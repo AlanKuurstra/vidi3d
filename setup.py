@@ -14,7 +14,7 @@ setup(
   author = 'Alan Kuurstra',
   author_email = 'alankuurstra@gmail.com',
   url = 'https://github.com/AlanKuurstra/vidi3d', # use the URL to the github repo
-  download_url = 'https://github.com/peterldowns/mypackage/archive/0.1.tar.gz', # I'll explain this in a second
-  keywords = ['3d', 'image', 'viewer', 'medical'],
+  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/0.1.tar.gz', # I'll explain this in a second
+  keywords = ['3d', 'image', 'viewer', 'medical', 'numpy'],
   classifiers = [],
 )

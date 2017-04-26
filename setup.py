@@ -9,7 +9,7 @@ from distutils.core import setup
 setup(
   name = 'vidi3d',
   packages = ['vidi3d'],
-  version = '0.1',
+  version = '0.1b',
   install_requires = [
   'numpy',
   #'PyQt4', #no PyQt4 in pipy

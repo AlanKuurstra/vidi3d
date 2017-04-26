@@ -1,10 +1,3 @@
-"""
-This class can be used to put a matplotlib like navigator bar above the 
-MpImage class.  The "Select" tool is still under development.  Currently
-it can be used to select a region and spit out the coordinates of the 
-bounding rectangle. Eventually it could be used to give avg value, std,
-or some other measure inside the ROI.
-"""
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 import os
 from matplotlib.lines import Line2D
@@ -34,7 +27,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         #commented lines are still under development        
         #a = self.addAction(self.__file__('zoom_to_rect.png'), 'Select', self.selectROI)
         #a.setToolTip('Under development.')
-        self.ROIwidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "lasso.png")), 'Select', self.roi)
+        self.ROIwidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "images/lasso.png")), 'Select', self.roi)
         self.ROIwidget.setToolTip('Select ROI for analysis')
         self.ROIwidget.setCheckable(True)
         self._ROIactive=False

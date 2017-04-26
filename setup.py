@@ -10,6 +10,10 @@ setup(
   name = 'vidi3d',
   packages = ['vidi3d'],
   version = '0.1',
+  install_requires = [
+  'numpy',
+  #'PyQt4', #no PyQt4 in pipy
+  'matplotlib'],
   description = 'Visualizes 3d and 4d NumPy arrays using Matplotlib and PyQt4.',
   author = 'Alan Kuurstra',
   author_email = 'alankuurstra@gmail.com',

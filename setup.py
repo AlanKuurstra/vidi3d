@@ -9,7 +9,7 @@ from distutils.core import setup
 setup(
   name = 'vidi3d',
   packages = ['vidi3d'],
-  version = '0.1b',
+  version = '0.1c',
   install_requires = [
   'numpy',
   #'PyQt4', #no PyQt4 in pipy
@@ -18,7 +18,7 @@ setup(
   author = 'Alan Kuurstra',
   author_email = 'alankuurstra@gmail.com',
   url = 'https://github.com/AlanKuurstra/vidi3d', # use the URL to the github repo
-  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/0.1.tar.gz', # I'll explain this in a second
+  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/0.1c.tar.gz', 
   keywords = ['3d', 'image', 'viewer', 'medical', 'numpy'],
   classifiers = [],
 )

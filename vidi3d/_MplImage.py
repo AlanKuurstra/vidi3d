@@ -54,7 +54,7 @@ class _MplImage(FigureCanvas):
         #image
         self.fig.patch.set_color(currLabels[2]['color'])                
         self.axes=self.fig.add_axes([.1,.05,.8,.8])     
-        self.axes.hold(False)
+        #self.axes.hold(False)
         if origin != 'upper' and origin != 'lower':
             print "origin parameter not understood, defaulting to 'lower'"
             origin='lower'

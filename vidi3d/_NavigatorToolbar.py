@@ -1,4 +1,7 @@
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+try:
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+except:
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 import os
 from matplotlib.lines import Line2D
 from PyQt4 import QtCore

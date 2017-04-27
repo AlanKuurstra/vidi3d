@@ -8,7 +8,10 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import _DisplayDefinitions as dd
 from PyQt4 import QtCore,QtGui
 import numpy as np
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+try:
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+except:
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 
 class _MplPlot(FigureCanvas):
     def __init__(self, complexData, parent=None,dataType=None,initMarkerPosn=None, colors=None, title=None):        

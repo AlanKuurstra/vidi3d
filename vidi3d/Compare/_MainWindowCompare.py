@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib import path
 
 class _MainWindow(QtGui.QMainWindow):     
-    def __init__(self,complexIm, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormap=None):                
+    def __init__(self,complexIm, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):                
         _Core._create_qApp()  
         super(_MainWindow,self).__init__() 
         self.setWindowTitle('Compare Viewer')      
@@ -39,7 +39,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # give each image a colormap
         #        
-        if colormap != None and type(colormap) != list:
+        if colormap is not None and type(colormap) is not list and type(colormap) != tuple:
             tmp=colormap
             colormap=[]
             for i in range(numImages):
@@ -48,9 +48,26 @@ class _MainWindow(QtGui.QMainWindow):
             colormap=[]
             for i in range(numImages):
                 colormap.append(None)
-            
-                
-                
+        
+        if overlay is not None:
+            if type(overlay)==tuple:
+                overlay=list(overlay)            
+            for i in range(len(overlay)):
+                img=overlay[i]
+                if img.ndim==2:
+                    overlay[i]=img[...,np.newaxis]        
+        self.overlay=overlay
+        
+        if overlayColormap != None and type(overlayColormap) != list:
+            tmp=overlayColormap
+            overlayColormap=[]
+            for i in range(numImages):
+                overlayColormap.append(tmp)
+        elif overlayColormap == None:
+            overlayColormap=[]
+            for i in range(numImages):
+                overlayColormap.append(None)                
+        
         
         #
         # give each image a label
@@ -94,8 +111,11 @@ class _MainWindow(QtGui.QMainWindow):
         if locationLabels is None:
             locationLabels = ["X", "Y","Z","T"]
         for imIndex in range(numImages):
-            labels= [{'color': 'r', 'textLabel': locationLabels[0]},{'color': 'b', 'textLabel': locationLabels[1]},{'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]                             
-            self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexIm[:,:,self.loc[2],self.loc[3],imIndex], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=self.complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormap[imIndex], parent=self))                            
+            labels= [{'color': 'r', 'textLabel': locationLabels[0]},{'color': 'b', 'textLabel': locationLabels[1]},{'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]
+            if overlay!=None:
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexIm[:,:,self.loc[2],self.loc[3],imIndex], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=self.complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormap[imIndex], parent=self, overlay=overlay[imIndex][:,:,self.loc[2]], overlayColormap=overlayColormap[imIndex]))                            
+            else:
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexIm[:,:,self.loc[2],self.loc[3],imIndex], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=self.complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormap[imIndex], parent=self))                            
             self.imagePanelToolbarsList.append(NavigationToolbar(self.imagePanelsList[imIndex],self.imagePanelsList[imIndex]))
             self.imagePanelsList[-1].NavigationToolbar=self.imagePanelToolbarsList[-1]
         """
@@ -268,7 +288,10 @@ class _MainWindow(QtGui.QMainWindow):
         for imagePanel in self.imagePanelsList:
             imagePanel.sliceNum=newz        
         for imgIndx in range(len(self.imagePanelsList)):
-            self.imagePanelsList[imgIndx].showComplexImageChange(self.complexIm[:,:,self.loc[2],self.loc[3],imgIndx])        
+            if self.overlay is None:
+                self.imagePanelsList[imgIndx].showComplexImageChange(self.complexIm[:,:,self.loc[2],self.loc[3],imgIndx])        
+            else:
+                self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexIm[:,:,self.loc[2],self.loc[3],imgIndx],self.overlay[imgIndx][:,:,self.loc[2]])
         self.updatePlots()
         
         

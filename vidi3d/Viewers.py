@@ -3,9 +3,9 @@ This module contains all the functions a user needs to call and control the
 behaviour of the viewers.
 """
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-plt.ion()
+#plt.ion()
 from PyQt4 import QtGui,QtCore
 import _Core as _Core
 import Imshow._MainWindow4D 
@@ -13,7 +13,9 @@ import Compare._MainWindowCompare
 import numpy as np
 
 def _startViewer(viewer,block, windowTitle = None):
-    if block:                
+    if block:    
+        if windowTitle is not None:
+            viewer.setWindowTitle(windowTitle)
         QtGui.qApp.exec_()
         return
     else:                
@@ -72,7 +74,7 @@ def imshow3d(data,pixdim=None,interpolation='none', block=True):
 
 
     
-def compare2d(data,pixdim=None,interpolation='none',origin='lower',windowTitle = None, subplotTitles=None,block=True, locationLabels=None, maxNumInRow=None, colormap=None):    
+def compare2d(data,pixdim=None,interpolation='none',origin='lower',windowTitle = None, subplotTitles=None,block=True, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):    
     """
     A viewer that displays multiple 2D images for comparison.
 
@@ -133,16 +135,16 @@ def compare2d(data,pixdim=None,interpolation='none',origin='lower',windowTitle =
         for i in range(len(data)):
             concat[...,i]=data[i]
         data=concat
-    else:
-        data=data[...,np.newaxis]   
-    if data.ndim==3:
+    if data.ndim==2:
+        data=data[...,np.newaxis,np.newaxis,np.newaxis]
+    elif data.ndim==3:
         data=data[...,np.newaxis,np.newaxis,:]
     elif data.ndim==4:
-        data=data[...,np.newaxis,:,:]
-    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap)
+        data=data[...,np.newaxis,:,:]    
+    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap, overlay=overlay, overlayColormap=overlayColormap)
     return _startViewer(viewer,block, windowTitle)
 
-def compare3d(data,pixdim=None,interpolation='none',origin='lower',windowTitle = None, subplotTitles=None,block=True, locationLabels=None, maxNumInRow=None, colormap=None):
+def compare3d(data,pixdim=None,interpolation='none',origin='lower',windowTitle = None, subplotTitles=None,block=True, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
     """
     A viewer that displays multiple 3D images for comparison.
 
@@ -201,12 +203,10 @@ def compare3d(data,pixdim=None,interpolation='none',origin='lower',windowTitle =
         concat = np.empty(data[0].shape+(len(data),),dtype='complex')
         for i in range(len(data)):
             concat[...,i]=data[i]
-        data=concat
-    else:
-        data=data[...,np.newaxis]    
+        data=concat      
     if data.ndim==4:
         data=data[...,np.newaxis,:]
-    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap)    
+    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap, overlay=overlay, overlayColormap=overlayColormap)    
     return _startViewer(viewer,block, windowTitle)
     
       

@@ -13,10 +13,10 @@ import _DisplayDefinitions as dd
         
 class _MplImage(FigureCanvas):
     from _DisplaySignals import *      
-    def __init__(self, complexImage, aspect='equal', overlay=None, underlay=None, parent=None, interpolation='none', origin = 'lower', imageType=None, windowLevel=None, location=None, locationLabels=None, colormap=None, overlayColormap=None, underlayColormap=None ):        
+    def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin = 'lower', imageType=None, windowLevel=None, location=None, locationLabels=None, colormap=None, overlayColormap=None ):        
         #
         # Qt related initialization
-        #        
+        #             
         _Core._create_qApp()        
         self.fig=mpl.figure.Figure()
         FigureCanvas.__init__(self,self.fig)  
@@ -37,7 +37,11 @@ class _MplImage(FigureCanvas):
         #
         # Internal data model initialization
         #        
-        self.complexImageData = complexImage  
+        self.complexImageData = complexImage 
+        if overlay is None:  
+            self.overlayData = np.zeros(complexImage.shape,dtype='bool')
+        else:
+            self.overlayData = overlay
         self.location = np.minimum(np.maximum(location, [0,0]), np.subtract(self.complexImageData.shape,1)).astype(np.int)
         
         #
@@ -47,6 +51,14 @@ class _MplImage(FigureCanvas):
             self.colormap = mpl.cm.Greys_r
         else:
             self.colormap = colormap
+        
+        
+        if overlayColormap is None:            
+            self.overlayColormap = mpl.cm.Reds
+        else:            
+            self.overlayColormap = overlayColormap
+            
+        
         #labels
         currLabels = [{'color': 'r', 'textLabel': "X"},{'color': 'b', 'textLabel': "Y"},{'color': 'g', 'textLabel': "Z Slice"}]
         if locationLabels is not None:
@@ -57,8 +69,9 @@ class _MplImage(FigureCanvas):
         #self.axes.hold(False)
         if origin != 'upper' and origin != 'lower':
             print "origin parameter not understood, defaulting to 'lower'"
-            origin='lower'
-        self.img=self.axes.imshow(np.zeros(complexImage.shape).T, aspect=aspect, interpolation=interpolation, origin=origin)
+            origin='lower'        
+        self.img=self.axes.imshow(np.zeros(complexImage.shape).T, aspect=aspect, interpolation=interpolation, origin=origin, cmap=self.colormap)                  
+        self.overlay=self.axes.imshow(self.overlayData.T, aspect=aspect, interpolation=interpolation, origin=origin, alpha=0.3,cmap=self.overlayColormap)            
         self._imageType=0
         self.setMplImg()        
         self.locationVal=self.img.get_array().data[self.location[1],self.location[0]]
@@ -86,8 +99,7 @@ class _MplImage(FigureCanvas):
         if imageType is None:
             self.showImageTypeChange(dd.ImageType.mag)
         else:
-            self.showImageTypeChange(imageType)
-     
+            self.showImageTypeChange(imageType)        
     def SaveImage(self, fname):
         img=self.img.get_array()
         cmap=cmap=self.img.get_cmap()
@@ -165,6 +177,8 @@ class _MplImage(FigureCanvas):
     #==================================================================
     def setComplexImage(self, newComplexImage):
         self.complexImageData = newComplexImage
+    def setOverlayImage(self, newOverlayImage):
+        self.overlayData = newOverlayImage
     def setLocation(self, newLocation):           
         # clip newLocation to valid locations, this is now done in MoveEvent() before the ChangeLocation signal is emitted
         # however, there could still be problems if a control signals a location change that is out of bounds
@@ -227,7 +241,8 @@ class _MplImage(FigureCanvas):
             intensityImage = np.imag(self.complexImageData)
         
         self.dynamicRange = np.max(intensityImage) - np.min(intensityImage)        
-        self.img.set_data(intensityImage.T)  
+        self.img.set_data(intensityImage.T)
+        self.overlay.set_data(self.overlayData.T)
         #reason for transpose: 
         #matplotlib shows 10x20 matrix with height of 10 and width of 20  
         #but in our matrix the 10 refers to width and the 20 to height 
@@ -276,6 +291,11 @@ class _MplImage(FigureCanvas):
     #==================================================================
     def showComplexImageChange(self, newComplexImage):
         self.setComplexImage(newComplexImage)
+        self.setMplImg()
+        self.BlitImageAndLines()
+    def showComplexImageAndOverlayChange(self, newComplexImage,newOverlayImage):
+        self.setComplexImage(newComplexImage)        
+        self.setOverlayImage(newOverlayImage)        
         self.setMplImg()
         self.BlitImageAndLines()
     def showLocationChange(self, newLocation):           

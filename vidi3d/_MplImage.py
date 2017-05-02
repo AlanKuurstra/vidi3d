@@ -179,6 +179,7 @@ class _MplImage(FigureCanvas):
         self.complexImageData = newComplexImage
     def setOverlayImage(self, newOverlayImage):
         self.overlayData = newOverlayImage
+        self.overlay.set_data(self.overlayData.T)
     def setLocation(self, newLocation):           
         # clip newLocation to valid locations, this is now done in MoveEvent() before the ChangeLocation signal is emitted
         # however, there could still be problems if a control signals a location change that is out of bounds
@@ -241,8 +242,7 @@ class _MplImage(FigureCanvas):
             intensityImage = np.imag(self.complexImageData)
         
         self.dynamicRange = np.max(intensityImage) - np.min(intensityImage)        
-        self.img.set_data(intensityImage.T)
-        self.overlay.set_data(self.overlayData.T)
+        self.img.set_data(intensityImage.T)        
         #reason for transpose: 
         #matplotlib shows 10x20 matrix with height of 10 and width of 20  
         #but in our matrix the 10 refers to width and the 20 to height 

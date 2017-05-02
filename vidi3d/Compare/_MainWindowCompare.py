@@ -29,6 +29,18 @@ class _MainWindow(QtGui.QMainWindow):
             return listOfLength1
         overlayList=matchListOfLength1toList2Length(overlayList,complexImList)
         self.overlayList=overlayList
+        overlayUsed=False
+        overlayMinMax=[-np.finfo('float').eps,np.finfo('float').eps]
+        for overlay in overlayList:
+            if overlay is not None:
+                overlayUsed=True
+                currentOverlayMin=overlay.min()
+                currentOverlayMax=overlay.max()
+                if currentOverlayMin < overlayMinMax[0]:
+                    overlayMinMax[0]=currentOverlayMin
+                if currentOverlayMax > overlayMinMax[1]:
+                    overlayMinMax[1]=currentOverlayMax
+                
         complexImList=matchListOfLength1toList2Length(complexImList,overlayList)
         colormapList=matchListOfLength1toList2Length(colormapList,complexImList)
         overlayColormapList=matchListOfLength1toList2Length(overlayColormapList,overlayList)        
@@ -80,7 +92,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up Controls
         #        
-        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels,imgVals=zip(subplotTitles,np.zeros(len(subplotTitles)))) 
+        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels,imgVals=zip(subplotTitles,np.zeros(len(subplotTitles))),overlayUsed=overlayUsed,overlayMinMax=overlayMinMax) 
         
         #
         # Set up image panels
@@ -177,6 +189,9 @@ class _MainWindow(QtGui.QMainWindow):
         self.controls.signalROIClear.connect(self.clearROI)        
         self.controls.signalROIAvgTimecourse.connect(self.plotROIAvgTimeseries)
         self.controls.signalROI1VolHistogram.connect(self.plotROI1VolHistogram)
+        
+        self.controls.signalOverlayLowerThreshChange.connect(self.thresholdOverlay)
+        self.controls.signalOverlayUpperThreshChange.connect(self.thresholdOverlay)
         
         #connect all z changes to each other
         for imagePanel in self.imagePanelsList:
@@ -425,6 +440,18 @@ class _MainWindow(QtGui.QMainWindow):
             currimagePanelToolbar.roiLines.mplLineObjects={}
             currimagePanelToolbar.canvas.draw()
             currimagePanelToolbar.canvas.blit(currimagePanelToolbar.ax.bbox)
+    def thresholdOverlay(self,lowerThresh,upperThresh):
+        for imgIndx in range(len(self.imagePanelsList)):
+            if self.overlayList[imgIndx] is not None:
+                overlay=self.overlayList[imgIndx][:,:,self.loc[2]]
+                lowerThreshMask=overlay>lowerThresh
+                upperThreshMask=overlay<upperThresh
+                mask=(lowerThreshMask * upperThreshMask).astype('bool')
+                thresholded=np.ma.masked_where(mask, overlay)
+                self.imagePanelsList[imgIndx].setOverlayImage(thresholded)
+                self.imagePanelsList[imgIndx].BlitImageAndLines()
+                
+           
         
 class roiData():    
     def __init__(self):

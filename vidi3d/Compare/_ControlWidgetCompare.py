@@ -7,9 +7,11 @@ from PyQt4 import QtGui, QtCore
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd  
 
+
+
 class _ControlWidgetCompare(QtGui.QWidget):
     from .._DisplaySignals import *
-    def __init__(self, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None):
+    def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=(-np.finfo(float).eps,np.finfo(float).eps)):
         _Core._create_qApp()        
         QtGui.QWidget.__init__(self)        
 
@@ -184,6 +186,32 @@ class _ControlWidgetCompare(QtGui.QWidget):
         #controlLayout.addWidget(numBinsWidget,layoutRowIndex, 1)
         controlLayout.addLayout(numBinsLayout,layoutRowIndex, 1)
         layoutRowIndex = layoutRowIndex + 1
+        
+        def setMinMaxValue(widget,MinMaxValue):
+            widget.setMinimum(MinMaxValue[0])
+            widget.setMaximum(MinMaxValue[1])
+            widget.setValue(MinMaxValue[2])
+            
+        overlayThresholdLayout=QtGui.QGridLayout()
+        self.lowerThreshSpinbox=QtGui.QDoubleSpinBox()
+        self.upperThreshSpinbox=QtGui.QDoubleSpinBox()
+        self.lowerThreshSlider=QtGui.QSlider(QtCore.Qt.Horizontal)        
+        self.upperThreshSlider=QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.numberOfStepsBetweenIntegers=100
+        sliderMinMax=list(np.array(overlayMinMax)*self.numberOfStepsBetweenIntegers)
+        setMinMaxValue(self.lowerThreshSpinbox,overlayMinMax+[0,])
+        setMinMaxValue(self.upperThreshSpinbox,overlayMinMax+[0,])
+        setMinMaxValue(self.lowerThreshSlider,sliderMinMax+[0,])
+        setMinMaxValue(self.upperThreshSlider,sliderMinMax+[0,])
+        
+        overlayThresholdLayout.addWidget(self.lowerThreshSpinbox,0,0)
+        overlayThresholdLayout.addWidget(self.lowerThreshSlider,0,1)
+        overlayThresholdLayout.addWidget(self.upperThreshSlider,1,1)
+        overlayThresholdLayout.addWidget(self.upperThreshSpinbox,1,2)
+        
+        if overlayUsed:
+            controlLayout.addLayout(overlayThresholdLayout,layoutRowIndex, 1)
+        layoutRowIndex = layoutRowIndex + 1
 
         controlLayout.setRowStretch(layoutRowIndex, 10)
         
@@ -201,6 +229,11 @@ class _ControlWidgetCompare(QtGui.QWidget):
         QtCore.QObject.connect(clearROIButton, QtCore.SIGNAL("clicked()"), self.clearROIPushed)
         QtCore.QObject.connect(roiAvgTimecourseButton, QtCore.SIGNAL("clicked()"), self.roiAvgTimecoursePushed)
         QtCore.QObject.connect(roi1VolHistogramButton, QtCore.SIGNAL("clicked()"), self.roi1VolHistogramButtonPushed)
+        
+        QtCore.QObject.connect(self.lowerThreshSlider, QtCore.SIGNAL("valueChanged(int)"), self.lowerThreshSliderChanged)
+        QtCore.QObject.connect(self.upperThreshSlider, QtCore.SIGNAL("valueChanged(int)"), self.upperThreshSliderChanged)
+        QtCore.QObject.connect(self.lowerThreshSpinbox, QtCore.SIGNAL("valueChanged(double)"), self.lowerThreshSpinBoxChanged)
+        QtCore.QObject.connect(self.upperThreshSpinbox, QtCore.SIGNAL("valueChanged(double)"), self.upperThreshSpinBoxChanged)
     
     def xLocationChanged(self, x):
         if x != self.location[0]:
@@ -266,5 +299,21 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.signalROIAvgTimecourse.emit()
     def roi1VolHistogramButtonPushed(self):
         self.signalROI1VolHistogram.emit(self.numBins.value())
-        
-        
+    def lowerThreshSliderChanged(self,lowerThresh):        
+        self.lowerThreshSpinbox.setValue(float(lowerThresh)/self.numberOfStepsBetweenIntegers)        
+        if lowerThresh>self.upperThreshSlider.value():
+            self.upperThreshSlider.setValue(lowerThresh)
+    def upperThreshSliderChanged(self,upperThresh):
+        self.upperThreshSpinbox.setValue(float(upperThresh)/self.numberOfStepsBetweenIntegers)
+        if upperThresh<self.lowerThreshSlider.value():
+            self.lowerThreshSlider.setValue(upperThresh)        
+    def lowerThreshSpinBoxChanged(self,lowerThresh):        
+        self.lowerThreshSlider.setValue(int(lowerThresh*self.numberOfStepsBetweenIntegers))
+        if lowerThresh>self.upperThreshSpinbox.value():
+            self.upperThreshSpinbox.setValue(lowerThresh)
+        self.signalOverlayLowerThreshChange.emit(lowerThresh,self.upperThreshSpinbox.value())
+    def upperThreshSpinBoxChanged(self,upperThresh):
+        self.upperThreshSlider.setValue(int(upperThresh*self.numberOfStepsBetweenIntegers))
+        if upperThresh<self.lowerThreshSpinbox.value():
+            self.lowerThreshSpinbox.setValue(upperThresh)
+        self.signalOverlayUpperThreshChange.emit(self.lowerThreshSpinbox.value(),upperThresh)

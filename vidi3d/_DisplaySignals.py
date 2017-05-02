@@ -12,8 +12,11 @@ signalZLocationChange = QtCore.pyqtSignal(int, name='zLocationChanged')
 signalTLocationChange = QtCore.pyqtSignal(int, name='tLocationChanged')
 signalLocationChange = QtCore.pyqtSignal(int, int)
 
-signalWindowLevelChange = QtCore.pyqtSignal(float, float)    
+signalWindowLevelChange = QtCore.pyqtSignal(float, float,name='windowLevelChanged')    
 signalWindowLevelReset = QtCore.pyqtSignal(name='windowLevelReset')
 signalROIClear = QtCore.pyqtSignal(name='ROIClear')
 signalROIAvgTimecourse = QtCore.pyqtSignal(name='ROIAvgTimecourse')
 signalROI1VolHistogram = QtCore.pyqtSignal(int,name='ROI1VolHistogram')
+
+signalOverlayLowerThreshChange = QtCore.pyqtSignal(float,float,name="OverlayLowerThreshChanged")
+signalOverlayUpperThreshChange = QtCore.pyqtSignal(float,float,name="OverlayUpperThreshChanged")

@@ -30,7 +30,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         #commented lines are still under development        
         #a = self.addAction(self.__file__('zoom_to_rect.png'), 'Select', self.selectROI)
         #a.setToolTip('Under development.')
-        self.ROIwidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "images/lasso.png")), 'Select', self.roi)
+        self.ROIwidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/lasso.png")), 'Select', self.roi)
         self.ROIwidget.setToolTip('Select ROI for analysis')
         self.ROIwidget.setCheckable(True)
         self._ROIactive=False

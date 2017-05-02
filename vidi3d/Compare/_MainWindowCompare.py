@@ -15,18 +15,29 @@ import matplotlib.pyplot as plt
 from matplotlib import path
 
 class _MainWindow(QtGui.QMainWindow):     
-    def __init__(self,complexIm, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):                
+    def __init__(self,complexImList, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormapList=[None,], overlayList=[None,], overlayColormapList=[None,]):                
         _Core._create_qApp()  
         super(_MainWindow,self).__init__() 
         self.setWindowTitle('Compare Viewer')      
         self.viewerNumber=0
-        self.complexIm = complexIm         
-        if self.complexIm.ndim == 4:
-            self.complexIm = self.complexIm[:,:,:,:,np.newaxis]  
-        numImages = self.complexIm.shape[4]
+        def matchListOfLength1toList2Length(listOfLength1,list2):
+            if len(listOfLength1) ==1 and len(list2)>1:
+                tmp=[]
+                for indx in range(len(list2)):
+                    tmp.append(listOfLength1[0])
+                listOfLength1=tmp
+            return listOfLength1
+        overlayList=matchListOfLength1toList2Length(overlayList,complexImList)
+        self.overlayList=overlayList
+        complexImList=matchListOfLength1toList2Length(complexImList,overlayList)
+        colormapList=matchListOfLength1toList2Length(colormapList,complexImList)
+        overlayColormapList=matchListOfLength1toList2Length(overlayColormapList,overlayList)        
+        self.complexImList = complexImList
+        numImages = len(complexImList)
+        complexIm=complexImList[0]
 
         #initLocation=[int(complexIm.shape[0]/2),int(complexIm.shape[1]/2)]
-        self.loc=[int(complexIm.shape[0]/2),int(complexIm.shape[1]/2),int(complexIm.shape[2]/2),0]
+        self.loc=[int(complexIm.shape[0]/2),int(complexIm.shape[1]/2),int(complexIm.shape[2]/2),0]        
         #initLocation=self.loc
         
         imageType=dd.ImageType.mag                
@@ -36,37 +47,9 @@ class _MainWindow(QtGui.QMainWindow):
             aspect='equal'
         self.pixdim=pixdim
         
-        #
-        # give each image a colormap
-        #        
-        if colormap is not None and type(colormap) is not list and type(colormap) != tuple:
-            tmp=colormap
-            colormap=[]
-            for i in range(numImages):
-                colormap.append(tmp)
-        elif colormap == None:
-            colormap=[]
-            for i in range(numImages):
-                colormap.append(None)
         
-        if overlay is not None:
-            if type(overlay)==tuple:
-                overlay=list(overlay)            
-            for i in range(len(overlay)):
-                img=overlay[i]
-                if img.ndim==2:
-                    overlay[i]=img[...,np.newaxis]        
-        self.overlay=overlay
         
-        if overlayColormap != None and type(overlayColormap) != list:
-            tmp=overlayColormap
-            overlayColormap=[]
-            for i in range(numImages):
-                overlayColormap.append(tmp)
-        elif overlayColormap == None:
-            overlayColormap=[]
-            for i in range(numImages):
-                overlayColormap.append(None)                
+        
         
         
         #
@@ -111,11 +94,11 @@ class _MainWindow(QtGui.QMainWindow):
         if locationLabels is None:
             locationLabels = ["X", "Y","Z","T"]
         for imIndex in range(numImages):
-            labels= [{'color': 'r', 'textLabel': locationLabels[0]},{'color': 'b', 'textLabel': locationLabels[1]},{'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]
-            if overlay!=None:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexIm[:,:,self.loc[2],self.loc[3],imIndex], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=self.complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormap[imIndex], parent=self, overlay=overlay[imIndex][:,:,self.loc[2]], overlayColormap=overlayColormap[imIndex]))                            
+            labels= [{'color': 'r', 'textLabel': locationLabels[0]},{'color': 'b', 'textLabel': locationLabels[1]},{'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]           
+            if self.overlayList[imIndex] is not None:
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:,:,self.loc[2],self.loc[3]], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self, overlay=overlayList[imIndex][:,:,self.loc[2]], overlayColormap=overlayColormapList[imIndex]))
             else:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexIm[:,:,self.loc[2],self.loc[3],imIndex], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=self.complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormap[imIndex], parent=self))                            
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:,:,self.loc[2],self.loc[3]], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self))
             self.imagePanelToolbarsList.append(NavigationToolbar(self.imagePanelsList[imIndex],self.imagePanelsList[imIndex]))
             self.imagePanelsList[-1].NavigationToolbar=self.imagePanelToolbarsList[-1]
         """
@@ -142,12 +125,21 @@ class _MainWindow(QtGui.QMainWindow):
         # Set up plots
         #
         self.plotsPanel=QtGui.QWidget(self)           
-        #self.xPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[:,initLocation[1],self.loc[2],:], title=locationLabels[0], dataType=imageType,colors=colors,initMarkerPosn=initLocation[1])
-        #self.yPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[initLocation[0],:,self.loc[2],:], title=locationLabels[1], dataType=imageType,colors=colors,initMarkerPosn=initLocation[0])
-        self.xPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[:,self.loc[1],self.loc[2],self.loc[3],:], title=locationLabels[0], dataType=imageType,colors=colors,initMarkerPosn=self.loc[1])
-        self.yPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[self.loc[0],:,self.loc[2],self.loc[3],:], title=locationLabels[1], dataType=imageType,colors=colors,initMarkerPosn=self.loc[0])
-        self.zPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[self.loc[0],self.loc[1],:,self.loc[3],:], title=locationLabels[2], dataType=imageType,colors=colors,initMarkerPosn=self.loc[2])
-        self.tPlotPanel=_MplPlot._MplPlot(complexData=self.complexIm[self.loc[0],self.loc[1],self.loc[2],:,:], title=locationLabels[3], dataType=imageType,colors=colors,initMarkerPosn=self.loc[3])
+        #self.xPlotPanel=_MplPlot._MplPlot(complexData=complexIm[:,initLocation[1],self.loc[2],:], title=locationLabels[0], dataType=imageType,colors=colors,initMarkerPosn=initLocation[1])
+        #self.yPlotPanel=_MplPlot._MplPlot(complexData=complexIm[initLocation[0],:,self.loc[2],:], title=locationLabels[1], dataType=imageType,colors=colors,initMarkerPosn=initLocation[0])
+        xPlotDataList=[]
+        yPlotDataList=[]
+        zPlotDataList=[]
+        tPlotDataList=[]
+        for img in self.complexImList:
+            xPlotDataList.append(img[:,self.loc[1],self.loc[2],self.loc[3]])
+            yPlotDataList.append(img[self.loc[0],:,self.loc[2],self.loc[3]])
+            zPlotDataList.append(img[self.loc[0],self.loc[1],:,self.loc[3]])
+            tPlotDataList.append(img[self.loc[0],self.loc[1],self.loc[2],:])            
+        self.xPlotPanel=_MplPlot._MplPlot(complexDataList=xPlotDataList, title=locationLabels[0], dataType=imageType,colors=colors,initMarkerPosn=self.loc[1])
+        self.yPlotPanel=_MplPlot._MplPlot(complexDataList=yPlotDataList, title=locationLabels[1], dataType=imageType,colors=colors,initMarkerPosn=self.loc[0])
+        self.zPlotPanel=_MplPlot._MplPlot(complexDataList=zPlotDataList, title=locationLabels[2], dataType=imageType,colors=colors,initMarkerPosn=self.loc[2])
+        self.tPlotPanel=_MplPlot._MplPlot(complexDataList=tPlotDataList, title=locationLabels[3], dataType=imageType,colors=colors,initMarkerPosn=self.loc[3])
         plotsLayout=QtGui.QVBoxLayout()        
         plotsLayout.addWidget(self.xPlotPanel)        
         plotsLayout.addWidget(self.yPlotPanel)
@@ -173,7 +165,7 @@ class _MainWindow(QtGui.QMainWindow):
         self.show()
         self.setFocus()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)        
-               
+                       
     def makeConnections(self):        
         # Connect from controls        
         self.controls.signalImageTypeChange.connect(self.ChangeImageType)                        
@@ -225,10 +217,20 @@ class _MainWindow(QtGui.QMainWindow):
             currImagePanel.showSetWindowLevelToDefault()
             
     def updatePlots(self):
-        self.xPlotPanel.showComplexDataAndMarkersChange(self.complexIm[:,self.loc[1],self.loc[2],self.loc[3],:],self.loc[0])
-        self.yPlotPanel.showComplexDataAndMarkersChange(self.complexIm[self.loc[0],:,self.loc[2],self.loc[3],:],self.loc[1])
-        self.zPlotPanel.showComplexDataAndMarkersChange(self.complexIm[self.loc[0],self.loc[1],:,self.loc[3],:],self.loc[2])
-        self.tPlotPanel.showComplexDataAndMarkersChange(self.complexIm[self.loc[0],self.loc[1],self.loc[2],:,:],self.loc[3])
+        xPlotDataList=[]
+        yPlotDataList=[]
+        zPlotDataList=[]
+        tPlotDataList=[]
+        for img in self.complexImList:
+            xPlotDataList.append(img[:,self.loc[1],self.loc[2],self.loc[3]])
+            yPlotDataList.append(img[self.loc[0],:,self.loc[2],self.loc[3]])
+            zPlotDataList.append(img[self.loc[0],self.loc[1],:,self.loc[3]])
+            tPlotDataList.append(img[self.loc[0],self.loc[1],self.loc[2],:])
+            
+        self.xPlotPanel.showComplexDataAndMarkersChange(xPlotDataList,self.loc[0])
+        self.yPlotPanel.showComplexDataAndMarkersChange(yPlotDataList,self.loc[1])
+        self.zPlotPanel.showComplexDataAndMarkersChange(zPlotDataList,self.loc[2])
+        self.tPlotPanel.showComplexDataAndMarkersChange(tPlotDataList,self.loc[3])
         
     def ChangeLocation(self, x, y ):  
         self.loc[:2]=[x,y]
@@ -288,20 +290,17 @@ class _MainWindow(QtGui.QMainWindow):
         for imagePanel in self.imagePanelsList:
             imagePanel.sliceNum=newz        
         for imgIndx in range(len(self.imagePanelsList)):
-            if self.overlay is None:
-                self.imagePanelsList[imgIndx].showComplexImageChange(self.complexIm[:,:,self.loc[2],self.loc[3],imgIndx])        
+            if self.overlayList[imgIndx] is not None:
+                self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
             else:
-                self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexIm[:,:,self.loc[2],self.loc[3],imgIndx],self.overlay[imgIndx][:,:,self.loc[2]])
+                self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
         self.updatePlots()
-        
-        
-                        
     def onTChange(self,value):
         #clip to valid locations?
         #value = np.minimum(np.maximum(value+0.5, 0), self.raw.shape[2]-1)      
         self.loc[3]=value 
         for imIndex in range(len(self.imagePanelsList)):            
-            self.imagePanelsList[imIndex].showComplexImageChange(self.complexIm[:,:,self.loc[2],self.loc[3],imIndex])        
+            self.imagePanelsList[imIndex].showComplexImageChange(self.complexImList[imIndex][:,:,self.loc[2],self.loc[3]])        
         self.updatePlots()
    
     def updateROI(self,x,y):

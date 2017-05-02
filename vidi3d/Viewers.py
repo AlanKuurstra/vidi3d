@@ -127,21 +127,33 @@ def compare2d(data,pixdim=None,interpolation='none',origin='lower',windowTitle =
     --------
     viewer : `Compare._MainWindowCompare`
     """
+    data=convertToListIfNecessary(data)
+    colormap=convertToListIfNecessary(colormap)
+    overlay=convertToListIfNecessary(overlay)
+    overlayColormap=convertToListIfNecessary(overlayColormap)
     
     for img in data:
         assert img.shape == data[0].shape
-    if type(data)==list or type(data)==tuple:      
-        concat = np.empty(data[0].shape+(len(data),),dtype='complex')        
-        for i in range(len(data)):
-            concat[...,i]=data[i]
-        data=concat
-    if data.ndim==2:
-        data=data[...,np.newaxis,np.newaxis,np.newaxis]
-    elif data.ndim==3:
-        data=data[...,np.newaxis,np.newaxis,:]
-    elif data.ndim==4:
-        data=data[...,np.newaxis,:,:]    
-    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap, overlay=overlay, overlayColormap=overlayColormap)
+    if data[0].ndim==2:
+        for indx in range(len(data)):
+            data[indx]=data[indx][...,np.newaxis,np.newaxis]
+    elif data[0].ndim==3:
+        for indx in range(len(data)):
+            data[indx]=data[indx][...,np.newaxis,:]
+    ndim=0
+    for i in range(max(len(data),len(overlay))):
+        try:
+            ndim=overlay[i].ndim
+        except:
+            pass
+    if ndim==2:
+        for indx in range(len(overlay)):
+            try:
+                overlay[indx]=overlay[indx][...,np.newaxis]
+            except:
+                pass
+            
+    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
     return _startViewer(viewer,block, windowTitle)
 
 def compare3d(data,pixdim=None,interpolation='none',origin='lower',windowTitle = None, subplotTitles=None,block=True, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
@@ -197,19 +209,26 @@ def compare3d(data,pixdim=None,interpolation='none',origin='lower',windowTitle =
     --------
     viewer : `Compare._MainWindowCompare`
     """
+    data=convertToListIfNecessary(data)
+    colormap=convertToListIfNecessary(colormap)
+    overlay=convertToListIfNecessary(overlay)
+    overlayColormap=convertToListIfNecessary(overlayColormap)
+       
     for img in data:
         assert img.shape == data[0].shape
-    if type(data)==list or type(data)==tuple:
-        concat = np.empty(data[0].shape+(len(data),),dtype='complex')
-        for i in range(len(data)):
-            concat[...,i]=data[i]
-        data=concat      
-    if data.ndim==4:
-        data=data[...,np.newaxis,:]
-    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormap=colormap, overlay=overlay, overlayColormap=overlayColormap)    
+    if data[0].ndim==3:
+        for indx in range(len(data)):
+            data[indx]=data[indx][...,np.newaxis]
+    viewer=Compare._MainWindowCompare._MainWindow(data,pixdim=pixdim,interpolation=interpolation, origin=origin, subplotTitles=subplotTitles, locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)    
     return _startViewer(viewer,block, windowTitle)
     
-      
+def convertToListIfNecessary(inputData):
+    if type(inputData) != list and type(inputData) != tuple:
+        inputData=[inputData,]
+    elif type(inputData)==tuple:
+        inputData=list(inputData)
+    return inputData
+
 def close(num=None):
     """
     Close a Viewer.

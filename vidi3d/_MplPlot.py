@@ -14,7 +14,7 @@ except:
     from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 
 class _MplPlot(FigureCanvas):
-    def __init__(self, complexData, parent=None,dataType=None,initMarkerPosn=None, colors=None, title=None):        
+    def __init__(self, complexDataList, parent=None,dataType=None,initMarkerPosn=None, colors=None, title=None):        
         #
         # Qt related initialization
         #        
@@ -35,7 +35,7 @@ class _MplPlot(FigureCanvas):
         #
         # Internal data model initialization
         #         
-        self.setComplexData(complexData)
+        self.setComplexData(complexDataList)
         if dataType is None:
             self.setDataType(dd.ImageType.mag)
         else:
@@ -73,30 +73,28 @@ class _MplPlot(FigureCanvas):
             self.toolbar.home()
         if event.button==2:
             plt.figure()             
-            for line in range(self.complexData.shape[1]):                                      
-                plt.plot(self.applyDataType(self.complexData[:,line]),self.colors[line])            
+            for line in range(len(self.complexDataList)):                                      
+                plt.plot(self.applyDataType(self.complexDataList[line]),self.colors[line])            
 
     #==================================================================
     #functions that set internal data
     #==================================================================
-    def setComplexData(self,newComplexData):
-        self.complexData=newComplexData 
-        if self.complexData.ndim == 1:
-            self.complexData = self.complexData[:,np.newaxis]  
+    def setComplexData(self,newComplexDataList):
+        self.complexDataList=newComplexDataList        
     def setDataType(self, dataType):
         self._dataType = dataType
     def setMarkerPosn(self,newMarkerPosn):
         if newMarkerPosn is None:
             self.markerPosn=newMarkerPosn
         else:
-            self.markerPosn = np.minimum(np.maximum(newMarkerPosn,0),self.complexData.shape[0]-1)
+            self.markerPosn = np.minimum(np.maximum(newMarkerPosn,0),self.complexDataList[0].shape[0]-1)
         
     #==================================================================            
     #functions that update objects visualizing internal data
     #==================================================================        
     def setLines(self):
-        for line in range(self.complexData.shape[1]):                           
-            self.lines[line][0].set_ydata(self.applyDataType(self.complexData[:,line]))          
+        for line in range(len(self.complexDataList)):                           
+            self.lines[line][0].set_ydata(self.applyDataType(self.complexDataList[line]))          
         if self._dataType == dd.ImageType.phase:
             self.axes.set_ylim(-np.pi,np.pi)
         else: 
@@ -105,18 +103,18 @@ class _MplPlot(FigureCanvas):
             self.axes.autoscale_view(scalex=False)        
     def setMarkers(self): 
         if self.markerPosn is not None:
-            for plotNum in range(self.complexData.shape[1]):            
-                self.markers[plotNum][0].set_data(self.markerPosn,self.applyDataType(self.complexData[self.markerPosn,plotNum]))
+            for plotNum in range(len(self.complexDataList)):            
+                self.markers[plotNum][0].set_data(self.markerPosn,self.applyDataType(self.complexDataList[plotNum][self.markerPosn]))
     def createLines(self):
         self.lines=[]
-        for line in range(self.complexData.shape[1]):                       
-            self.lines.append(self.axes.plot(self.applyDataType(self.complexData[:,line]),self.colors[line]))        
-        self.axes.set_xlim(0,self.complexData.shape[0]-1)
+        for line in range(len(self.complexDataList)):                       
+            self.lines.append(self.axes.plot(self.applyDataType(self.complexDataList[line]),self.colors[line]))        
+        self.axes.set_xlim(0,self.complexDataList[0].shape[0]-1)
     def createMarkers(self):
         if self.markerPosn is not None:
             self.markers=[]
-            for plotNum in range(self.complexData.shape[1]):            
-                self.markers.append(self.axes.plot(self.markerPosn,self.applyDataType(self.complexData[self.markerPosn,plotNum]),'kx'))
+            for plotNum in range(len(self.complexDataList)):            
+                self.markers.append(self.axes.plot(self.markerPosn,self.applyDataType(self.complexDataList[plotNum][self.markerPosn]),'kx'))
     def drawLinesAndMarkers(self):
         self.draw()
     #==================================================================        

@@ -360,12 +360,12 @@ class _MainWindow(QtGui.QMainWindow):
         self.ROIData.verts[self.loc[2]].pop()
     
     def getROIMask(self):
-        mask=np.zeros(self.complexIm.shape[:-2],dtype='bool')
+        mask=np.zeros(self.complexImList[0].shape[:-1],dtype='bool')
         for z in self.ROIData.verts:
             for contour in self.ROIData.verts[z]:
                 mypath=path.Path(contour)
-                tmp=mypath.contains_points(list(np.ndindex(self.complexIm.shape[:2])))
-                tmp=tmp.reshape(self.complexIm.shape[:2])                
+                tmp=mypath.contains_points(list(np.ndindex(self.complexImList[0].shape[:2])))
+                tmp=tmp.reshape(self.complexImList[0].shape[:2])                
                 mask[...,z]=np.logical_or(mask[...,z], tmp) 
         return mask
     def applyImageType(self,data,imageType):
@@ -395,7 +395,7 @@ class _MainWindow(QtGui.QMainWindow):
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar=self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._ROIactive:
-                data=self.complexIm[...,index]                
+                data=self.complexImList[index]
                 data=self.applyImageType(data,imageType)                 
                 avgTimeseries=data[mask].mean(axis=0)
                 avgTimeseries=avgTimeseries+np.finfo(float).eps
@@ -416,7 +416,7 @@ class _MainWindow(QtGui.QMainWindow):
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar=self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._ROIactive:
-                data=self.complexIm[...,index]
+                data=self.complexImList[index]
                 data=self.applyImageType(data,imageType)
                 dataList.append(data[...,self.loc[3]][mask])
                 colorList.append(dd.PlotColours.colours[index])

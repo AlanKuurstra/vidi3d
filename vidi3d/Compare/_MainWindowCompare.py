@@ -305,10 +305,12 @@ class _MainWindow(QtGui.QMainWindow):
         for imagePanel in self.imagePanelsList:
             imagePanel.sliceNum=newz        
         for imgIndx in range(len(self.imagePanelsList)):
-            if self.overlayList[imgIndx] is not None:
-                self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
-            else:
-                self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
+            #if self.overlayList[imgIndx] is not None:
+            #    self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
+            #else:
+            #    self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
+            self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
+            self.thresholdOverlay(self.controls.lowerThreshSpinbox.value(),self.controls.upperThreshSpinbox.value())
         self.updatePlots()
     def onTChange(self,value):
         #clip to valid locations?
@@ -444,8 +446,8 @@ class _MainWindow(QtGui.QMainWindow):
         for imgIndx in range(len(self.imagePanelsList)):
             if self.overlayList[imgIndx] is not None:
                 overlay=self.overlayList[imgIndx][:,:,self.loc[2]]
-                lowerThreshMask=overlay>lowerThresh
-                upperThreshMask=overlay<upperThresh
+                lowerThreshMask=overlay>=lowerThresh
+                upperThreshMask=overlay<=upperThresh
                 mask=(lowerThreshMask * upperThreshMask).astype('bool')
                 thresholded=np.ma.masked_where(mask, overlay)
                 self.imagePanelsList[imgIndx].setOverlayImage(thresholded)

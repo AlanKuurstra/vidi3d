@@ -38,8 +38,9 @@ class _MplImage(FigureCanvas):
         # Internal data model initialization
         #        
         self.complexImageData = complexImage 
-        if overlay is None:  
-            self.overlayData = np.zeros(complexImage.shape,dtype='bool')
+        if overlay is None:
+            ones=np.ones(complexImage.shape,dtype='bool')
+            self.overlayData = np.ma.masked_where(ones, ones)
         else:
             self.overlayData = overlay
         self.location = np.minimum(np.maximum(location, [0,0]), np.subtract(self.complexImageData.shape,1)).astype(np.int)

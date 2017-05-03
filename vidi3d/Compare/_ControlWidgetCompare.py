@@ -44,40 +44,41 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.imgType.addItem("Real")
         self.imgType.addItem("Imaginary")
         self.imgType.setCurrentIndex(self.imgTypeIndex[self.currImageType])        
-        controlLayout.addWidget(self.imgType, layoutRowIndex, 1)        
+        controlLayout.addWidget(self.imgType,layoutRowIndex,0)               
         layoutRowIndex = layoutRowIndex + 1
         
         #
         # Window/Level
-        #           
+        #
+        wlLayout=QtGui.QHBoxLayout()
+        wlSpinboxLayout=QtGui.QGridLayout()
         self.currWindow=0.0
         self.currLevel=0.0
         self.window=QtGui.QDoubleSpinBox()                
         self.window.setDecimals(3)
         self.window.setMaximum(1.7*10**308)        
-        self.window.setMaximumWidth (70) 
+        self.window.setMaximumWidth (80) 
         self.level=QtGui.QDoubleSpinBox()                                
         self.level.setDecimals(3)
         self.level.setMaximum(1.7*10**308)
         self.level.setMinimum(-1.7*10**308)        
-        self.level.setMaximumWidth (70) 
+        self.level.setMaximumWidth (80) 
         label=QtGui.QLabel()
         label.setText("W")
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
 
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)        
-        controlLayout.addWidget(self.window, layoutRowIndex, 1)        
-        layoutRowIndex = layoutRowIndex+1
+        wlSpinboxLayout.addWidget(label,0,0,alignment=QtCore.Qt.AlignRight)
+        wlSpinboxLayout.addWidget(self.window,0,1)
         
         label=QtGui.QLabel()
         label.setText("L")
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)
-        controlLayout.addWidget(self.level, layoutRowIndex, 1)
-        layoutRowIndex = layoutRowIndex+1
-        
+        wlSpinboxLayout.addWidget(label, 1,0,alignment=QtCore.Qt.AlignRight)
+        wlSpinboxLayout.addWidget(self.level,1,1)        
+        wlLayout.addLayout(wlSpinboxLayout)
         wlbutton=QtGui.QPushButton("Default W/L")      
-        controlLayout.addWidget(wlbutton, layoutRowIndex, 1)
+        wlLayout.addWidget(wlbutton)
+        self.controlLayout.addLayout(wlLayout,layoutRowIndex,0,alignment=QtCore.Qt.AlignLeft)
         layoutRowIndex = layoutRowIndex+1
         
         
@@ -85,6 +86,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
         #
         # Location    
         #
+        locationLayout=QtGui.QGridLayout()
         self.location = list(np.array(location).copy())
         self.xcontrol=QtGui.QSpinBox()
         self.xcontrol.setMinimum(0)
@@ -110,68 +112,47 @@ class _ControlWidgetCompare(QtGui.QWidget):
         label=QtGui.QLabel()
         label.setText(locationLabels[0])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)       
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)
-        controlLayout.addWidget(self.xcontrol, layoutRowIndex, 1)
-        layoutRowIndex = layoutRowIndex + 1
+        locationLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.xcontrol, 0, 1)
+        
         label=QtGui.QLabel()
         label.setText(locationLabels[1])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)
-        controlLayout.addWidget(self.ycontrol, layoutRowIndex, 1)
-        layoutRowIndex = layoutRowIndex + 1
+        locationLayout.addWidget(label, 1, 0, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.ycontrol, 1, 1)
+        
         label=QtGui.QLabel()
         label.setText(locationLabels[2])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)
-        controlLayout.addWidget(self.zcontrol, layoutRowIndex, 1)
-        layoutRowIndex = layoutRowIndex + 1
+        locationLayout.addWidget(label, 2, 0, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.zcontrol, 2, 1)
+        
         label=QtGui.QLabel()
         label.setText(locationLabels[3])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        controlLayout.addWidget(label, layoutRowIndex, 0, alignment=QtCore.Qt.AlignRight)
-        controlLayout.addWidget(self.tcontrol, layoutRowIndex, 1)
+        locationLayout.addWidget(label, 3, 0, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.tcontrol, 3, 1)
+        
+        self.movie=QtGui.QPushButton("Movie")
+        locationLayout.addWidget(self.movie, 4, 0)
+        
+        self.controlLayout.addLayout(locationLayout,layoutRowIndex,0,alignment=QtCore.Qt.AlignLeft)
         layoutRowIndex = layoutRowIndex + 1       
- 
-        #
-        # Display Image Values    
-        #
-        label=QtGui.QLabel()
-        label.setText("Image Values")
-        controlLayout.addWidget(label,layoutRowIndex,1)
-        layoutRowIndex = layoutRowIndex+1
-        
-        imgValsLayout=QtGui.QGridLayout()
-        self.imgValLabels=[]
-        if imgVals is not None:
-            numImgs=len(imgVals)            
-            for imNum in range(numImgs):                
-                    label=QtGui.QLabel()
-                    label.setText(str(imgVals[imNum][0])+":")
-                    imgValsLayout.addWidget(label,imNum,1)
-                    label=QtGui.QLabel()
-                    label.setText('%.3e'%(imgVals[imNum][1]))
-                    self.imgValLabels.append(label)
-                    imgValsLayout.addWidget(label,imNum,2)                    
-        
-        controlLayout.addLayout(imgValsLayout,layoutRowIndex,1)
-        layoutRowIndex = layoutRowIndex+1
-        
-        controlLayout.addWidget(QtGui.QLabel(),layoutRowIndex,0)
-        layoutRowIndex = layoutRowIndex+1
+       
         
         #
         #ROI Analysis
         #
-        clearROIButton=QtGui.QPushButton("Clear ROI")      
-        controlLayout.addWidget(clearROIButton, layoutRowIndex, 1)
-        layoutRowIndex = layoutRowIndex+1
+        roiLayout=QtGui.QVBoxLayout()
+        clearROIButton=QtGui.QPushButton("Clear ROI")
+        roiLayout.addWidget(clearROIButton)
+        #layoutRowIndex = layoutRowIndex+1
         roiAvgTimecourseButton=QtGui.QPushButton("Avg Timecourse")      
-        controlLayout.addWidget(roiAvgTimecourseButton, layoutRowIndex, 1)        
-        layoutRowIndex = layoutRowIndex+1
+        roiLayout.addWidget(roiAvgTimecourseButton)
+        #layoutRowIndex = layoutRowIndex+1
         roi1VolHistogramButton=QtGui.QPushButton("1 Vol Histogram")      
-        controlLayout.addWidget(roi1VolHistogramButton, layoutRowIndex, 1)        
-        layoutRowIndex = layoutRowIndex+1
-        
+        roiLayout.addWidget(roi1VolHistogramButton)
+        #layoutRowIndex = layoutRowIndex+1
         #numBinsWidget=QtGui.QWidget(self)
         numBinsLayout=QtGui.QHBoxLayout()
         label=QtGui.QLabel()
@@ -183,10 +164,31 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.numBins.setValue(10)        
         numBinsLayout.addWidget(self.numBins)
         #numBinsWidget.setLayout(numBinsLayout)
-        #controlLayout.addWidget(numBinsWidget,layoutRowIndex, 1)
-        controlLayout.addLayout(numBinsLayout,layoutRowIndex, 1)
+        #controlLayout.addWidget(numBinsWidget,layoutRowIndex, 1)        
+        roiLayout.addLayout(numBinsLayout)
+        #layoutRowIndex = layoutRowIndex + 1
+        
+        tmp=QtGui.QGroupBox()
+        tmp.setTitle('ROI Analysis')
+        tmp.setLayout(roiLayout)
+        tmp.setStyleSheet("\
+                          QGroupBox {\
+                          border: 1px solid gray;\
+                          border-radius: 9px;\
+                          margin-top: 0.5em;} \
+                          \
+                          QGroupBox::title {\
+                          subcontrol-origin: margin;\
+                          left: 10px;\
+                          padding: 0 3px 0 3px;}")
+        controlLayout.addWidget(tmp,layoutRowIndex,0)
         layoutRowIndex = layoutRowIndex + 1
         
+        
+        
+        #
+        #Overlay Thresholding
+        #        
         def setMinMaxValue(widget,MinMaxValue):
             widget.setMinimum(MinMaxValue[0])
             widget.setMaximum(MinMaxValue[1])
@@ -197,21 +199,71 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.upperThreshSpinbox=QtGui.QDoubleSpinBox()
         self.lowerThreshSlider=QtGui.QSlider(QtCore.Qt.Horizontal)        
         self.upperThreshSlider=QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.upperThreshSlider.setInvertedAppearance(True)
         self.numberOfStepsBetweenIntegers=100
-        sliderMinMax=list(np.array(overlayMinMax)*self.numberOfStepsBetweenIntegers)
+        sliderMinMaxLowerThresh=list(np.array(overlayMinMax)*self.numberOfStepsBetweenIntegers)
+        sliderMinMaxUpperThresh=list(np.array(overlayMinMax)[::-1]*-1*self.numberOfStepsBetweenIntegers)
         setMinMaxValue(self.lowerThreshSpinbox,overlayMinMax+[0,])
         setMinMaxValue(self.upperThreshSpinbox,overlayMinMax+[0,])
-        setMinMaxValue(self.lowerThreshSlider,sliderMinMax+[0,])
-        setMinMaxValue(self.upperThreshSlider,sliderMinMax+[0,])
+        setMinMaxValue(self.lowerThreshSlider,sliderMinMaxLowerThresh+[0,])
+        setMinMaxValue(self.upperThreshSlider,sliderMinMaxUpperThresh+[0,])
         
-        overlayThresholdLayout.addWidget(self.lowerThreshSpinbox,0,0)
-        overlayThresholdLayout.addWidget(self.lowerThreshSlider,0,1)
-        overlayThresholdLayout.addWidget(self.upperThreshSlider,1,1)
-        overlayThresholdLayout.addWidget(self.upperThreshSpinbox,1,2)
+        overlayThresholdLayout.addWidget(self.lowerThreshSpinbox,0,1)
+        overlayThresholdLayout.addWidget(self.lowerThreshSlider,0,0)
+        overlayThresholdLayout.addWidget(self.upperThreshSlider,1,0)
+        overlayThresholdLayout.addWidget(self.upperThreshSpinbox,1,1)
         
         if overlayUsed:
-            controlLayout.addLayout(overlayThresholdLayout,layoutRowIndex, 1)
+            #controlLayout.addLayout(overlayThresholdLayout,layoutRowIndex, 1)
+            pass
         layoutRowIndex = layoutRowIndex + 1
+        
+        tmp=QtGui.QGroupBox()
+        tmp.setTitle('Overlay Thresholding')
+        tmp.setLayout(overlayThresholdLayout)
+        tmp.setStyleSheet("\
+                          QGroupBox {\
+                          border: 1px solid gray;\
+                          border-radius: 9px;\
+                          margin-top: 0.5em;} \
+                          \
+                          QGroupBox::title {\
+                          subcontrol-origin: margin;\
+                          left: 10px;\
+                          padding: 0 3px 0 3px;}")
+        
+    
+        controlLayout.addWidget(tmp,layoutRowIndex,0)
+        layoutRowIndex = layoutRowIndex + 1
+        
+        
+        #
+        # Display Image Values    
+        #
+        imgValsLayout=QtGui.QGridLayout()
+        self.imgValLabels=[]
+        if imgVals is not None:
+            numImgs=len(imgVals)            
+            for imNum in range(numImgs):                
+                    label=QtGui.QLabel()
+                    label.setText(str(imgVals[imNum][0])+":")
+                    imgValsLayout.addWidget(label,imNum,0,alignment=QtCore.Qt.AlignRight)
+                    label=QtGui.QLabel()
+                    label.setText('%.3e'%(imgVals[imNum][1]))
+                    self.imgValLabels.append(label)
+                    imgValsLayout.addWidget(label,imNum,1,alignment=QtCore.Qt.AlignLeft)                    
+        tmp=QtGui.QGroupBox()
+        tmp.setTitle('Image Values')
+        tmp.setLayout(imgValsLayout)
+        
+        controlLayout.addWidget(tmp,layoutRowIndex,0)
+        layoutRowIndex = layoutRowIndex+1
+        
+        #controlLayout.addWidget(QtGui.QLabel(),layoutRowIndex,0)
+        #layoutRowIndex = layoutRowIndex+1
+        
+        
+        
 
         controlLayout.setRowStretch(layoutRowIndex, 10)
         
@@ -301,9 +353,10 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.signalROI1VolHistogram.emit(self.numBins.value())
     def lowerThreshSliderChanged(self,lowerThresh):        
         self.lowerThreshSpinbox.setValue(float(lowerThresh)/self.numberOfStepsBetweenIntegers)        
-        if lowerThresh>self.upperThreshSlider.value():
-            self.upperThreshSlider.setValue(lowerThresh)
+        if lowerThresh>-self.upperThreshSlider.value():
+            self.upperThreshSlider.setValue(-lowerThresh)
     def upperThreshSliderChanged(self,upperThresh):
+        upperThresh=-upperThresh
         self.upperThreshSpinbox.setValue(float(upperThresh)/self.numberOfStepsBetweenIntegers)
         if upperThresh<self.lowerThreshSlider.value():
             self.lowerThreshSlider.setValue(upperThresh)        
@@ -312,8 +365,8 @@ class _ControlWidgetCompare(QtGui.QWidget):
         if lowerThresh>self.upperThreshSpinbox.value():
             self.upperThreshSpinbox.setValue(lowerThresh)
         self.signalOverlayLowerThreshChange.emit(lowerThresh,self.upperThreshSpinbox.value())
-    def upperThreshSpinBoxChanged(self,upperThresh):
-        self.upperThreshSlider.setValue(int(upperThresh*self.numberOfStepsBetweenIntegers))
-        if upperThresh<self.lowerThreshSpinbox.value():
-            self.lowerThreshSpinbox.setValue(upperThresh)
+    def upperThreshSpinBoxChanged(self,upperThresh):        
+        #self.upperThreshSlider.setValue(self.upperThreshSlider.maximum-int(upperThresh*self.numberOfStepsBetweenIntegers))
+        #if upperThresh<self.lowerThreshSpinbox.value():
+        #    self.lowerThreshSpinbox.setValue(upperThresh)
         self.signalOverlayUpperThreshChange.emit(self.lowerThreshSpinbox.value(),upperThresh)

@@ -9,7 +9,6 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt4 import QtCore,QtGui
 import _Core
 import _DisplayDefinitions as dd
-
         
 class _MplImage(FigureCanvas):
     from _DisplaySignals import *      
@@ -19,7 +18,7 @@ class _MplImage(FigureCanvas):
         #             
         _Core._create_qApp()        
         self.fig=mpl.figure.Figure()
-        FigureCanvas.__init__(self,self.fig)  
+        FigureCanvas.__init__(self,self.fig)          
         FigureCanvas.setSizePolicy(self,QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
         
@@ -27,9 +26,9 @@ class _MplImage(FigureCanvas):
         #
         # Event related initialization
         #
-        self.mpl_connect('motion_notify_event',self.MoveEvent)        
-        self.mpl_connect('button_press_event',self.PressEvent)
-        self.mpl_connect('button_release_event',self.ReleaseEvent)
+        self._idMove=self.mpl_connect('motion_notify_event',self.MoveEvent)        
+        self._idPress=self.mpl_connect('button_press_event',self.PressEvent)
+        self._idRelease=self.mpl_connect('button_release_event',self.ReleaseEvent)
         self.leftMousePress=False
         self.middleMousePress=False
         self.rightMousePress=False
@@ -95,12 +94,13 @@ class _MplImage(FigureCanvas):
         self.intensityWindow = 1.0
         self._imageType = dd.ImageType.mag
         self.enableWindowLevel = True
+        self.moviePlayingMode=False
         
         self.setWindowLevelToDefault()
         if imageType is None:
             self.showImageTypeChange(dd.ImageType.mag)
         else:
-            self.showImageTypeChange(imageType)        
+            self.showImageTypeChange(imageType)  
     def SaveImage(self, fname):
         img=self.img.get_array()
         cmap=cmap=self.img.get_cmap()
@@ -252,13 +252,13 @@ class _MplImage(FigureCanvas):
         self.vline.set_xdata([self.location[0],self.location[0]])
         self.htxt.set_y(self.location[1])
         self.vtxt.set_x(self.location[0]) 
-    def BlitImageAndLines(self):
-        if self.fig._cachedRenderer is not None:
-            self.fig.canvas.draw()
+    def BlitImageAndLines(self):        
+        if self.fig._cachedRenderer is not None:            
+            self.fig.canvas.draw()                    
             self.blit(self.fig.bbox)
             return
-        
-            if self.NavigationToolbar._ROIactive:
+            """    
+            if self.NavigationToolbar._ROIactive:                
                 self.BlitImageForROIDrawing()
                 return
             self.fig.draw_artist(self.fig.patch)
@@ -271,9 +271,13 @@ class _MplImage(FigureCanvas):
             self.axes.draw_artist(self.vtxt)
             #blit the entire figure instead of axes
             #so when x,y labels are outside axes,they also get repainted
-            #self.blit(self.axes.bbox)        
-            self.blit(self.fig.bbox) 
-            
+            #self.blit(self.axes.bbox)  
+            print "artist"
+            self.blit(self.fig.bbox)
+            #"""
+        else:
+            print "wtf"
+    """    
     def BlitImageForROIDrawing(self):        
         if self.fig._cachedRenderer is not None:  
            # print "blit!!"            
@@ -285,7 +289,9 @@ class _MplImage(FigureCanvas):
             if z in self.NavigationToolbar.roiLines.mplLineObjects:
                 for currentLine in self.NavigationToolbar.roiLines.mplLineObjects[z]:
                     self.axes.draw_artist(currentLine)            
-            self.blit(self.fig.bbox)            
+            self.blit(self.fig.bbox)  
+    """
+        
             
     #==================================================================        
     #convenience functions to change data and update visualizing objects

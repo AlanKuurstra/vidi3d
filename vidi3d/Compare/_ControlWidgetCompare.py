@@ -14,7 +14,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
     def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=(-np.finfo(float).eps,np.finfo(float).eps)):
         _Core._create_qApp()        
         QtGui.QWidget.__init__(self)        
-
+        self.parent=parent
         controlLayout=QtGui.QGridLayout(self)
         self.controlLayout=controlLayout
         layoutRowIndex = 0
@@ -118,26 +118,41 @@ class _ControlWidgetCompare(QtGui.QWidget):
         label=QtGui.QLabel()
         label.setText(locationLabels[1])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        locationLayout.addWidget(label, 1, 0, alignment=QtCore.Qt.AlignRight)
-        locationLayout.addWidget(self.ycontrol, 1, 1)
+        locationLayout.addWidget(label, 0, 2, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.ycontrol, 0, 3)
         
         label=QtGui.QLabel()
         label.setText(locationLabels[2])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        locationLayout.addWidget(label, 2, 0, alignment=QtCore.Qt.AlignRight)
-        locationLayout.addWidget(self.zcontrol, 2, 1)
+        locationLayout.addWidget(label, 0, 4, alignment=QtCore.Qt.AlignRight)
+        locationLayout.addWidget(self.zcontrol, 0, 5)
+        
+        temporalLayout=QtGui.QGridLayout()
         
         label=QtGui.QLabel()
         label.setText(locationLabels[3])
         label.setFixedWidth(label.fontMetrics().width(label.text())+5)
-        locationLayout.addWidget(label, 3, 0, alignment=QtCore.Qt.AlignRight)
-        locationLayout.addWidget(self.tcontrol, 3, 1)
+        temporalLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
+        temporalLayout.addWidget(self.tcontrol, 0, 1)
         
-        self.movie=QtGui.QPushButton("Movie")
-        locationLayout.addWidget(self.movie, 4, 0)
+        movieFpsMin=.2 #fps
+        movieFpsMax=200        
+        numberOfStepsBetweenMovieSliderIntegers=100
+        movieSliderMin=movieFpsMin*numberOfStepsBetweenMovieSliderIntegers
+        movieSliderMax=movieFpsMax*numberOfStepsBetweenMovieSliderIntegers
+        self.movieFpsSlider=QtGui.QSlider(QtCore.Qt.Horizontal)        
+        self.movieFpsSlider.setMinimum(movieSliderMin)
+        self.movieFpsSlider.setMaximum(movieSliderMax)
+        self.movieFpsSlider.setValue(20*numberOfStepsBetweenMovieSliderIntegers)
+        self.movieFpsSpinbox=QtGui.QDoubleSpinBox()
+        temporalLayout.addWidget(self.movieFpsSlider,0,3)
+        temporalLayout.addWidget(self.movieFpsSpinbox,0,4)
+        
         
         self.controlLayout.addLayout(locationLayout,layoutRowIndex,0,alignment=QtCore.Qt.AlignLeft)
-        layoutRowIndex = layoutRowIndex + 1       
+        layoutRowIndex = layoutRowIndex + 1 
+        self.controlLayout.addLayout(temporalLayout,layoutRowIndex,0,alignment=QtCore.Qt.AlignLeft)
+        layoutRowIndex = layoutRowIndex + 1
        
         
         #
@@ -166,12 +181,12 @@ class _ControlWidgetCompare(QtGui.QWidget):
         #numBinsWidget.setLayout(numBinsLayout)
         #controlLayout.addWidget(numBinsWidget,layoutRowIndex, 1)        
         roiLayout.addLayout(numBinsLayout)
-        #layoutRowIndex = layoutRowIndex + 1
+        #layoutRowIndex = layoutRowIndex + 1        
         
-        tmp=QtGui.QGroupBox()
-        tmp.setTitle('ROI Analysis')
-        tmp.setLayout(roiLayout)
-        tmp.setStyleSheet("\
+        roiAnalysisWidget=QtGui.QGroupBox()
+        roiAnalysisWidget.setTitle('ROI Analysis')
+        roiAnalysisWidget.setLayout(roiLayout)
+        roiAnalysisWidget.setStyleSheet("\
                           QGroupBox {\
                           border: 1px solid gray;\
                           border-radius: 9px;\
@@ -181,7 +196,9 @@ class _ControlWidgetCompare(QtGui.QWidget):
                           subcontrol-origin: margin;\
                           left: 10px;\
                           padding: 0 3px 0 3px;}")
-        controlLayout.addWidget(tmp,layoutRowIndex,0)
+        self.roiAnalysisWidget=roiAnalysisWidget
+        self.roiAnalysisWidget.setEnabled(False)
+        controlLayout.addWidget(roiAnalysisWidget,layoutRowIndex,0)
         layoutRowIndex = layoutRowIndex + 1
         
         
@@ -286,6 +303,9 @@ class _ControlWidgetCompare(QtGui.QWidget):
         QtCore.QObject.connect(self.upperThreshSlider, QtCore.SIGNAL("valueChanged(int)"), self.upperThreshSliderChanged)
         QtCore.QObject.connect(self.lowerThreshSpinbox, QtCore.SIGNAL("valueChanged(double)"), self.lowerThreshSpinBoxChanged)
         QtCore.QObject.connect(self.upperThreshSpinbox, QtCore.SIGNAL("valueChanged(double)"), self.upperThreshSpinBoxChanged)
+        
+        QtCore.QObject.connect(self.movieFpsSlider, QtCore.SIGNAL("valueChanged(int)"), self.movieFpsSliderChanged)
+        QtCore.QObject.connect(self.movieFpsSpinbox, QtCore.SIGNAL("valueChanged(double)"), self.movieFpsSpinBoxChanged)
     
     def xLocationChanged(self, x):
         if x != self.location[0]:
@@ -370,3 +390,9 @@ class _ControlWidgetCompare(QtGui.QWidget):
         #if upperThresh<self.lowerThreshSpinbox.value():
         #    self.lowerThreshSpinbox.setValue(upperThresh)
         self.signalOverlayUpperThreshChange.emit(self.lowerThreshSpinbox.value(),upperThresh)
+    def movieFpsSliderChanged(self,Fps):
+        self.movieFpsSpinbox.setValue(float(Fps)/self.numberOfStepsBetweenIntegers)
+    def movieFpsSpinBoxChanged(self,Fps):
+        interval=1.0/Fps*1000 #in ms
+        self.parent.imagePanelToolbarsList[0].tmp.event_source.interval=interval
+        #self.parent.imagePanelToolbarsList[0].tmp.timer.interval=interval

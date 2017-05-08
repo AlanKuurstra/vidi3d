@@ -4,9 +4,12 @@ except:
     from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 import os
 from matplotlib.lines import Line2D
+from matplotlib import animation
+import matplotlib.pyplot as plt
 from PyQt4 import QtCore
 import _DisplayDefinitions as dd
-
+import numpy as np
+from ._MplAnimation import _MplAnimation
 
 
 class NavigationToolbar(NavigationToolbar2QTAgg):        
@@ -14,12 +17,13 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
     signalROIStart = QtCore.pyqtSignal(float, float)        
     signalROIEnd = QtCore.pyqtSignal(float, float)
     signalROICancel = QtCore.pyqtSignal()
-    def __init__(self,canvas,parent):        
+    def __init__(self,canvas,parent,imgIndex):        
         super(NavigationToolbar,self).__init__(canvas,parent)        
         self.clear()          
         self.parent=parent
         self.canvas=canvas
         self.ax=parent.axes
+        self.imgIndex=imgIndex
         self._idMove=None
         a = self.addAction(self._icon('home.png'), 'Home', self.home)
         a.setToolTip('Reset original view')   
@@ -31,7 +35,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         #a = self.addAction(self.__file__('zoom_to_rect.png'), 'Select', self.selectROI)
         #a.setToolTip('Under development.')
         self.ROIwidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/lasso.png")), 'Select', self.roi)
-        self.ROIwidget.setToolTip('Select ROI for analysis')
+        self.ROIwidget.setToolTip('Select an ROI for analysis')
         self.ROIwidget.setCheckable(True)
         self._ROIactive=False
         self._idROIPress=None
@@ -39,6 +43,12 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self._idROIMove=None        
         self.roiLines=lassoLines()
         self.roiDrawingEngaged=False
+        
+        self.movieWidget = self.addAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/movie.png")), 'Select', self.playMovie)
+        self.movieWidget.setToolTip('Play movie of timeseries')
+        self.movieWidget.setCheckable(True)
+        self._movieActive=False
+        
         
         self.addSeparator()
         a = self.addAction(self._icon('filesave.png'), 'Save',
@@ -54,47 +64,75 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             self._ROIactive = True
             self.roi_initialize()
         
-    def roi_initialize(self):
-        
+    def roi_initialize(self):        
         self._idROIPress=self.canvas.mpl_connect('button_press_event', self.roi_press)        
         self._idROIRelease=self.canvas.mpl_connect('motion_notify_event', self.roi_move)
         self._idROIMove=self.canvas.mpl_connect('button_release_event', self.roi_release)        
-        self.ROIwidget.setChecked(True)                     
-        self.parent.signalLocationChange.disconnect(self.parent.parent.ChangeLocation)
-        
-        z=self.parent.parent.loc[2]   
+        self.ROIwidget.setChecked(True)      
+
+        z=self.parent.parent.getCurrentSlice() 
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.add_line(currentLine)
         
+        """
         self.parent.vline.remove()
         self.parent.hline.remove()
         self.parent.htxt.remove()
         self.parent.vtxt.remove()
+        #"""
         
-        #self.parent.BlitImageForROIDrawing()
+        #self.parent.vline.set_visible(False)
+        #self.parent.hline.set_visible(False)
+        #self.parent.htxt.set_visible(False)
+        #self.parent.vtxt.set_visible(False)
+        
+        #"""
+        self.parent.axes.lines.remove(self.parent.vline)
+        self.parent.axes.lines.remove(self.parent.hline)
+        self.parent.axes.texts.remove(self.parent.htxt)
+        self.parent.axes.texts.remove(self.parent.vtxt)
+        #"""       
+        
         self.parent.BlitImageAndLines()
         
-    def roi_deconstruct(self):
-        
+        self.parent.parent.controls.roiAnalysisWidget.setEnabled(True)
+        self.parent.signalLocationChange.disconnect(self.parent.parent.ChangeLocation)
+  
+    def roi_deconstruct(self):        
         self._idROIPress=self.canvas.mpl_disconnect(self._idROIPress)
         self._idROIRelease=self.canvas.mpl_disconnect(self._idROIRelease)
-        self._idROIMove=self.canvas.mpl_disconnect(self._idROIMove)        
+        self._idROIMove=self.canvas.mpl_disconnect(self._idROIMove)                
         self.ROIwidget.setChecked(False)
-        self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)
         
+        
+        """
         self.ax.add_line(self.parent.hline)
-        self.ax.add_line(self.parent.vline)
-        self.ax.texts.append(self.parent.htxt)
-        self.ax.texts.append(self.parent.vtxt)        
+        self.ax.add_line(self.parent.vline)        
+        self.ax.add_artist(self.parent.htxt)
+        self.ax.add_artist(self.parent.vtxt)
+        #"""
         
-        z=self.parent.parent.loc[2]   
+        #self.parent.vline.set_visible(True)
+        #self.parent.hline.set_visible(True)
+        #self.parent.htxt.set_visible(True)
+        #self.parent.vtxt.set_visible(True)
+        
+        #"""    
+        self.ax.lines.append(self.parent.hline)            
+        self.ax.lines.append(self.parent.vline)
+        self.ax.texts.append(self.parent.htxt)        
+        self.ax.texts.append(self.parent.vtxt)
+        #"""
+                
+        z=self.parent.parent.getCurrentSlice()
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.lines.remove(currentLine)               
-        
-        self.parent.BlitImageAndLines()
-        
+
+        self.parent.BlitImageAndLines() 
+        self.parent.parent.controls.roiAnalysisWidget.setEnabled(False)
+        self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)
         
     def roi_release(self,event):    
         
@@ -126,12 +164,87 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             return 
         if event.button != 1:            
             return
-#        if self.current_roi.verts is None:
-#            return
         if event.inaxes != self.ax:
             return
-        self.signalROIChange.emit(event.xdata,event.ydata)       
-        
+        self.signalROIChange.emit(event.xdata,event.ydata)   
+    def playMovie(self):
+        self._movieActive=not self._movieActive
+        if self._movieActive:                        
+            if self._ROIactive:
+                self.roi()
+            self.ROIwidget.setDisabled(True)            
+            #self.parent.signalLocationChange.disconnect(self.parent.parent.ChangeLocation)
+            #self.parent.signalWindowLevelChange.disconnect(self.parent.parent.ChangeWindowLevel)             
+            #self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange)
+            
+            self.parent.mpl_disconnect(self.parent._idMove)        
+            self.parent.mpl_disconnect(self.parent._idPress)
+            self.parent.mpl_disconnect(self.parent._idRelease)
+            
+            
+            self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange) #specific to viewer
+            
+            #left mouse
+            #scroll mouse
+            #don't allow ROI drawing
+            z=self.parent.parent.loc[2] #specific to viewer
+            print "apply data type"
+            complexData = self.parent.parent.complexImList[self.imgIndex][:,:,z,:]#specific to viewer
+            imgType=self.parent._imageType
+            if imgType == dd.ImageType.mag:
+                movieArray = np.abs(complexData)
+            elif imgType == dd.ImageType.phase:
+                movieArray = np.angle(complexData)
+            elif imgType == dd.ImageType.real:
+                movieArray = np.real(complexData)
+            elif imgType == dd.ImageType.imag:
+                movieArray = np.imag(complexData)
+            print "done"
+            
+            
+            aspect=self.parent.img.axes.get_aspect()
+            interpolation=self.parent.img.get_interpolation()
+            origin = self.parent.img.origin
+            colormap=self.parent.img.get_cmap()
+            vmin,vmax=self.parent.img.get_clim()        
+            interval=100 #ms
+            blit=True          
+               
+            self.oldAxImages=self.parent.img.axes.images
+            self.oldAxLines=self.parent.img.axes.lines
+            self.oldAxTexts=self.parent.img.axes.texts
+                    
+            self.parent.axes.images=[]
+            self.parent.axes.lines=[]
+            self.parent.axes.texts=[] #keep the image title!!
+                      
+            self.animationObject=_MplAnimation(movieArray, aspect=aspect, parent=self,\
+                          interpolation=interpolation, origin =origin,\
+                          colormap=colormap, vmin=vmin, vmax=vmax,\
+                          interval=interval, blit=blit, figure=self.parent.fig)
+    
+        else:            
+            self.animationObject.event_source.stop()
+            
+            for axesimageList in self.animationObject.imshowList:                
+                for axesimage in axesimageList:
+                    axesimage.remove()
+            del self.animationObject
+            
+            
+            self.parent.axes.images=self.oldAxImages
+            self.parent.axes.lines=self.oldAxLines
+            self.parent.axes.texts=self.oldAxTexts
+            
+            self.parent.draw()        
+            self.parent.blit(self.parent.fig.bbox)
+            self.ROIwidget.setEnabled(True)               
+            self.parent._idMove=self.parent.mpl_connect('motion_notify_event',self.parent.MoveEvent)        
+            self.parent._idPress=self.parent.mpl_connect('button_press_event',self.parent.PressEvent)
+            self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)        
+            self.parent.signalZLocationChange.connect(self.parent.parent.onZChange)# specific to viewer                             
+            #self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)            
+            
         
 class lassoLines():
     def __init__(self):        
@@ -142,7 +255,7 @@ class lassoLines():
         else:
             self.mplLineObjects[z]=[Line2D([x], [y], linestyle='-', color=dd.roiColor, lw=1),]    
         
-             
+        
     
     
   

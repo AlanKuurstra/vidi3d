@@ -92,7 +92,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up Controls
         #        
-        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels,imgVals=zip(subplotTitles,np.zeros(len(subplotTitles))),overlayUsed=overlayUsed,overlayMinMax=overlayMinMax) 
+        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels,imgVals=zip(subplotTitles,np.zeros(len(subplotTitles))),overlayUsed=overlayUsed,overlayMinMax=overlayMinMax,parent=self) 
         
         #
         # Set up image panels
@@ -111,7 +111,7 @@ class _MainWindow(QtGui.QMainWindow):
                 self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:,:,self.loc[2],self.loc[3]], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self, overlay=overlayList[imIndex][:,:,self.loc[2]], overlayColormap=overlayColormapList[imIndex]))
             else:
                 self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:,:,self.loc[2],self.loc[3]], aspect=aspect,sliceNum=self.loc[2],maxSliceNum=complexIm.shape[2],interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self))
-            self.imagePanelToolbarsList.append(NavigationToolbar(self.imagePanelsList[imIndex],self.imagePanelsList[imIndex]))
+            self.imagePanelToolbarsList.append(NavigationToolbar(self.imagePanelsList[imIndex],self.imagePanelsList[imIndex],imIndex))
             self.imagePanelsList[-1].NavigationToolbar=self.imagePanelToolbarsList[-1]
         """
         # Synchronize the starting window/leveling to agree with the first panel        
@@ -120,7 +120,8 @@ class _MainWindow(QtGui.QMainWindow):
             self.imagePanelsList[imIndex].intensityWindowCache=self.imagePanelsList[0].intensityWindowCache
         self.ChangeWindowLevel(self.imagePanelsList[0].intensityWindowCache[imageType],self.imagePanelsList[0].intensityLevelCache[imageType])
         """
-        imLayout = QtGui.QGridLayout()
+        self.imLayout = QtGui.QGridLayout()
+        imLayout=self.imLayout
         if maxNumInRow is None:
             maxNumInRow=int(np.sqrt(numImages)+1-1e-10)
         for imIndex in range(numImages):            
@@ -160,7 +161,8 @@ class _MainWindow(QtGui.QMainWindow):
         self.plotsPanel.setLayout(plotsLayout)
         
         #make each section resizeable using a splitter                     
-        splitter=QtGui.QSplitter(QtCore.Qt.Horizontal)        
+        self.splitter=QtGui.QSplitter(QtCore.Qt.Horizontal)        
+        splitter=self.splitter
         splitter.addWidget(self.controls)
         splitter.addWidget(self.imagePanels)
         splitter.addWidget(self.plotsPanel)
@@ -208,7 +210,9 @@ class _MainWindow(QtGui.QMainWindow):
             currimagePanelToolbar.signalROIChange.connect(self.updateROI)
             currimagePanelToolbar.signalROIEnd.connect(self.endROI)
             currimagePanelToolbar.signalROICancel.connect(self.cancelROI)
-                
+    def getCurrentSlice(self):
+        return self.loc[2]
+            
     def ChangeImageType(self, imageType):
         self.controls.SetImageType(imageType)
         self.xPlotPanel.showDataTypeChange(imageType)
@@ -254,8 +258,9 @@ class _MainWindow(QtGui.QMainWindow):
         numImages = len(self.imagePanelsList)
         imgVals=[]
         for imIndex in range(numImages):
-            self.imagePanelsList[imIndex].showLocationChange([x,y])
-            imgVals.append(self.imagePanelsList[imIndex].locationVal)
+            if not self.imagePanelToolbarsList[imIndex]._movieActive:
+                self.imagePanelsList[imIndex].showLocationChange([x,y])
+                imgVals.append(self.imagePanelsList[imIndex].locationVal)
         self.controls.ChangeImgVals(imgVals)
 
     def keyPressEvent(self,event):
@@ -304,12 +309,12 @@ class _MainWindow(QtGui.QMainWindow):
         
         for imagePanel in self.imagePanelsList:
             imagePanel.sliceNum=newz        
-        for imgIndx in range(len(self.imagePanelsList)):
+        for imgIndx in range(len(self.imagePanelsList)):            
             #if self.overlayList[imgIndx] is not None:
             #    self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
             #else:
             #    self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
-            self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
+            self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])            
             self.thresholdOverlay(self.controls.lowerThreshSpinbox.value(),self.controls.upperThreshSpinbox.value())
         self.updatePlots()
     def onTChange(self,value):

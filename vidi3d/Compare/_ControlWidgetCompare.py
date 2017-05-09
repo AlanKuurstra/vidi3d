@@ -135,7 +135,8 @@ class _ControlWidgetCompare(QtGui.QWidget):
         temporalLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
         temporalLayout.addWidget(self.tcontrol, 0, 1)
         
-        movieFpsMin=.2 #fps
+        initFps=20
+        movieFpsMin=.5 #fps
         movieFpsMax=200        
         numberOfStepsBetweenMovieSliderIntegers=100
         movieSliderMin=movieFpsMin*numberOfStepsBetweenMovieSliderIntegers
@@ -143,8 +144,10 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.movieFpsSlider=QtGui.QSlider(QtCore.Qt.Horizontal)        
         self.movieFpsSlider.setMinimum(movieSliderMin)
         self.movieFpsSlider.setMaximum(movieSliderMax)
-        self.movieFpsSlider.setValue(20*numberOfStepsBetweenMovieSliderIntegers)
+        self.movieFpsSlider.setValue(initFps*numberOfStepsBetweenMovieSliderIntegers)
         self.movieFpsSpinbox=QtGui.QDoubleSpinBox()
+        self.movieFpsSpinbox.setMaximum(movieFpsMax)
+        self.movieFpsSpinbox.setValue(initFps)
         temporalLayout.addWidget(self.movieFpsSlider,0,3)
         temporalLayout.addWidget(self.movieFpsSpinbox,0,4)
         
@@ -235,10 +238,10 @@ class _ControlWidgetCompare(QtGui.QWidget):
             pass
         layoutRowIndex = layoutRowIndex + 1
         
-        tmp=QtGui.QGroupBox()
-        tmp.setTitle('Overlay Thresholding')
-        tmp.setLayout(overlayThresholdLayout)
-        tmp.setStyleSheet("\
+        overlayThresholdWidget=QtGui.QGroupBox()
+        overlayThresholdWidget.setTitle('Overlay Thresholding')
+        overlayThresholdWidget.setLayout(overlayThresholdLayout)
+        overlayThresholdWidget.setStyleSheet("\
                           QGroupBox {\
                           border: 1px solid gray;\
                           border-radius: 9px;\
@@ -248,9 +251,8 @@ class _ControlWidgetCompare(QtGui.QWidget):
                           subcontrol-origin: margin;\
                           left: 10px;\
                           padding: 0 3px 0 3px;}")
-        
-    
-        controlLayout.addWidget(tmp,layoutRowIndex,0)
+        self.overlayThresholdWidget=overlayThresholdWidget    
+        controlLayout.addWidget(overlayThresholdWidget,layoutRowIndex,0)
         layoutRowIndex = layoutRowIndex + 1
         
         
@@ -393,6 +395,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
     def movieFpsSliderChanged(self,Fps):
         self.movieFpsSpinbox.setValue(float(Fps)/self.numberOfStepsBetweenIntegers)
     def movieFpsSpinBoxChanged(self,Fps):
-        interval=1.0/Fps*1000 #in ms
-        self.parent.imagePanelToolbarsList[0].tmp.event_source.interval=interval
+        interval=1.0/Fps*1e3 #in ms
+        #self.parent.imagePanelToolbarsList[0].tmp.event_source.interval=interval
+        self.signalMovieIntervalChange.emit(interval)
         #self.parent.imagePanelToolbarsList[0].tmp.timer.interval=interval

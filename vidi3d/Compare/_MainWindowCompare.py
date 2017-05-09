@@ -13,6 +13,32 @@ from .. import _DisplayDefinitions as dd
 import _ControlWidgetCompare
 import matplotlib.pyplot as plt
 from matplotlib import path
+import matplotlib
+import matplotlib.animation as animation
+
+
+#this matplotlib hack allows text outisde axes bbox to be redrawn during animation
+def _blit_draw(self, artists, bg_cache):
+        # Handles blitted drawing, which renders only the artists given instead
+        # of the entire figure.        
+        updated_ax = []
+        for a in artists:
+            # If we haven't cached the background for this axes object, do
+            # so now. This might not always be reliable, but it's an attempt
+            # to automate the process.
+            if a.axes not in bg_cache:
+                # bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.bbox)
+                # change here
+                bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.figure.bbox)
+            a.axes.draw_artist(a)
+            updated_ax.append(a.axes)
+    
+        # After rendering all the needed artists, blit each axes individually.
+        for ax in set(updated_ax):
+            # and here
+            # ax.figure.canvas.blit(ax.bbox)
+            ax.figure.canvas.blit(ax.figure.bbox)
+matplotlib.animation.Animation._blit_draw = _blit_draw
 
 class _MainWindow(QtGui.QMainWindow):     
     def __init__(self,complexImList, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormapList=[None,], overlayList=[None,], overlayColormapList=[None,]):                
@@ -61,9 +87,6 @@ class _MainWindow(QtGui.QMainWindow):
         
         
         
-        
-        
-        
         #
         # give each image a label
         #
@@ -89,11 +112,14 @@ class _MainWindow(QtGui.QMainWindow):
             for imIndex in range(numImages):
                 subplotTitles.append("Image "+str(imIndex)) 
         self.subplotTitles = subplotTitles
+        
+        
         #
         # Set up Controls
         #        
         self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels,imgVals=zip(subplotTitles,np.zeros(len(subplotTitles))),overlayUsed=overlayUsed,overlayMinMax=overlayMinMax,parent=self) 
-        
+        if not overlayUsed:
+            self.controls.overlayThresholdWidget.setEnabled(False)
         #
         # Set up image panels
         #   
@@ -133,6 +159,15 @@ class _MainWindow(QtGui.QMainWindow):
         #Set up ROI
         #
         self.ROIData=roiData()
+            
+        #
+        #Set up Movie
+        #
+        numFrames=complexImList[0].shape[-1]
+        initFPS=self.controls.movieFpsSpinbox.value()
+        initInterval=1.0/initFPS*1e3
+        self.moviePlayer = animation.FuncAnimation(self.imagePanelsList[0].fig, self.movieUpdate, frames=range(numFrames),interval=initInterval, blit=True, repeat_delay=0)
+        
         
         #
         # Set up plots
@@ -191,6 +226,7 @@ class _MainWindow(QtGui.QMainWindow):
         self.controls.signalROIClear.connect(self.clearROI)        
         self.controls.signalROIAvgTimecourse.connect(self.plotROIAvgTimeseries)
         self.controls.signalROI1VolHistogram.connect(self.plotROI1VolHistogram)
+        self.controls.signalMovieIntervalChange.connect(self.changeMovieInterval)
         
         self.controls.signalOverlayLowerThreshChange.connect(self.thresholdOverlay)
         self.controls.signalOverlayUpperThreshChange.connect(self.thresholdOverlay)
@@ -206,10 +242,17 @@ class _MainWindow(QtGui.QMainWindow):
         
         # Connect from imagePanel toolbars
         for currimagePanelToolbar in self.imagePanelToolbarsList:
+            currimagePanelToolbar.signalROIInit.connect(self.initializeROI)
+            currimagePanelToolbar.signalROIDestruct.connect(self.destructROI)
             currimagePanelToolbar.signalROIStart.connect(self.startNewROI)            
             currimagePanelToolbar.signalROIChange.connect(self.updateROI)
             currimagePanelToolbar.signalROIEnd.connect(self.endROI)
             currimagePanelToolbar.signalROICancel.connect(self.cancelROI)
+            
+            currimagePanelToolbar.signalMovieInit.connect(self.initializeMovie)
+            currimagePanelToolbar.signalMovieDestruct.connect(self.destructMovie)
+            
+            
     def getCurrentSlice(self):
         return self.loc[2]
             
@@ -458,7 +501,72 @@ class _MainWindow(QtGui.QMainWindow):
                 self.imagePanelsList[imgIndx].setOverlayImage(thresholded)
                 self.imagePanelsList[imgIndx].BlitImageAndLines()
                 
-           
+    def initializeROI(self): 
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
+            if currimagePanelToolbar._ROIactive:
+                try:
+                    currimagePanelToolbar.parent.signalLocationChange.disconnect(self.ChangeLocation)
+                except:
+                    pass
+        self.controls.roiAnalysisWidget.setEnabled(True)
+    def destructROI(self):
+        atLeastOneActive=False
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
+            if currimagePanelToolbar._ROIactive:  
+                atLeastOneActive=True
+            else:
+                try:
+                    currimagePanelToolbar.parent.signalLocationChange.connect(self.ChangeLocation)
+                except:
+                    pass
+        if not atLeastOneActive:
+            self.controls.roiAnalysisWidget.setEnabled(False)
+            
+    def movieUpdate(self,frame):            
+        z=self.loc[2]
+        imageType=self.imagePanelsList[0]._imageType
+        artistsToUpdate=[]
+        for index in range(len(self.imagePanelToolbarsList)):
+            currimagePanelToolbar=self.imagePanelToolbarsList[index]
+            if currimagePanelToolbar._movieActive:
+                newData=self.applyImageType(self.complexImList[index][...,z,frame].T,imageType)                
+                currimagePanelToolbar.movieText.set_text("frame: "+str(frame))                
+                currimagePanelToolbar.movieAxesImage.set_data(newData) 
+                artistsToUpdate.append(currimagePanelToolbar.movieText)                               
+                artistsToUpdate.append(currimagePanelToolbar.movieAxesImage)  
+        return artistsToUpdate
+    
+    def initializeMovie(self):        
+        numActive=0
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
+            if currimagePanelToolbar._movieActive:  
+                numActive+=1
+                try:
+                    currimagePanelToolbar.parent.signalLocationChange.disconnect(self.ChangeLocation)
+                except:
+                    pass
+                #currimagePanelToolbar.parent.signalZLocationChange.disconnect(self.onZChange)
+        if numActive==1:
+            self.moviePlayer.event_source.start()
+            
+    def destructMovie(self):
+        atLeastOneActive=False
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
+            if currimagePanelToolbar._movieActive:  
+                atLeastOneActive=True
+            else:
+                #currimagePanelToolbar.parent.signalZLocationChange.connect(self.onZChange)
+                try:
+                    currimagePanelToolbar.parent.signalLocationChange.connect(self.ChangeLocation)
+                except:
+                    pass
+        if not atLeastOneActive: 
+            self.moviePlayer.event_source.stop()
+            
+            
+    def changeMovieInterval(self,interval):        
+        self.moviePlayer.event_source.interval=interval
+        
         
 class roiData():    
     def __init__(self):

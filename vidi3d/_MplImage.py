@@ -274,9 +274,7 @@ class _MplImage(FigureCanvas):
             #self.blit(self.axes.bbox)  
             print "artist"
             self.blit(self.fig.bbox)
-            #"""
-        else:
-            print "wtf"
+            #"""                   
     """    
     def BlitImageForROIDrawing(self):        
         if self.fig._cachedRenderer is not None:  

@@ -10,13 +10,11 @@ from PyQt4 import QtCore
 import _DisplayDefinitions as dd
 import numpy as np
 from ._MplAnimation import _MplAnimation
+import matplotlib.transforms as transforms
 
 
 class NavigationToolbar(NavigationToolbar2QTAgg):        
-    signalROIChange = QtCore.pyqtSignal(float, float)        
-    signalROIStart = QtCore.pyqtSignal(float, float)        
-    signalROIEnd = QtCore.pyqtSignal(float, float)
-    signalROICancel = QtCore.pyqtSignal()
+    from ._DisplaySignals import *
     def __init__(self,canvas,parent,imgIndex):        
         super(NavigationToolbar,self).__init__(canvas,parent)        
         self.clear()          
@@ -59,7 +57,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
     def roi(self,*args):        
         if self._ROIactive == True:
             self._ROIactive = False
-            self.roi_deconstruct()
+            self.roi_destructor()
         else:
             self._ROIactive = True
             self.roi_initialize()
@@ -96,10 +94,9 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         
         self.parent.BlitImageAndLines()
         
-        self.parent.parent.controls.roiAnalysisWidget.setEnabled(True)
-        self.parent.signalLocationChange.disconnect(self.parent.parent.ChangeLocation)
+        self.signalROIInit.emit()
   
-    def roi_deconstruct(self):        
+    def roi_destructor(self):        
         self._idROIPress=self.canvas.mpl_disconnect(self._idROIPress)
         self._idROIRelease=self.canvas.mpl_disconnect(self._idROIRelease)
         self._idROIMove=self.canvas.mpl_disconnect(self._idROIMove)                
@@ -131,8 +128,8 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 self.ax.lines.remove(currentLine)               
 
         self.parent.BlitImageAndLines() 
-        self.parent.parent.controls.roiAnalysisWidget.setEnabled(False)
-        self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)
+        
+        self.signalROIDestruct.emit()
         
     def roi_release(self,event):    
         
@@ -181,9 +178,39 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             self.parent.mpl_disconnect(self.parent._idPress)
             self.parent.mpl_disconnect(self.parent._idRelease)
             
+            #self.oldAxImages=self.parent.img.axes.images
+            #self.oldAxLines=self.parent.img.axes.lines
+            #self.oldAxTexts=self.parent.img.axes.texts
+                    
+            #self.parent.axes.images=[]
+            #self.parent.axes.lines=[]
+            #self.parent.axes.texts=[] 
             
-            self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange) #specific to viewer
+            self.parent.axes.texts.remove(self.parent.htxt)
+            self.parent.axes.texts.remove(self.parent.vtxt)  
+            self.parent.axes.lines.remove(self.parent.hline)  
+            self.parent.axes.lines.remove(self.parent.vline)  
             
+            
+            aspect=self.parent.img.axes.get_aspect()
+            interpolation=self.parent.img.get_interpolation()
+            origin = self.parent.img.origin
+            colormap=self.parent.img.get_cmap()
+            vmin,vmax=self.parent.img.get_clim()        
+            
+            self.movieAxesImage=self.parent.img.axes.imshow(np.zeros(self.parent.complexImageData.shape).T, aspect=aspect,\
+                          interpolation=interpolation, origin =origin,\
+                          cmap=colormap, vmin=vmin, vmax=vmax)
+            
+            axesTransform=self.parent.img.axes.transAxes
+            axesOffset=transforms.ScaledTranslation(0, .6, self.parent.img.axes.figure.dpi_scale_trans)
+            self.movieText = self.parent.img.axes.text(0.5, 1, '',fontsize=15,transform = axesTransform+axesOffset, ha='center')                        
+            self.parent.BlitImageAndLines()
+            self.signalMovieInit.emit()
+                          
+            #self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange) #specific to viewer
+            
+            """
             #left mouse
             #scroll mouse
             #don't allow ROI drawing
@@ -208,41 +235,50 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             colormap=self.parent.img.get_cmap()
             vmin,vmax=self.parent.img.get_clim()        
             interval=100 #ms
-            blit=True          
-               
-            self.oldAxImages=self.parent.img.axes.images
-            self.oldAxLines=self.parent.img.axes.lines
-            self.oldAxTexts=self.parent.img.axes.texts
-                    
-            self.parent.axes.images=[]
-            self.parent.axes.lines=[]
-            self.parent.axes.texts=[] #keep the image title!!
-                      
+            blit=True 
+            
             self.animationObject=_MplAnimation(movieArray, aspect=aspect, parent=self,\
                           interpolation=interpolation, origin =origin,\
                           colormap=colormap, vmin=vmin, vmax=vmax,\
                           interval=interval, blit=blit, figure=self.parent.fig)
+            """
     
-        else:            
+        else:
+            """
             self.animationObject.event_source.stop()
             
             for axesimageList in self.animationObject.imshowList:                
                 for axesimage in axesimageList:
                     axesimage.remove()
             del self.animationObject
+            """
             
             
-            self.parent.axes.images=self.oldAxImages
-            self.parent.axes.lines=self.oldAxLines
-            self.parent.axes.texts=self.oldAxTexts
+            #self.parent.axes.images=self.oldAxImages
+            #self.parent.axes.lines=self.oldAxLines         
+            #self.parent.axes.texts=self.oldAxTexts
+            
+            
+            self.movieText.remove()
+            self.movieAxesImage.remove()
+            del self.movieText
+            del self.movieAxesImage
+            
+            
+            self.parent.axes.texts.append(self.parent.htxt)
+            self.parent.axes.texts.append(self.parent.vtxt)
+            self.parent.axes.lines.append(self.parent.hline)  
+            self.parent.axes.lines.append(self.parent.vline)  
             
             self.parent.draw()        
             self.parent.blit(self.parent.fig.bbox)
             self.ROIwidget.setEnabled(True)               
             self.parent._idMove=self.parent.mpl_connect('motion_notify_event',self.parent.MoveEvent)        
             self.parent._idPress=self.parent.mpl_connect('button_press_event',self.parent.PressEvent)
-            self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)        
-            self.parent.signalZLocationChange.connect(self.parent.parent.onZChange)# specific to viewer                             
+            self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)
+            self.signalMovieDestruct.emit()
+            
+            #self.parent.signalZLocationChange.connect(self.parent.parent.onZChange)# specific to viewer                             
             #self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)            
             
         

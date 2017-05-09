@@ -501,26 +501,17 @@ class _MainWindow(QtGui.QMainWindow):
                 self.imagePanelsList[imgIndx].setOverlayImage(thresholded)
                 self.imagePanelsList[imgIndx].BlitImageAndLines()
                 
-    def initializeROI(self): 
-        for currimagePanelToolbar in self.imagePanelToolbarsList:            
-            if currimagePanelToolbar._ROIactive:
-                try:
-                    currimagePanelToolbar.parent.signalLocationChange.disconnect(self.ChangeLocation)
-                except:
-                    pass
+    def initializeROI(self,imgIndex):         
         self.controls.roiAnalysisWidget.setEnabled(True)
-    def destructROI(self):
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
+    def destructROI(self,imgIndex):
         atLeastOneActive=False
         for currimagePanelToolbar in self.imagePanelToolbarsList:            
             if currimagePanelToolbar._ROIactive:  
-                atLeastOneActive=True
-            else:
-                try:
-                    currimagePanelToolbar.parent.signalLocationChange.connect(self.ChangeLocation)
-                except:
-                    pass
+                atLeastOneActive=True           
         if not atLeastOneActive:
             self.controls.roiAnalysisWidget.setEnabled(False)
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(self.ChangeLocation)
             
     def movieUpdate(self,frame):            
         z=self.loc[2]
@@ -536,32 +527,23 @@ class _MainWindow(QtGui.QMainWindow):
                 artistsToUpdate.append(currimagePanelToolbar.movieAxesImage)  
         return artistsToUpdate
     
-    def initializeMovie(self):        
+    def initializeMovie(self,imgIndex):        
         numActive=0
         for currimagePanelToolbar in self.imagePanelToolbarsList:            
             if currimagePanelToolbar._movieActive:  
-                numActive+=1
-                try:
-                    currimagePanelToolbar.parent.signalLocationChange.disconnect(self.ChangeLocation)
-                except:
-                    pass
-                #currimagePanelToolbar.parent.signalZLocationChange.disconnect(self.onZChange)
+                numActive+=1                              
         if numActive==1:
             self.moviePlayer.event_source.start()
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
             
-    def destructMovie(self):
+    def destructMovie(self,imgIndex):
         atLeastOneActive=False
         for currimagePanelToolbar in self.imagePanelToolbarsList:            
             if currimagePanelToolbar._movieActive:  
-                atLeastOneActive=True
-            else:
-                #currimagePanelToolbar.parent.signalZLocationChange.connect(self.onZChange)
-                try:
-                    currimagePanelToolbar.parent.signalLocationChange.connect(self.ChangeLocation)
-                except:
-                    pass
+                atLeastOneActive=True           
         if not atLeastOneActive: 
             self.moviePlayer.event_source.stop()
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(self.ChangeLocation)
             
             
     def changeMovieInterval(self,interval):        

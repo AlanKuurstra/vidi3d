@@ -94,7 +94,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         
         self.parent.BlitImageAndLines()
         
-        self.signalROIInit.emit()
+        self.signalROIInit.emit(self.imgIndex)
   
     def roi_destructor(self):        
         self._idROIPress=self.canvas.mpl_disconnect(self._idROIPress)
@@ -129,7 +129,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
 
         self.parent.BlitImageAndLines() 
         
-        self.signalROIDestruct.emit()
+        self.signalROIDestruct.emit(self.imgIndex)
         
     def roi_release(self,event):    
         
@@ -206,7 +206,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             axesOffset=transforms.ScaledTranslation(0, .6, self.parent.img.axes.figure.dpi_scale_trans)
             self.movieText = self.parent.img.axes.text(0.5, 1, '',fontsize=15,transform = axesTransform+axesOffset, ha='center')                        
             self.parent.BlitImageAndLines()
-            self.signalMovieInit.emit()
+            self.signalMovieInit.emit(self.imgIndex)
                           
             #self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange) #specific to viewer
             
@@ -276,7 +276,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             self.parent._idMove=self.parent.mpl_connect('motion_notify_event',self.parent.MoveEvent)        
             self.parent._idPress=self.parent.mpl_connect('button_press_event',self.parent.PressEvent)
             self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)
-            self.signalMovieDestruct.emit()
+            self.signalMovieDestruct.emit(self.imgIndex)
             
             #self.parent.signalZLocationChange.connect(self.parent.parent.onZChange)# specific to viewer                             
             #self.parent.signalLocationChange.connect(self.parent.parent.ChangeLocation)            

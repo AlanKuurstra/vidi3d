@@ -15,18 +15,21 @@ signalYLocationChange = QtCore.pyqtSignal(int, name='yLocationChanged')
 signalZLocationChange = QtCore.pyqtSignal(int, name='zLocationChanged')
 signalTLocationChange = QtCore.pyqtSignal(int, name='tLocationChanged')
 signalLocationChange = QtCore.pyqtSignal(int, int)
-    
-signalWindowLevelChange = QtCore.pyqtSignal(float, float,name='windowLevelChanged')    
+
+signalWindowLevelChange = QtCore.pyqtSignal(
+    float, float, name='windowLevelChanged')
 signalWindowLevelReset = QtCore.pyqtSignal(name='windowLevelReset')
 
 signalROIInitialize = QtCore.pyqtSignal(name='ROIInitialize')
 signalROIDestruct = QtCore.pyqtSignal(name='ROIDestruct')
 signalROIClear = QtCore.pyqtSignal(name='ROIClear')
 signalROIAvgTimecourse = QtCore.pyqtSignal(name='ROIAvgTimecourse')
-signalROI1VolHistogram = QtCore.pyqtSignal(int,name='ROI1VolHistogram')
+signalROI1VolHistogram = QtCore.pyqtSignal(int, name='ROI1VolHistogram')
 
 signalMovieInitialize = QtCore.pyqtSignal(name='MovieInitialize')
 signalMovieDestruct = QtCore.pyqtSignal(name='MovieDestruct')
 
-signalOverlayLowerThreshChange = QtCore.pyqtSignal(float,float,name="OverlayLowerThreshChanged")
-signalOverlayUpperThreshChange = QtCore.pyqtSignal(float,float,name="OverlayUpperThreshChanged")
+signalOverlayLowerThreshChange = QtCore.pyqtSignal(
+    float, float, name="OverlayLowerThreshChanged")
+signalOverlayUpperThreshChange = QtCore.pyqtSignal(
+    float, float, name="OverlayUpperThreshChanged")

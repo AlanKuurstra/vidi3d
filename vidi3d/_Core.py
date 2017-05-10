@@ -4,6 +4,7 @@ a global dictionary of viewer objects.
 """
 from PyQt4 import QtGui, QtCore
 
+
 def _create_qApp():
     """
     Only one qApp can exist at a time, so check before creating one.
@@ -12,26 +13,28 @@ def _create_qApp():
         global qApp
         app = QtGui.QApplication.instance()
         if app is None:
-            qApp = QtGui.QApplication( [" "] )
-            QtCore.QObject.connect( qApp, QtCore.SIGNAL( "lastWindowClosed()" ),
-                                qApp, QtCore.SLOT( "quit()" ) )
+            qApp = QtGui.QApplication([" "])
+            QtCore.QObject.connect(qApp, QtCore.SIGNAL("lastWindowClosed()"),
+                                   qApp, QtCore.SLOT("quit()"))
         else:
-            qApp = app      
+            qApp = app
 
-def _storeViewer(viewer):    
+
+def _storeViewer(viewer):
     _checkViewerListExists()
-    global _viewerList   
-    viewerCount=0
+    global _viewerList
+    viewerCount = 0
     while(1):
-        viewerCount+=1
+        viewerCount += 1
         if not _viewerList.has_key(viewerCount):
-            _viewerList[viewerCount]=viewer
+            _viewerList[viewerCount] = viewer
             break
     return viewerCount
-    
+
+
 def _checkViewerListExists():
     global _viewerList
     try:
         _viewerList
     except NameError:
-        _viewerList = {}  
+        _viewerList = {}

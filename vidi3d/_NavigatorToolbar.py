@@ -174,9 +174,10 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             #self.parent.signalWindowLevelChange.disconnect(self.parent.parent.ChangeWindowLevel)             
             #self.parent.signalZLocationChange.disconnect(self.parent.parent.onZChange)
             
-            self.parent.mpl_disconnect(self.parent._idMove)        
-            self.parent.mpl_disconnect(self.parent._idPress)
-            self.parent.mpl_disconnect(self.parent._idRelease)
+            #this stops window leveling
+            #self.parent.mpl_disconnect(self.parent._idMove)        
+            #self.parent.mpl_disconnect(self.parent._idPress)
+            #self.parent.mpl_disconnect(self.parent._idRelease)
             
             #self.oldAxImages=self.parent.img.axes.images
             #self.oldAxLines=self.parent.img.axes.lines
@@ -190,18 +191,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             self.parent.axes.texts.remove(self.parent.vtxt)  
             self.parent.axes.lines.remove(self.parent.hline)  
             self.parent.axes.lines.remove(self.parent.vline)  
-            
-            
-            aspect=self.parent.img.axes.get_aspect()
-            interpolation=self.parent.img.get_interpolation()
-            origin = self.parent.img.origin
-            colormap=self.parent.img.get_cmap()
-            vmin,vmax=self.parent.img.get_clim()        
-            
-            self.movieAxesImage=self.parent.img.axes.imshow(np.zeros(self.parent.complexImageData.shape).T, aspect=aspect,\
-                          interpolation=interpolation, origin =origin,\
-                          cmap=colormap, vmin=vmin, vmax=vmax)
-            
+             
             axesTransform=self.parent.img.axes.transAxes
             axesOffset=transforms.ScaledTranslation(0, .6, self.parent.img.axes.figure.dpi_scale_trans)
             self.movieText = self.parent.img.axes.text(0.5, 1, '',fontsize=15,transform = axesTransform+axesOffset, ha='center')                        
@@ -259,11 +249,8 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             #self.parent.axes.texts=self.oldAxTexts
             
             
-            self.movieText.remove()
-            self.movieAxesImage.remove()
+            self.movieText.remove()            
             del self.movieText
-            del self.movieAxesImage
-            
             
             self.parent.axes.texts.append(self.parent.htxt)
             self.parent.axes.texts.append(self.parent.vtxt)
@@ -272,10 +259,11 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             
             self.parent.draw()        
             self.parent.blit(self.parent.fig.bbox)
-            self.ROIwidget.setEnabled(True)               
-            self.parent._idMove=self.parent.mpl_connect('motion_notify_event',self.parent.MoveEvent)        
-            self.parent._idPress=self.parent.mpl_connect('button_press_event',self.parent.PressEvent)
-            self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)
+            self.ROIwidget.setEnabled(True)         
+            #this stopped window leveling
+            #self.parent._idMove=self.parent.mpl_connect('motion_notify_event',self.parent.MoveEvent)        
+            #self.parent._idPress=self.parent.mpl_connect('button_press_event',self.parent.PressEvent)
+            #self.parent._idRelease=self.parent.mpl_connect('button_release_event',self.parent.ReleaseEvent)
             self.signalMovieDestruct.emit(self.imgIndex)
             
             #self.parent.signalZLocationChange.connect(self.parent.parent.onZChange)# specific to viewer                             

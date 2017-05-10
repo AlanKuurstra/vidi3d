@@ -13,10 +13,9 @@ from .. import _DisplayDefinitions as dd
 import _ControlWidgetCompare
 import matplotlib.pyplot as plt
 from matplotlib import path
-import matplotlib
 import matplotlib.animation as animation
 
-
+#============================================================================
 #this matplotlib hack allows text outisde axes bbox to be redrawn during animation
 def _blit_draw(self, artists, bg_cache):
         # Handles blitted drawing, which renders only the artists given instead
@@ -38,7 +37,10 @@ def _blit_draw(self, artists, bg_cache):
             # and here
             # ax.figure.canvas.blit(ax.bbox)
             ax.figure.canvas.blit(ax.figure.bbox)
+import matplotlib
 matplotlib.animation.Animation._blit_draw = _blit_draw
+#============================================================================
+
 
 class _MainWindow(QtGui.QMainWindow):     
     def __init__(self,complexImList, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormapList=[None,], overlayList=[None,], overlayColormapList=[None,]):                
@@ -301,7 +303,7 @@ class _MainWindow(QtGui.QMainWindow):
         numImages = len(self.imagePanelsList)
         imgVals=[]
         for imIndex in range(numImages):
-            if not self.imagePanelToolbarsList[imIndex]._movieActive:
+            #if not self.imagePanelToolbarsList[imIndex]._movieActive:
                 self.imagePanelsList[imIndex].showLocationChange([x,y])
                 imgVals.append(self.imagePanelsList[imIndex].locationVal)
         self.controls.ChangeImgVals(imgVals)
@@ -520,11 +522,11 @@ class _MainWindow(QtGui.QMainWindow):
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar=self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._movieActive:
-                newData=self.applyImageType(self.complexImList[index][...,z,frame].T,imageType)                
-                currimagePanelToolbar.movieText.set_text("frame: "+str(frame))                
-                currimagePanelToolbar.movieAxesImage.set_data(newData) 
-                artistsToUpdate.append(currimagePanelToolbar.movieText)                               
-                artistsToUpdate.append(currimagePanelToolbar.movieAxesImage)  
+                newData=self.applyImageType(self.complexImList[index][...,z,frame].T,imageType)                   
+                currimagePanelToolbar.movieText.set_text("frame: "+str(frame))                                
+                self.imagePanelsList[index].img.set_data(newData)                
+                artistsToUpdate.append(currimagePanelToolbar.movieText)                                
+                artistsToUpdate.append(self.imagePanelsList[index].img)
         return artistsToUpdate
     
     def initializeMovie(self,imgIndex):        

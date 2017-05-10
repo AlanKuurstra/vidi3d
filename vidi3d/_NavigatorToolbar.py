@@ -16,7 +16,7 @@ import matplotlib.transforms as transforms
 class NavigationToolbar(NavigationToolbar2QTAgg):
     from ._DisplaySignals import *
 
-    def __init__(self, canvas, parent, imgIndex):
+    def __init__(self, canvas, parent, imgIndex=0):
         super(NavigationToolbar, self).__init__(canvas, parent)
         self.clear()
         self.parent = parent
@@ -72,7 +72,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             'button_release_event', self.roi_release)
         self.ROIwidget.setChecked(True)
 
-        z = self.parent.parent.getCurrentSlice()
+        z = self.parent.getImgSliceNumber()
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.add_line(currentLine)
@@ -125,7 +125,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.ax.texts.append(self.parent.vtxt)
         #"""
 
-        z = self.parent.parent.getCurrentSlice()
+        z = self.parent.getImgSliceNumber()
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.lines.remove(currentLine)

@@ -146,10 +146,10 @@ class _MainWindow(QtGui.QMainWindow):
             labels = [{'color': 'r', 'textLabel': locationLabels[0]}, {'color': 'b', 'textLabel': locationLabels[1]}, {
                 'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]
             if self.overlayList[imIndex] is not None:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, sliceNum=self.loc[2], maxSliceNum=complexIm.shape[2], interpolation=interpolation, origin=origin,
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexIm.shape[2], interpolation=interpolation, origin=origin,
                                                            location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self, overlay=overlayList[imIndex][:, :, self.loc[2]], overlayColormap=overlayColormapList[imIndex]))
             else:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, sliceNum=self.loc[2], maxSliceNum=complexIm.shape[
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexIm.shape[
                                             2], interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self))
             self.imagePanelToolbarsList.append(NavigationToolbar(
                 self.imagePanelsList[imIndex], self.imagePanelsList[imIndex], imIndex))
@@ -380,7 +380,7 @@ class _MainWindow(QtGui.QMainWindow):
                         currimagePanelToolbar.ax.add_line(currentLine)
 
         for imagePanel in self.imagePanelsList:
-            imagePanel.sliceNum = newz
+            imagePanel.setImgSliceNumber(newz)
         for imgIndx in range(len(self.imagePanelsList)):
             # if self.overlayList[imgIndx] is not None:
             #    self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
@@ -621,16 +621,15 @@ class roiData():
 
 
 class _MplImageSlice(_MplImage._MplImage):
-    def __init__(self, sliceNum=0, maxSliceNum=0, *args, **keywords):
-        super(_MplImageSlice, self).__init__(*args, **keywords)
-        self.sliceNum = sliceNum
+    def __init__(self, maxSliceNum=0, *args, **keywords):
+        super(_MplImageSlice, self).__init__(*args, **keywords)        
         self.maxSliceNum = maxSliceNum
 
     def wheelEvent(self, event):
         if event.delta() > 0:
             clipVal = np.minimum(np.maximum(
-                self.sliceNum + 1, 0), self.maxSliceNum - 1)
+                self.getImgSliceNumber() + 1, 0), self.maxSliceNum - 1)
         else:
             clipVal = np.minimum(np.maximum(
-                self.sliceNum - 1, 0), self.maxSliceNum - 1)
+                self.getImgSliceNumber() - 1, 0), self.maxSliceNum - 1)
         self.signalZLocationChange.emit(clipVal)

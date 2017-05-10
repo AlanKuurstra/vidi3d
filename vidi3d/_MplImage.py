@@ -14,7 +14,7 @@ import _DisplayDefinitions as dd
 class _MplImage(FigureCanvas):
     from _DisplaySignals import *
 
-    def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, locationLabels=None, colormap=None, overlayColormap=None):
+    def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
         #
         # Qt related initialization
         #
@@ -48,6 +48,7 @@ class _MplImage(FigureCanvas):
             self.overlayData = overlay
         self.location = np.minimum(np.maximum(location, [0, 0]), np.subtract(
             self.complexImageData.shape, 1)).astype(np.int)
+        self.imgSliceNumber=imgSliceNumber
 
         #
         # Initialize objects visualizing the internal data model
@@ -218,7 +219,8 @@ class _MplImage(FigureCanvas):
             self.location = newLocation
             self.locationVal = self.img.get_array(
             ).data[self.location[1], self.location[0]]
-
+    def setImgSliceNumber(self,newImgSliceNumber):
+        self.imgSliceNumber=newImgSliceNumber
     def setImageType(self, imageType):
         self._imageType = imageType
         if imageType == dd.ImageType.mag or imageType == dd.ImageType.imag or imageType == dd.ImageType.real:
@@ -362,6 +364,8 @@ class _MplImage(FigureCanvas):
     def showSetWindowLevelToDefault(self):
         self.setWindowLevelToDefault()
         self.BlitImageAndLines()
+    def getImgSliceNumber(self):
+        return self.imgSliceNumber
 
     #==================================================================
     # functions related to Qt

@@ -1,5 +1,6 @@
 """
-Map integers to words to make code more readable.
+Common defnitions used throughout vidi3d.
+Map integers to words for readable code.
 """
 
 
@@ -12,7 +13,6 @@ class ImageCMap:
 # ran out of creativity after 8 colours and just started repeating existing colours.
 # If the comparison viewer has more than 8 images, consider adding different
 # colours.
-
 
 class PlotColours:
     colours = ['#00FFFF', '#FF00FF', '#008000', '#FFA500', "#000080", "#808000", "#800080", "#800000",

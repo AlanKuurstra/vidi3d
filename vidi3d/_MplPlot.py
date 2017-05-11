@@ -1,9 +1,8 @@
 """
-Base clase for plots shown in the viewers. Instances of this clase are used 
+Base class for plots shown in the viewers. Instances of this clase are used 
 to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import _DisplayDefinitions as dd
 from PyQt4 import QtCore, QtGui
@@ -73,13 +72,19 @@ class _MplPlot(FigureCanvas):
     #==================================================================
     def PressEvent(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right
-        if event.button == 3:
+        """
+        if event.button == 3: 
             self.toolbar.home()
         if event.button == 2:
             plt.figure()
             for line in range(len(self.complexDataList)):
                 plt.plot(self.applyDataType(
                     self.complexDataList[line]), self.colors[line])
+        """
+        #left mouse button for auto scale was fighting with zoom out
+        #changed auto scale to middle mouse button and removed popout plot
+        if event.button == 2: 
+            self.toolbar.home()
 
     #==================================================================
     # functions that set internal data

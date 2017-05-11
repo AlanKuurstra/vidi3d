@@ -8,7 +8,6 @@ from .. import _Core as _Core
 
 class _ControlWidget4D(QtGui.QWidget):
     from .._DisplaySignals import *
-
     def __init__(self, image4DShape, initLocation, imageType, parent=None):
         _Core._create_qApp()
         super(_ControlWidget4D, self).__init__()

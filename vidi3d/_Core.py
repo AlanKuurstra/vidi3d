@@ -12,7 +12,7 @@ def _create_qApp():
     if QtGui.QApplication.startingUp():
         global qApp
         app = QtGui.QApplication.instance()
-        if app is None:
+        if app is None:            
             qApp = QtGui.QApplication([" "])
             QtCore.QObject.connect(qApp, QtCore.SIGNAL("lastWindowClosed()"),
                                    qApp, QtCore.SLOT("quit()"))

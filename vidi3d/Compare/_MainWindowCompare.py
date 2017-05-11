@@ -1,12 +1,11 @@
 """
-Sets up the main window for the 2d viewer. This includes creating MpImage, MpPlot,
-ControlWidget2D.  Also connections are made between QT signals sent by other
-classes and functions within this class.
+Sets up the main window for the compare viewer. Creates MplImage, MplPlot, 
+and a ControlWidget objects and connects their Qt Signals to local functions.
 """
 import numpy as np
 from PyQt4 import QtCore, QtGui
 from .. import _Core as _Core
-from .._NavigatorToolbar import NavigationToolbar
+from .._NavigationToolbar import NavigationToolbar
 from .. import _MplImage as _MplImage
 from .. import _MplPlot as _MplPlot
 from .. import _DisplayDefinitions as dd
@@ -16,10 +15,9 @@ from matplotlib import path
 import matplotlib.animation as animation
 
 #============================================================================
-# this matplotlib hack allows text outisde axes bbox to be redrawn during
-# animation
-
-
+# this matplotlib hack allows text outisde the axes bbox to be redrawn during
+# animation - this allows us to print the frame number with the animation
+#http://stackoverflow.com/questions/17558096/animated-title-in-matplotlib
 def _blit_draw(self, artists, bg_cache):
     # Handles blitted drawing, which renders only the artists given instead
     # of the entire figure.
@@ -54,20 +52,23 @@ class _MainWindow(QtGui.QMainWindow):
         super(_MainWindow, self).__init__()
         self.setWindowTitle('Compare Viewer')
         self.viewerNumber = 0
-
-        def matchListOfLength1toList2Length(listOfLength1, list2):
+        
+        #
+        #'Broadcast' input lists of different lengths
+        #
+        def matchListOfLength1toSecondListsLength(listOfLength1, list2):
             if len(listOfLength1) == 1 and len(list2) > 1:
                 tmp = []
                 for indx in range(len(list2)):
                     tmp.append(listOfLength1[0])
                 listOfLength1 = tmp
             return listOfLength1
-        overlayList = matchListOfLength1toList2Length(
+        self.overlayList = matchListOfLength1toSecondListsLength(
             overlayList, complexImList)
-        self.overlayList = overlayList
+        del overlayList
         overlayUsed = False
         overlayMinMax = [-np.finfo('float').eps, np.finfo('float').eps]
-        for overlay in overlayList:
+        for overlay in self.overlayList:
             if overlay is not None:
                 overlayUsed = True
                 currentOverlayMin = overlay.min()
@@ -76,28 +77,31 @@ class _MainWindow(QtGui.QMainWindow):
                     overlayMinMax[0] = currentOverlayMin
                 if currentOverlayMax > overlayMinMax[1]:
                     overlayMinMax[1] = currentOverlayMax
-
-        complexImList = matchListOfLength1toList2Length(
-            complexImList, overlayList)
-        colormapList = matchListOfLength1toList2Length(
-            colormapList, complexImList)
-        overlayColormapList = matchListOfLength1toList2Length(
-            overlayColormapList, overlayList)
-        self.complexImList = complexImList
-        numImages = len(complexImList)
-        complexIm = complexImList[0]
-
-        # initLocation=[int(complexIm.shape[0]/2),int(complexIm.shape[1]/2)]
-        self.loc = [int(complexIm.shape[0] / 2),
-                    int(complexIm.shape[1] / 2), int(complexIm.shape[2] / 2), 0]
-        # initLocation=self.loc
-
+        
+        self.complexImList = matchListOfLength1toSecondListsLength(
+            complexImList, self.overlayList)        
+        colormapList = matchListOfLength1toSecondListsLength(
+            colormapList, self.complexImList)
+        overlayColormapList = matchListOfLength1toSecondListsLength(
+            overlayColormapList, self.overlayList)
+        
+        #
+        # a few image parameters
+        #        
+        numImages = len(self.complexImList)
+        complexImShape = self.complexImList[0].shape 
         imageType = dd.ImageType.mag
         if pixdim != None:
             aspect = np.float(pixdim[1]) / pixdim[0]
         else:
             aspect = 'equal'
         self.pixdim = pixdim
+        
+        #
+        # intial cursor location
+        # 
+        self.loc = [int(complexImShape[0] / 2),
+                    int(complexImShape[1] / 2), int(complexImShape[2] / 2), 0]        
 
         #
         # give each image a label
@@ -128,16 +132,15 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up Controls
         #
-        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexIm.shape, location=self.loc, imageType=imageType, locationLabels=locationLabels, imgVals=zip(
+        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexImShape, location=self.loc, imageType=imageType, locationLabels=locationLabels, imgVals=zip(
             subplotTitles, np.zeros(len(subplotTitles))), overlayUsed=overlayUsed, overlayMinMax=overlayMinMax, parent=self)
         if not overlayUsed:
             self.controls.overlayThresholdWidget.setEnabled(False)
         #
-        # Set up image panels
+        # Set up image panels and toolbars
         #
         self.imagePanels = QtGui.QWidget(self)
         colors = dd.PlotColours.colours
-
         self.imagePanelsList = []
         self.imagePanelToolbarsList = []
         if locationLabels is None:
@@ -146,21 +149,17 @@ class _MainWindow(QtGui.QMainWindow):
             labels = [{'color': 'r', 'textLabel': locationLabels[0]}, {'color': 'b', 'textLabel': locationLabels[1]}, {
                 'color': colors[imIndex], 'textLabel': subplotTitles[imIndex]}]
             if self.overlayList[imIndex] is not None:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexIm.shape[2], interpolation=interpolation, origin=origin,
-                                                           location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self, overlay=overlayList[imIndex][:, :, self.loc[2]], overlayColormap=overlayColormapList[imIndex]))
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexImShape[2], interpolation=interpolation, origin=origin,
+                                                           location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self, overlay=self.overlayList[imIndex][:, :, self.loc[2]], overlayColormap=overlayColormapList[imIndex]))
             else:
-                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexIm.shape[
+                self.imagePanelsList.append(_MplImageSlice(complexImage=self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]], aspect=aspect, imgSliceNumber=self.loc[2], maxSliceNum=complexImShape[
                                             2], interpolation=interpolation, origin=origin, location=self.loc[:2], imageType=imageType, locationLabels=labels, colormap=colormapList[imIndex], parent=self))
             self.imagePanelToolbarsList.append(NavigationToolbar(
                 self.imagePanelsList[imIndex], self.imagePanelsList[imIndex], imIndex))
             self.imagePanelsList[-1].NavigationToolbar = self.imagePanelToolbarsList[-1]
-        """
-        # Synchronize the starting window/leveling to agree with the first panel        
-        for imIndex in range(1,numImages):            
-            self.imagePanelsList[imIndex].intensityLevelCache=self.imagePanelsList[0].intensityLevelCache
-            self.imagePanelsList[imIndex].intensityWindowCache=self.imagePanelsList[0].intensityWindowCache
-        self.ChangeWindowLevel(self.imagePanelsList[0].intensityWindowCache[imageType],self.imagePanelsList[0].intensityLevelCache[imageType])
-        """
+        #
+        #Layout image panels in a grid
+        #
         self.imLayout = QtGui.QGridLayout()
         imLayout = self.imLayout
         if maxNumInRow is None:
@@ -180,18 +179,16 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up Movie
         #
-        numFrames = complexImList[0].shape[-1]
-        initFPS = self.controls.movieFpsSpinbox.value()
-        initInterval = 1.0 / initFPS * 1e3
+        numFrames = self.complexImList[0].shape[-1]
+        initInterval = self.controls.movieIntervalSpinbox.value()
+        #initInterval = initFPS#1.0 / initFPS * 1e3
         self.moviePlayer = animation.FuncAnimation(self.imagePanelsList[0].fig, self.movieUpdate, frames=range(
             numFrames), interval=initInterval, blit=True, repeat_delay=0)
 
         #
         # Set up plots
         #
-        self.plotsPanel = QtGui.QWidget(self)
-        #self.xPlotPanel=_MplPlot._MplPlot(complexData=complexIm[:,initLocation[1],self.loc[2],:], title=locationLabels[0], dataType=imageType,colors=colors,initMarkerPosn=initLocation[1])
-        #self.yPlotPanel=_MplPlot._MplPlot(complexData=complexIm[initLocation[0],:,self.loc[2],:], title=locationLabels[1], dataType=imageType,colors=colors,initMarkerPosn=initLocation[0])
+        self.plotsPanel = QtGui.QWidget(self)        
         xPlotDataList = []
         yPlotDataList = []
         zPlotDataList = []
@@ -231,13 +228,13 @@ class _MainWindow(QtGui.QMainWindow):
         # self.statusBar().showMessage('Ready')
 
         self.makeConnections()
-
+        
         self.show()
         self.setFocus()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def makeConnections(self):
-        # Connect from controls
+        # Connect signals from controls
         self.controls.signalImageTypeChange.connect(self.ChangeImageType)
         self.controls.signalLocationChange.connect(self.ChangeLocation)
         self.controls.signalZLocationChange.connect(self.onZChange)
@@ -250,7 +247,6 @@ class _MainWindow(QtGui.QMainWindow):
         self.controls.signalROI1VolHistogram.connect(self.plotROI1VolHistogram)
         self.controls.signalMovieIntervalChange.connect(
             self.changeMovieInterval)
-
         self.controls.signalOverlayLowerThreshChange.connect(
             self.thresholdOverlay)
         self.controls.signalOverlayUpperThreshChange.connect(
@@ -258,17 +254,15 @@ class _MainWindow(QtGui.QMainWindow):
         self.controls.signalMovieGotoFrame.connect(
             self.movieGotoFrame)
 
-        # connect all z changes to each other
-        for imagePanel in self.imagePanelsList:
-            imagePanel.signalZLocationChange.connect(self.onZChange)
 
-        # Connect from imagePanel
+        # Connect signals from imagePanel
         for currImagePanel in self.imagePanelsList:
             currImagePanel.signalLocationChange.connect(self.ChangeLocation)
             currImagePanel.signalWindowLevelChange.connect(
                 self.ChangeWindowLevel)
+            currImagePanel.signalZLocationChange.connect(self.onZChange)
 
-        # Connect from imagePanel toolbars
+        # Connect signals from imagePanel toolbars
         for currimagePanelToolbar in self.imagePanelToolbarsList:
             currimagePanelToolbar.signalROIInit.connect(self.initializeROI)
             currimagePanelToolbar.signalROIDestruct.connect(self.destructROI)
@@ -276,14 +270,17 @@ class _MainWindow(QtGui.QMainWindow):
             currimagePanelToolbar.signalROIChange.connect(self.updateROI)
             currimagePanelToolbar.signalROIEnd.connect(self.endROI)
             currimagePanelToolbar.signalROICancel.connect(self.cancelROI)
-
             currimagePanelToolbar.signalMovieInit.connect(self.initializeMovie)
             currimagePanelToolbar.signalMovieDestruct.connect(
                 self.destructMovie)
 
-    def getCurrentSlice(self):
-        return self.loc[2]
-
+    def setViewerNumber(self, number):
+        self.viewerNumber = number
+        
+    #==================================================================
+    # slots dealing with image appearance
+    #==================================================================
+        
     def ChangeImageType(self, imageType):
         self.controls.SetImageType(imageType)
         self.xPlotPanel.showDataTypeChange(imageType)
@@ -294,53 +291,7 @@ class _MainWindow(QtGui.QMainWindow):
         for currImagePanel in self.imagePanelsList:
             currImagePanel.showImageTypeChange(imageType)
 
-    def ChangeWindowLevel(self, newIntensityWindow, newIntensityLevel):
-        self.controls.ChangeWindowLevel(newIntensityWindow, newIntensityLevel)
-        numImages = len(self.imagePanelsList)
-        for currImagePanel in self.imagePanelsList:
-            currImagePanel.showWindowLevelChange(
-                newIntensityWindow, newIntensityLevel)
-
-    def SetWindowLevelToDefault(self):
-        self.controls.ChangeWindowLevel(0, 0)
-
-        for currImagePanel in self.imagePanelsList:
-            currImagePanel.showSetWindowLevelToDefault()
-
-    def updatePlots(self):
-        xPlotDataList = []
-        yPlotDataList = []
-        zPlotDataList = []
-        tPlotDataList = []
-        for img in self.complexImList:
-            xPlotDataList.append(img[:, self.loc[1], self.loc[2], self.loc[3]])
-            yPlotDataList.append(img[self.loc[0], :, self.loc[2], self.loc[3]])
-            zPlotDataList.append(img[self.loc[0], self.loc[1], :, self.loc[3]])
-            tPlotDataList.append(img[self.loc[0], self.loc[1], self.loc[2], :])
-
-        self.xPlotPanel.showComplexDataAndMarkersChange(
-            xPlotDataList, self.loc[0])
-        self.yPlotPanel.showComplexDataAndMarkersChange(
-            yPlotDataList, self.loc[1])
-        self.zPlotPanel.showComplexDataAndMarkersChange(
-            zPlotDataList, self.loc[2])
-        self.tPlotPanel.showComplexDataAndMarkersChange(
-            tPlotDataList, self.loc[3])
-
-    def ChangeLocation(self, x, y):
-        self.loc[:2] = [x, y]
-        self.controls.ChangeLocation(x, y)
-        self.updatePlots()
-        numImages = len(self.imagePanelsList)
-        imgVals = []
-        for imIndex in range(numImages):
-            # if not self.imagePanelToolbarsList[imIndex]._movieActive:
-            self.imagePanelsList[imIndex].showLocationChange([x, y])
-            imgVals.append(self.imagePanelsList[imIndex].locationVal)
-        self.controls.ChangeImgVals(imgVals)
-
-    def keyPressEvent(self, event):
-        # print event.text() #this one can tell when shift is being held down
+    def keyPressEvent(self, event):        
         key = event.key()
         if key == 77:
             self.ChangeImageType(dd.ImageType.mag)
@@ -351,10 +302,32 @@ class _MainWindow(QtGui.QMainWindow):
         elif key == 73:
             self.ChangeImageType(dd.ImageType.imag)
         event.ignore()
+        
+    def ChangeWindowLevel(self, newIntensityWindow, newIntensityLevel):
+        self.controls.ChangeWindowLevel(newIntensityWindow, newIntensityLevel)        
+        for currImagePanel in self.imagePanelsList:
+            currImagePanel.showWindowLevelChange(
+                newIntensityWindow, newIntensityLevel)
 
-    def setViewerNumber(self, number):
-        self.viewerNumber = number
-
+    def SetWindowLevelToDefault(self):
+        self.controls.ChangeWindowLevel(0, 0)
+        for currImagePanel in self.imagePanelsList:
+            currImagePanel.showSetWindowLevelToDefault()    
+    
+    #==================================================================
+    # slots dealing with a location change
+    #==================================================================    
+    def ChangeLocation(self, x, y):
+        self.loc[:2] = [x, y]
+        self.controls.ChangeLocation(x, y)
+        self.updatePlots()
+        numImages = len(self.imagePanelsList)
+        imgVals = []
+        for imIndex in range(numImages):            
+            self.imagePanelsList[imIndex].showLocationChange([x, y])
+            imgVals.append(self.imagePanelsList[imIndex].locationVal)
+        self.controls.ChangeImgVals(imgVals)
+        
     def onZChange(self, newz):
         prevz = self.loc[2]
         self.loc[2] = newz
@@ -382,10 +355,6 @@ class _MainWindow(QtGui.QMainWindow):
         for imagePanel in self.imagePanelsList:
             imagePanel.setImgSliceNumber(newz)
         for imgIndx in range(len(self.imagePanelsList)):
-            # if self.overlayList[imgIndx] is not None:
-            #    self.imagePanelsList[imgIndx].showComplexImageAndOverlayChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]],self.overlayList[imgIndx][:,:,self.loc[2]])
-            # else:
-            #    self.imagePanelsList[imgIndx].showComplexImageChange(self.complexImList[imgIndx][:,:,self.loc[2],self.loc[3]])
             self.imagePanelsList[imgIndx].showComplexImageChange(
                 self.complexImList[imgIndx][:, :, self.loc[2], self.loc[3]])
             self.thresholdOverlay(self.controls.lowerThreshSpinbox.value(
@@ -400,12 +369,49 @@ class _MainWindow(QtGui.QMainWindow):
             self.imagePanelsList[imIndex].showComplexImageChange(
                 self.complexImList[imIndex][:, :, self.loc[2], self.loc[3]])
         self.updatePlots()
+        
+    def updatePlots(self):
+        xPlotDataList = []
+        yPlotDataList = []
+        zPlotDataList = []
+        tPlotDataList = []
+        for img in self.complexImList:
+            xPlotDataList.append(img[:, self.loc[1], self.loc[2], self.loc[3]])
+            yPlotDataList.append(img[self.loc[0], :, self.loc[2], self.loc[3]])
+            zPlotDataList.append(img[self.loc[0], self.loc[1], :, self.loc[3]])
+            tPlotDataList.append(img[self.loc[0], self.loc[1], self.loc[2], :])
 
+        self.xPlotPanel.showComplexDataAndMarkersChange(
+            xPlotDataList, self.loc[0])
+        self.yPlotPanel.showComplexDataAndMarkersChange(
+            yPlotDataList, self.loc[1])
+        self.zPlotPanel.showComplexDataAndMarkersChange(
+            zPlotDataList, self.loc[2])
+        self.tPlotPanel.showComplexDataAndMarkersChange(
+            tPlotDataList, self.loc[3])       
+    
+    #==================================================================
+    # slots for ROI tool
+    #==================================================================
+    def initializeROI(self, imgIndex):
+        self.controls.roiAnalysisWidget.setEnabled(True)
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
+            self.ChangeLocation)
+
+    def destructROI(self, imgIndex):
+        atLeastOneActive = False
+        for currimagePanelToolbar in self.imagePanelToolbarsList:
+            if currimagePanelToolbar._ROIactive:
+                atLeastOneActive = True
+        if not atLeastOneActive:
+            self.controls.roiAnalysisWidget.setEnabled(False)
+        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
+            self.ChangeLocation)
+        
     def updateROI(self, x, y):
         currentROIverts = self.ROIData.verts[self.loc[2]][-1]
         currentROIverts.append((x, y))
-        for currimagePanelToolbar in self.imagePanelToolbarsList:
-            # self.canvas.restore_region(self.background)
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
             currentLine = currimagePanelToolbar.roiLines.mplLineObjects[self.loc[2]][-1]
             currentLine.set_data(zip(*currentROIverts))
             self.drawROI(currimagePanelToolbar)
@@ -428,8 +434,7 @@ class _MainWindow(QtGui.QMainWindow):
     def endROI(self):
         currentROIverts = self.ROIData.verts[self.loc[2]][-1]
         currentROIverts.append(currentROIverts[0])
-        for currimagePanelToolbar in self.imagePanelToolbarsList:
-            # self.canvas.restore_region(self.background)
+        for currimagePanelToolbar in self.imagePanelToolbarsList:            
             currentLine = currimagePanelToolbar.roiLines.mplLineObjects[self.loc[2]][-1]
             currentLine.set_data(zip(*currentROIverts))
             self.drawROI(currimagePanelToolbar)
@@ -464,15 +469,6 @@ class _MainWindow(QtGui.QMainWindow):
         elif imageType == dd.ImageType.imag:
             data = np.imag(data)
         return data
-
-    def displayROI(self):
-        mask = self.getROIMask()
-        data = (self.complexIm[..., 0], mask[..., np.newaxis])
-        concat = np.empty(data[0].shape + (len(data),), dtype='complex')
-        for i in range(len(data)):
-            concat[:, :, :, :, i] = data[i]
-        data = concat
-        viewer = _MainWindow(data, pixdim=self.pixdim, interpolation='none')
 
     def plotROIAvgTimeseries(self):
         mask = self.getROIMask()
@@ -531,6 +527,9 @@ class _MainWindow(QtGui.QMainWindow):
             currimagePanelToolbar.canvas.draw()
             currimagePanelToolbar.canvas.blit(currimagePanelToolbar.ax.bbox)
 
+    #==================================================================
+    # slots for overlay thresholding
+    #==================================================================
     def thresholdOverlay(self, lowerThresh, upperThresh):
         for imgIndx in range(len(self.imagePanelsList)):
             if self.overlayList[imgIndx] is not None:
@@ -542,21 +541,9 @@ class _MainWindow(QtGui.QMainWindow):
                 self.imagePanelsList[imgIndx].setOverlayImage(thresholded)
                 self.imagePanelsList[imgIndx].BlitImageAndLines()
 
-    def initializeROI(self, imgIndex):
-        self.controls.roiAnalysisWidget.setEnabled(True)
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
-            self.ChangeLocation)
-
-    def destructROI(self, imgIndex):
-        atLeastOneActive = False
-        for currimagePanelToolbar in self.imagePanelToolbarsList:
-            if currimagePanelToolbar._ROIactive:
-                atLeastOneActive = True
-        if not atLeastOneActive:
-            self.controls.roiAnalysisWidget.setEnabled(False)
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
-            self.ChangeLocation)
-
+    #==================================================================
+    # slots for movie tool
+    #==================================================================    
     def movieUpdate(self, frame):
         z = self.loc[2]
         imageType = self.imagePanelsList[0]._imageType
@@ -597,18 +584,21 @@ class _MainWindow(QtGui.QMainWindow):
         self.imagePanelsList[imgIndex].showComplexImageChange(
                 self.complexImList[imgIndex][:, :, self.loc[2], self.loc[3]])
 
-    def changeMovieInterval(self, interval):
+    def changeMovieInterval(self, interval):        
         self.moviePlayer.event_source.interval = interval
+        
     def movieGotoFrame(self,frame):
         newFrameSeq=self.moviePlayer.new_frame_seq()
         for i in range(frame):
             newFrameSeq.next()
-        self.moviePlayer.frame_seq=newFrameSeq        
+        self.moviePlayer.frame_seq=newFrameSeq 
+    
     def closeEvent(self, event):
             self.moviePlayer.event_source.stop()
             if self.viewerNumber:
                 del _Core._viewerList[self.viewerNumber]
-            event.accept()   
+            event.accept()
+            
 class roiData():
     def __init__(self):
         self.verts = {}

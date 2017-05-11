@@ -1,5 +1,5 @@
 """
-Base clase for images shown in the viewers. Instances of this clase are used 
+Base class for images shown in the viewers. Instances of this clase are used 
 to setup an arbitrary number of 2D images for comparison.  Instances of this
 class are also used to show the 3 cross sectional views of a 3D image.
 """
@@ -13,7 +13,6 @@ import _DisplayDefinitions as dd
 
 class _MplImage(FigureCanvas):
     from _DisplaySignals import *
-
     def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
         #
         # Qt related initialization
@@ -24,7 +23,8 @@ class _MplImage(FigureCanvas):
         FigureCanvas.setSizePolicy(
             self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
-
+        # the FigureCanvas class doesn't have the option to pass the parent to
+        # the __init__() constructer, must set it manually
         self.parent = parent
         #
         # Event related initialization
@@ -36,9 +36,8 @@ class _MplImage(FigureCanvas):
         self.leftMousePress = False
         self.middleMousePress = False
         self.rightMousePress = False
-
         #
-        # Internal data model initialization
+        # Internal data initialization
         #
         self.complexImageData = complexImage
         if overlay is None:
@@ -51,7 +50,7 @@ class _MplImage(FigureCanvas):
         self.imgSliceNumber=imgSliceNumber
 
         #
-        # Initialize objects visualizing the internal data model
+        # Initialize objects visualizing the internal data 
         #
         if colormap is None:
             self.colormap = mpl.cm.Greys_r
@@ -64,14 +63,14 @@ class _MplImage(FigureCanvas):
             self.overlayColormap = overlayColormap
 
         # labels
-        currLabels = [{'color': 'r', 'textLabel': "X"}, {
-            'color': 'b', 'textLabel': "Y"}, {'color': 'g', 'textLabel': "Z Slice"}]
+        currLabels = [{'color': 'r', 'textLabel': "X"}, 
+                      {'color': 'b', 'textLabel': "Y"},
+                      {'color': 'g', 'textLabel': "Z Slice"}]
         if locationLabels is not None:
             currLabels = locationLabels
         # image
         self.fig.patch.set_color(currLabels[2]['color'])
-        self.axes = self.fig.add_axes([.1, .05, .8, .8])
-        # self.axes.hold(False)
+        self.axes = self.fig.add_axes([.1, .05, .8, .8])        
         if origin != 'upper' and origin != 'lower':
             print "origin parameter not understood, defaulting to 'lower'"
             origin = 'lower'
@@ -79,10 +78,9 @@ class _MplImage(FigureCanvas):
                                     interpolation=interpolation, origin=origin, cmap=self.colormap)
         self.overlay = self.axes.imshow(self.overlayData.T, aspect=aspect,
                                         interpolation=interpolation, origin=origin, alpha=0.3, cmap=self.overlayColormap)
-        self._imageType = 0
+        self._imageType = dd.ImageType.mag
         self.setMplImg()
-        self.locationVal = self.img.get_array(
-        ).data[self.location[1], self.location[0]]
+        self.locationVal = self.img.get_array().data[self.location[1], self.location[0]]
         self.title = self.axes.text(
             0.5, 1.08, currLabels[2]['textLabel'], horizontalalignment='center', fontsize=18, transform=self.axes.transAxes)
         self.axes.xaxis.set_visible(False)
@@ -99,7 +97,7 @@ class _MplImage(FigureCanvas):
             facecolor='white', alpha=0.7), va='top', ha='center')
 
         #
-        # Initialize internal variables that determine how visualization objects display data model
+        # Initialize parameters for data visualization
         #
         self.intensityLevelCache = np.zeros(4)
         self.intensityWindowCache = np.ones(4)
@@ -107,8 +105,7 @@ class _MplImage(FigureCanvas):
         self.intensityWindow = 1.0
         self._imageType = dd.ImageType.mag
         self.enableWindowLevel = True
-        self.moviePlayingMode = False
-
+        
         self.setWindowLevelToDefault()
         if imageType is None:
             self.showImageTypeChange(dd.ImageType.mag)
@@ -146,8 +143,7 @@ class _MplImage(FigureCanvas):
                 img, cmap=cmap, origin=origin, vmin=vmin, vmax=vmax, interpolation=interpolation)
             popOutPlot.axes.set_aspect(aspect)
             popOutPlot.axes.xaxis.set_visible(False)
-            popOutPlot.axes.yaxis.set_visible(False)
-            #mpl.pyplot.imsave(fname="temp.png", arr=img, cmap=cmap, origin=origin, vmin=vmin, vmax=vmax, format="png")
+            popOutPlot.axes.yaxis.set_visible(False)            
 
         elif event.button == 3:
             self.rightMousePress = True
@@ -191,14 +187,10 @@ class _MplImage(FigureCanvas):
             locationDataCoord = self.axes.transData.inverted().transform([
                 event.x, event.y])
             clippedLocation = np.minimum(np.maximum(
-                locationDataCoord + 0.5, [0, 0]), np.subtract(self.complexImageData.shape, 1))
-            # print self.complexImageData.shape, locationDataCoord,
-            # clippedLocation
+                locationDataCoord + 0.5, [0, 0]), np.subtract(self.complexImageData.shape, 1))            
             self._signalCursorChange(clippedLocation)
 
-    def _signalCursorChange(self, location):
-        # this function will be overwritten to use signals when the class is
-        # inherited
+    def _signalCursorChange(self, location):       
         self.signalLocationChange.emit(location[0], location[1])
 
     #==================================================================
@@ -212,8 +204,8 @@ class _MplImage(FigureCanvas):
         self.overlay.set_data(self.overlayData.T)
 
     def setLocation(self, newLocation):
-        # clip newLocation to valid locations, this is now done in MoveEvent() before the ChangeLocation signal is emitted
-        # however, there could still be problems if a control signals a location change that is out of bounds
+        # clipping newLocation to valid locations is done in MoveEvent() before the ChangeLocation signal is emitted
+        # however, there could be problems if a control class objec signals a location change that is out of bounds
         #newLocation = np.minimum(np.maximum(newLocation, [0,0]), np.subtract(self.complexImageData.shape,1)).astype(np.int)
         if (int(self.location[0]) != newLocation[0]) or (int(self.location[1]) != newLocation[1]):
             self.location = newLocation
@@ -233,8 +225,7 @@ class _MplImage(FigureCanvas):
             self.setWindowLevel(2 * np.pi, 0)
             self.enableWindowLevel = False
 
-    def setWindowLevel(self, newIntensityWindow, newIntensityLevel):
-        # print 'window: %f, level %f' %(newIntensityWindow, newIntensityLevel)
+    def setWindowLevel(self, newIntensityWindow, newIntensityLevel):        
         if self.intensityLevel != newIntensityLevel or self.intensityWindow != newIntensityWindow:
             self.intensityLevel = newIntensityLevel
             self.intensityWindow = max(newIntensityWindow, 0)
@@ -245,7 +236,6 @@ class _MplImage(FigureCanvas):
             self.img.set_clim(vmin, vmax)
 
     def setWindowLevelToDefault(self):
-
         maxMag = np.max(np.abs(self.complexImageData))
 
         self.intensityLevelCache[dd.ImageType.imag] = 0.0
@@ -310,14 +300,13 @@ class _MplImage(FigureCanvas):
             self.axes.draw_artist(self.vtxt)
             #blit the entire figure instead of axes
             #so when x,y labels are outside axes,they also get repainted
-            #self.blit(self.axes.bbox)  
-            print "artist"
+            #self.blit(self.axes.bbox)
             self.blit(self.fig.bbox)
             #"""
-    """    
-    def BlitImageForROIDrawing(self):        
-        if self.fig._cachedRenderer is not None:  
-           # print "blit!!"            
+        
+    def BlitImageForROIDrawing(self):
+        #not using this function anymore, just always draw the entire canvas
+        if self.fig._cachedRenderer is not None:              
             self.fig.draw_artist(self.fig.patch)
             self.axes.draw_artist(self.title)
             self.axes.draw_artist(self.axes.patch)
@@ -327,7 +316,7 @@ class _MplImage(FigureCanvas):
                 for currentLine in self.NavigationToolbar.roiLines.mplLineObjects[z]:
                     self.axes.draw_artist(currentLine)            
             self.blit(self.fig.bbox)  
-    """
+    
 
     #==================================================================
     # convenience functions to change data and update visualizing objects

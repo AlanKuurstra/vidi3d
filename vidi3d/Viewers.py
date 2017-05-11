@@ -248,7 +248,7 @@ def close(num=None):
     if type(num) is int:
         if num <= len(_Core._viewerList) and _Core._viewerList.has_key(num):
             _Core._viewerList[num].close()
-    if num is None:
+    if num.lower() == 'all':
         _Core._viewerList.clear()
 
 

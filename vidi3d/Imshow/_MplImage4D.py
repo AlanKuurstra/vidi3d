@@ -4,7 +4,7 @@ to show the cross sections through a 4D object.  Using QT signals, it coordinate
 cursor line changes and image changes to match the current viewing location in the 4D object.
 """
 
-from .._NavigatorToolbar import NavigationToolbar
+from .._NavigationToolbar import NavigationToolbar
 from .. import _DisplayDefinitions as dd
 from .. import _MplImage as _MplImage
 from .. import _MplPlot as _MplPlot

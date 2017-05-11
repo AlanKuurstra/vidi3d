@@ -30,7 +30,7 @@ signalMovieGotoFrame = QtCore.pyqtSignal(int, name='GotoFrame')
 signalMovieInit = QtCore.pyqtSignal(int, name='MovieInit')
 signalMovieDestruct = QtCore.pyqtSignal(int, name='MovieDestruct')
 signalMovieIntervalChange = QtCore.pyqtSignal(
-    float, name='MovieIntervalChanged')
+    int, name='MovieIntervalChanged')
 
 signalOverlayLowerThreshChange = QtCore.pyqtSignal(
     float, float, name="OverlayLowerThreshChanged")

@@ -186,9 +186,14 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.movieIntervalSpinbox.setMinimum(1)
         self.movieIntervalSpinbox.setMaximum(movieIntervalMax)
         self.movieIntervalSpinbox.setValue(initInterval)
+        self.moviePauseButton=QtGui.QPushButton("||")
+        self.moviePauseButton.setCheckable(True)
+        self.moviePauseButton.setFixedWidth(40)
+        
         
         intervalLayout.addWidget(self.movieIntervalSlider, 0, 1)
         intervalLayout.addWidget(self.movieIntervalSpinbox, 0, 2)
+        intervalLayout.addWidget(self.moviePauseButton, 0, 3)
         
         frameControlLayout = QtGui.QGridLayout()        
         label = QtGui.QLabel()
@@ -227,24 +232,37 @@ class _ControlWidgetCompare(QtGui.QWidget):
         # ROI Analysis
         #
         roiLayout = QtGui.QVBoxLayout()
-        self.clearROIButton = QtGui.QPushButton("Clear ROI")
-        roiLayout.addWidget(self.clearROIButton)
+        tmp=QtGui.QHBoxLayout()
+        self.deleteLastROIButton=QtGui.QPushButton("Delete Last")
+        self.deleteLastROIButton.setToolTip("Delete last drawn ROI")
+        self.clearROIButton = QtGui.QPushButton("Clear All")
+        self.clearROIButton.setToolTip("Delete all drawn ROIs")
+        tmp.addWidget(self.deleteLastROIButton)
+        tmp.addWidget(self.clearROIButton)
+        roiLayout.addLayout(tmp)
         
-        self.roiAvgTimecourseButton = QtGui.QPushButton("Avg Timecourse")
-        roiLayout.addWidget(self.roiAvgTimecourseButton)
+        tmp=QtGui.QHBoxLayout()
+        self.roiAvgTimecourseButton = QtGui.QPushButton("Avg")
+        self.roiAvgTimecourseButton.setToolTip("Plot average timecourse")
+        self.roiPSCTimecourseButton = QtGui.QPushButton("PSC")
+        self.roiPSCTimecourseButton.setToolTip("Plot percent signal change timecourse")
+        tmp.addWidget(self.roiAvgTimecourseButton)
+        tmp.addWidget(self.roiPSCTimecourseButton)    
+        roiLayout.addLayout(tmp)
         
-        self.roi1VolHistogramButton = QtGui.QPushButton("1 Vol Histogram")
-        roiLayout.addWidget(self.roi1VolHistogramButton)        
-        numBinsLayout = QtGui.QHBoxLayout()
+        tmp=QtGui.QHBoxLayout()        
         label = QtGui.QLabel()
         label.setText("# of Bins")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        numBinsLayout.addWidget(label)
+        tmp.addWidget(label)
         self.numBins = QtGui.QSpinBox()
         self.numBins.setMinimum(1)
         self.numBins.setValue(10)
-        numBinsLayout.addWidget(self.numBins)        
-        roiLayout.addLayout(numBinsLayout)        
+        tmp.addWidget(self.numBins)   
+        self.roi1VolHistogramButton = QtGui.QPushButton("Hist")
+        self.roi1VolHistogramButton.setToolTip("Plot 1 volume histogram")
+        tmp.addWidget(self.roi1VolHistogramButton)
+        roiLayout.addLayout(tmp)        
 
         roiAnalysisWidget = QtGui.QGroupBox()
         roiAnalysisWidget.setTitle('ROI Analysis')
@@ -278,13 +296,29 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.lowerThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider.setInvertedAppearance(True)
-        self.numberOfStepsBetweenIntegers = 100
+        overlayDiff=(overlayMinMax[1]-overlayMinMax[0])
+        mant,exp=('%.5e' %overlayDiff).split('e')
+        if np.double(mant)<5.0:
+            exp=int(exp)
+        else:
+            exp=int(exp)+1
+        exp=exp-2
+        stepsize=10**(exp)
+        self.numberOfStepsBetweenIntegers = 1/stepsize
         sliderMinMaxLowerThresh = list(
             np.array(overlayMinMax) * self.numberOfStepsBetweenIntegers)
         sliderMinMaxUpperThresh = list(np.array(overlayMinMax)[
-                                       ::-1] * -1 * self.numberOfStepsBetweenIntegers)
-        setMinMaxValue(self.lowerThreshSpinbox, overlayMinMax + [0, ])
+                                       ::-1] * -1 * self.numberOfStepsBetweenIntegers)            
+        setMinMaxValue(self.lowerThreshSpinbox, overlayMinMax + [0, ])                
+        self.lowerThreshSpinbox.setSingleStep(stepsize)        
         setMinMaxValue(self.upperThreshSpinbox, overlayMinMax + [0, ])
+        self.upperThreshSpinbox.setSingleStep(stepsize)
+        if exp<0:            
+            self.lowerThreshSpinbox.setDecimals(np.abs(exp))
+            self.upperThreshSpinbox.setDecimals(np.abs(exp))
+        else:
+            self.lowerThreshSpinbox.setDecimals(0)
+            self.upperThreshSpinbox.setDecimals(0)
         setMinMaxValue(self.lowerThreshSlider, sliderMinMaxLowerThresh + [0, ])
         setMinMaxValue(self.upperThreshSlider, sliderMinMaxUpperThresh + [0, ])
 
@@ -323,7 +357,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
                 imgValsLayout.addWidget(
                     label, imNum, 0, alignment=QtCore.Qt.AlignRight)
                 label = QtGui.QLabel()
-                label.setText('%.3e' % (imgVals[imNum][1]))
+                label.setText('%.5e' % (imgVals[imNum][1]))
                 self.imgValLabels.append(label)
                 imgValsLayout.addWidget(
                     label, imNum, 1, alignment=QtCore.Qt.AlignLeft)
@@ -356,11 +390,15 @@ class _ControlWidgetCompare(QtGui.QWidget):
             "valueChanged(int)"), self.zLocationChanged)
         QtCore.QObject.connect(self.tcontrol, QtCore.SIGNAL(
             "valueChanged(double)"), self.changeTcontrol)
-
+        
+        QtCore.QObject.connect(self.deleteLastROIButton, QtCore.SIGNAL(
+            "clicked()"), self.deleteLastROIPushed)
         QtCore.QObject.connect(self.clearROIButton, QtCore.SIGNAL(
             "clicked()"), self.clearROIPushed)
         QtCore.QObject.connect(self.roiAvgTimecourseButton, QtCore.SIGNAL(
             "clicked()"), self.roiAvgTimecoursePushed)
+        QtCore.QObject.connect(self.roiPSCTimecourseButton, QtCore.SIGNAL(
+            "clicked()"), self.roiPSCTimecoursePushed)
         QtCore.QObject.connect(self.roi1VolHistogramButton, QtCore.SIGNAL(
             "clicked()"), self.roi1VolHistogramButtonPushed)
 
@@ -380,7 +418,13 @@ class _ControlWidgetCompare(QtGui.QWidget):
         
         QtCore.QObject.connect(self.movieGotoFrameButton, QtCore.SIGNAL(
             "clicked()"), self.movieGotoFrame)
-
+        QtCore.QObject.connect(self.moviePauseButton, QtCore.SIGNAL(
+            "clicked()"), self.moviePause)
+    def blockedSetValue(self,control,value):
+        control.blockSignals(True)
+        control.setValue(value)
+        control.blockSignals(False)
+        
     def xLocationChanged(self, x):
         if x != self.location[0]:
             self.location[0] = x
@@ -443,16 +487,22 @@ class _ControlWidgetCompare(QtGui.QWidget):
     def changeTcontrol(self, value):
         if self.tcontrol.hasFocus():
             self.signalTLocationChange.emit(value)
-
+    
+    def deleteLastROIPushed(self):
+        self.signalROIDeleteLast.emit()
+        
     def clearROIPushed(self):
         self.signalROIClear.emit()
 
     def roiAvgTimecoursePushed(self):
         self.signalROIAvgTimecourse.emit()
+        
+    def roiPSCTimecoursePushed(self):
+        self.signalROIPSCTimecourse.emit()
 
     def roi1VolHistogramButtonPushed(self):
-        self.signalROI1VolHistogram.emit(self.numBins.value())
-
+        self.signalROI1VolHistogram.emit(self.numBins.value())        
+   
     def lowerThreshSliderChanged(self, lowerThresh):
         self.lowerThreshSpinbox.setValue(
             float(lowerThresh) / self.numberOfStepsBetweenIntegers)
@@ -467,29 +517,33 @@ class _ControlWidgetCompare(QtGui.QWidget):
             self.lowerThreshSlider.setValue(upperThresh)
 
     def lowerThreshSpinBoxChanged(self, lowerThresh):
-        self.lowerThreshSlider.setValue(
-            int(lowerThresh * self.numberOfStepsBetweenIntegers))
+        self.blockedSetValue(self.lowerThreshSlider,int(lowerThresh * self.numberOfStepsBetweenIntegers))
         if lowerThresh > self.upperThreshSpinbox.value():
-            self.upperThreshSpinbox.setValue(lowerThresh)
+            self.blockedSetValue(self.upperThreshSlider,int(-lowerThresh * self.numberOfStepsBetweenIntegers))
+            self.blockedSetValue(self.upperThreshSpinbox,lowerThresh)            
         self.signalOverlayLowerThreshChange.emit(
             lowerThresh, self.upperThreshSpinbox.value())
 
-    def upperThreshSpinBoxChanged(self, upperThresh):        
-        #self.upperThreshSlider.setValue(self.upperThreshSlider.maximum() - int(upperThresh*self.numberOfStepsBetweenIntegers))
-        #if upperThresh<self.lowerThreshSpinbox.value():
-        #    self.lowerThreshSpinbox.setValue(upperThresh)
+    def upperThreshSpinBoxChanged(self, upperThresh):       
+        self.blockedSetValue(self.upperThreshSlider, self.upperThreshSlider.maximum() - int(upperThresh*self.numberOfStepsBetweenIntegers))
+        if upperThresh<self.lowerThreshSpinbox.value():            
+            self.blockedSetValue(self.lowerThreshSlider, int(upperThresh*self.numberOfStepsBetweenIntegers))
+            self.blockedSetValue(self.lowerThreshSpinbox, upperThresh)
         self.signalOverlayUpperThreshChange.emit(
             self.lowerThreshSpinbox.value(), upperThresh)
 
     def movieIntervalSliderChanged(self, Interval):        
         self.movieIntervalSpinbox.setValue(
-            float(Interval) / self.numberOfStepsBetweenMovieSliderIntegers)            
+            float(Interval) / self.numberOfStepsBetweenMovieSliderIntegers)                    
 
     def movieIntervalSpinBoxChanged(self, Interval):
-        interval = Interval #1.0 / Fps * 1e3 # in ms        
-        self.movieIntervalSlider.setValue(int(Interval*self.numberOfStepsBetweenMovieSliderIntegers))        
+        interval = Interval #1.0 / Fps * 1e3 # in ms 
+        self.movieIntervalSlider.blockSignals(True)
+        self.blockedSetValue(self.movieIntervalSlider,int(Interval*self.numberOfStepsBetweenMovieSliderIntegers))
         self.signalMovieIntervalChange.emit(interval)
         
     def movieGotoFrame(self):
         frame=self.movieFrameSpinbox.value()
         self.signalMovieGotoFrame.emit(frame)
+    def moviePause(self):
+        self.signalMoviePause.emit()

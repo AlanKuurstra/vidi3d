@@ -14,38 +14,6 @@ import matplotlib.pyplot as plt
 from matplotlib import path
 import matplotlib.animation as animation
 
-#============================================================================
-# this matplotlib hack allows text outisde the axes bbox to be redrawn during
-# animation - this allows us to print the frame number with the animation
-#http://stackoverflow.com/questions/17558096/animated-title-in-matplotlib
-def _blit_draw(self, artists, bg_cache):
-    # Handles blitted drawing, which renders only the artists given instead
-    # of the entire figure.
-    updated_ax = []
-    for a in artists:
-        # If we haven't cached the background for this axes object, do
-        # so now. This might not always be reliable, but it's an attempt
-        # to automate the process.
-        if a.axes not in bg_cache:
-            # bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.bbox)
-            # change here
-            bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(
-                a.axes.figure.bbox)
-        a.axes.draw_artist(a)
-        updated_ax.append(a.axes)
-
-    # After rendering all the needed artists, blit each axes individually.
-    for ax in set(updated_ax):
-        # and here
-        # ax.figure.canvas.blit(ax.bbox)
-        ax.figure.canvas.blit(ax.figure.bbox)
-
-
-import matplotlib
-matplotlib.animation.Animation._blit_draw = _blit_draw
-#============================================================================
-
-
 class _MainWindow(QtGui.QMainWindow):
     def __init__(self, complexImList, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormapList=[None, ], overlayList=[None, ], overlayColormapList=[None, ]):
         _Core._create_qApp()
@@ -182,8 +150,9 @@ class _MainWindow(QtGui.QMainWindow):
         numFrames = self.complexImList[0].shape[-1]
         initInterval = self.controls.movieIntervalSpinbox.value()
         #initInterval = initFPS#1.0 / initFPS * 1e3
-        self.moviePlayer = animation.FuncAnimation(self.imagePanelsList[0].fig, self.movieUpdate, frames=range(
+        self.moviePlayer = FuncAnimationCustom(self.imagePanelsList[0].fig, self.movieUpdate, frames=range(
             numFrames), interval=initInterval, blit=True, repeat_delay=0)
+        self.currentMovieFrame=0
 
         #
         # Set up plots
@@ -243,17 +212,19 @@ class _MainWindow(QtGui.QMainWindow):
             self.SetWindowLevelToDefault)
         self.controls.signalTLocationChange.connect(self.onTChange)
         self.controls.signalROIClear.connect(self.clearROI)
+        self.controls.signalROIDeleteLast.connect(self.deleteLastROI)
         self.controls.signalROIAvgTimecourse.connect(self.plotROIAvgTimeseries)
+        self.controls.signalROIPSCTimecourse.connect(self.plotROIPSCTimeseries)
         self.controls.signalROI1VolHistogram.connect(self.plotROI1VolHistogram)
         self.controls.signalMovieIntervalChange.connect(
             self.changeMovieInterval)
+        self.controls.signalMoviePause.connect(self.pauseMovie)
         self.controls.signalOverlayLowerThreshChange.connect(
             self.thresholdOverlay)
         self.controls.signalOverlayUpperThreshChange.connect(
             self.thresholdOverlay)
         self.controls.signalMovieGotoFrame.connect(
             self.movieGotoFrame)
-
 
         # Connect signals from imagePanel
         for currImagePanel in self.imagePanelsList:
@@ -480,9 +451,6 @@ class _MainWindow(QtGui.QMainWindow):
                 data = self.complexImList[index]
                 data = self.applyImageType(data, imageType)
                 avgTimeseries = data[mask].mean(axis=0)
-                avgTimeseries = avgTimeseries + np.finfo(float).eps
-                avgTimeseries = (
-                    avgTimeseries - avgTimeseries[0]) / avgTimeseries[0] * 100
                 if fig == None:
                     fig = plt.figure()
                 plt.plot(
@@ -490,6 +458,27 @@ class _MainWindow(QtGui.QMainWindow):
         plt.legend()
         plt.xlabel("Volume")
         plt.ylabel("Average Signal")
+        
+    def plotROIPSCTimeseries(self):
+        mask = self.getROIMask()
+        imageType = self.imagePanelsList[0]._imageType
+        fig = None
+        for index in range(len(self.imagePanelToolbarsList)):
+            currimagePanelToolbar = self.imagePanelToolbarsList[index]
+            if currimagePanelToolbar._ROIactive:
+                data = self.complexImList[index]
+                data = self.applyImageType(data, imageType)
+                pscTimeseries = data[mask].mean(axis=0)
+                pscTimeseries = pscTimeseries + np.finfo(float).eps
+                pscTimeseries = (
+                    pscTimeseries - pscTimeseries[0]) / pscTimeseries[0] * 100
+                if fig == None:
+                    fig = plt.figure()
+                plt.plot(
+                    pscTimeseries, dd.PlotColours.colours[index], label=self.subplotTitles[index])
+        plt.legend()
+        plt.xlabel("Volume")
+        plt.ylabel("Percent Signal Change")
 
     def plotROI1VolHistogram(self, numBins):
         mask = self.getROIMask()
@@ -517,15 +506,28 @@ class _MainWindow(QtGui.QMainWindow):
 
     def clearROI(self):
         self.ROIData.verts = {}
+        z = self.loc[2]
         for currimagePanelToolbar in self.imagePanelToolbarsList:
-            if currimagePanelToolbar._ROIactive:
-                z = self.loc[2]
+            if currimagePanelToolbar._ROIactive:                
                 if z in currimagePanelToolbar.roiLines.mplLineObjects:
                     for currentLine in currimagePanelToolbar.roiLines.mplLineObjects[z]:
                         currimagePanelToolbar.ax.lines.remove(currentLine)
             currimagePanelToolbar.roiLines.mplLineObjects = {}
             currimagePanelToolbar.canvas.draw()
             currimagePanelToolbar.canvas.blit(currimagePanelToolbar.ax.bbox)
+        
+    def deleteLastROI(self):
+        z = self.loc[2]
+        self.ROIData.verts[z].pop()
+        for currimagePanelToolbar in self.imagePanelToolbarsList:
+            if currimagePanelToolbar._ROIactive:                
+                if z in currimagePanelToolbar.roiLines.mplLineObjects:
+                    currentLine = currimagePanelToolbar.roiLines.mplLineObjects[z][-1]
+                    currimagePanelToolbar.ax.lines.remove(currentLine)
+            currimagePanelToolbar.roiLines.mplLineObjects[z].pop()
+            currimagePanelToolbar.canvas.draw()
+            currimagePanelToolbar.canvas.blit(currimagePanelToolbar.ax.bbox)
+
 
     #==================================================================
     # slots for overlay thresholding
@@ -546,6 +548,7 @@ class _MainWindow(QtGui.QMainWindow):
     #==================================================================    
     def movieUpdate(self, frame):
         z = self.loc[2]
+        self.currentMovieFrame=frame
         imageType = self.imagePanelsList[0]._imageType
         artistsToUpdate = []
         for index in range(len(self.imagePanelToolbarsList)):
@@ -558,7 +561,7 @@ class _MainWindow(QtGui.QMainWindow):
                 self.imagePanelsList[index].img.set_data(newData)
                 artistsToUpdate.append(currimagePanelToolbar.movieText)
                 artistsToUpdate.append(self.imagePanelsList[index].img)
-        return artistsToUpdate
+        return artistsToUpdate    
 
     def initializeMovie(self, imgIndex):
         numActive = 0
@@ -567,9 +570,13 @@ class _MainWindow(QtGui.QMainWindow):
                 numActive += 1
         if numActive == 1:
             self.controls.movieWidget.setEnabled(True)
-            self.moviePlayer.event_source.start()
+            if not self.moviePlayer.moviePaused:
+                self.moviePlayer.event_source.start()
         self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
             self.ChangeLocation)
+        self.imagePanelsList[imgIndex].overlay.set_visible(False)
+        self.movieUpdate(self.currentMovieFrame)        
+        self.imagePanelsList[imgIndex].BlitImageAndLines()
 
     def destructMovie(self, imgIndex):
         atLeastOneActive = False
@@ -580,12 +587,20 @@ class _MainWindow(QtGui.QMainWindow):
             self.controls.movieWidget.setEnabled(False)
             self.moviePlayer.event_source.stop()
         self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
-            self.ChangeLocation)        
+            self.ChangeLocation)
+        self.imagePanelsList[imgIndex].overlay.set_visible(True)        
         self.imagePanelsList[imgIndex].showComplexImageChange(
                 self.complexImList[imgIndex][:, :, self.loc[2], self.loc[3]])
 
     def changeMovieInterval(self, interval):        
         self.moviePlayer.event_source.interval = interval
+        
+    def pauseMovie(self):
+        self.moviePlayer.moviePaused=not self.moviePlayer.moviePaused
+        if self.moviePlayer.moviePaused:
+            self.moviePlayer.event_source.stop()
+        else:
+            self.moviePlayer.event_source.start()
         
     def movieGotoFrame(self,frame):
         newFrameSeq=self.moviePlayer.new_frame_seq()
@@ -598,7 +613,12 @@ class _MainWindow(QtGui.QMainWindow):
             if self.viewerNumber:
                 del _Core._viewerList[self.viewerNumber]
             event.accept()
-            
+ 
+
+#==================================================================
+# other classes
+#================================================================== 
+           
 class roiData():
     def __init__(self):
         self.verts = {}
@@ -623,3 +643,51 @@ class _MplImageSlice(_MplImage._MplImage):
             clipVal = np.minimum(np.maximum(
                 self.getImgSliceNumber() - 1, 0), self.maxSliceNum - 1)
         self.signalZLocationChange.emit(clipVal)
+
+class FuncAnimationCustom(animation.FuncAnimation):
+    def __init__(self, *args, **keywords):
+        self.moviePaused=False        
+        animation.FuncAnimation.__init__(self,*args, **keywords)
+    def _end_redraw(self, evt):
+        # Now that the redraw has happened, do the post draw flushing and
+        # blit handling. Then re-enable all of the original events.
+        self._post_draw(None, False)
+        if not self.moviePaused:
+            self.event_source.start()
+        self._fig.canvas.mpl_disconnect(self._resize_id)
+        self._resize_id = self._fig.canvas.mpl_connect('resize_event',
+                                                       self._handle_resize)
+    def _blit_draw(self, artists, bg_cache):
+        # Handles blitted drawing, which renders only the artists given instead
+        # of the entire figure.
+        updated_ax = []
+        for a in artists:
+            # If we haven't cached the background for this axes object, do
+            # so now. This might not always be reliable, but it's an attempt
+            # to automate the process.
+            if a.axes not in bg_cache:
+                # bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.bbox)
+                #CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+                bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(
+                    a.axes.figure.bbox)
+            a.axes.draw_artist(a)
+            updated_ax.append(a.axes)
+
+        # After rendering all the needed artists, blit each axes individually.
+        for ax in set(updated_ax):
+            #CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+            # ax.figure.canvas.blit(ax.bbox)
+            ax.figure.canvas.blit(ax.figure.bbox)
+            
+    def _handle_resize(self, *args):
+        # On resize, we need to disable the resize event handling so we don't
+        # get too many events. Also stop the animation events, so that
+        # we're paused. Reset the cache and re-init. Set up an event handler
+        # to catch once the draw has actually taken place.
+        self._fig.canvas.mpl_disconnect(self._resize_id)
+        self.event_source.stop()
+        self._blit_cache.clear()
+        #REMOVE THIS SO THE FIRST FRAME ISN'T DRAWN WHEN RESIZING
+        #self._init_draw()
+        self._resize_id = self._fig.canvas.mpl_connect('draw_event',
+                                                       self._end_redraw)

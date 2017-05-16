@@ -581,8 +581,7 @@ class _MainWindow(QtGui.QMainWindow):
         self.imagePanelsList[imgIndex].overlay.set_visible(False)
         artistsToUpdate=self.movieUpdate(self.currentMovieFrame)
         #self.imagePanelsList[imgIndex].BlitImageAndLines()        
-        self.moviePlayer._blit_draw(artistsToUpdate,self.moviePlayer._blit_cache)
-        self.moviePlayer._blit()
+        self.moviePlayer._blit_draw(artistsToUpdate,self.moviePlayer._blit_cache)        
 
     def destructMovie(self, imgIndex):
         atLeastOneActive = False

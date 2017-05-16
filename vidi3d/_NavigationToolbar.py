@@ -182,7 +182,8 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             axesOffset = transforms.ScaledTranslation(
                 0, .6, self.parent.img.axes.figure.dpi_scale_trans)
             self.movieText = self.parent.img.axes.text(
-                0.5, 1, '', fontsize=15, transform=axesTransform + axesOffset, ha='center')
+                1, -.01, '', fontsize=10, transform=axesTransform,ha='right',va='top')  
+                        
             self.parent.BlitImageAndLines()
             self.signalMovieInit.emit(self.imgIndex)
 

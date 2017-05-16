@@ -304,7 +304,8 @@ class _ControlWidgetCompare(QtGui.QWidget):
             exp=int(exp)+1
         exp=exp-2
         stepsize=10**(exp)
-        self.numberOfStepsBetweenIntegers = 1/stepsize
+        
+        self.numberOfStepsBetweenIntegers = max(1/stepsize,1)
         sliderMinMaxLowerThresh = list(
             np.array(overlayMinMax) * self.numberOfStepsBetweenIntegers)
         sliderMinMaxUpperThresh = list(np.array(overlayMinMax)[
@@ -509,7 +510,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
         if lowerThresh > -self.upperThreshSlider.value():
             self.upperThreshSlider.setValue(-lowerThresh)
 
-    def upperThreshSliderChanged(self, upperThresh):
+    def upperThreshSliderChanged(self, upperThresh):        
         upperThresh = -upperThresh
         self.upperThreshSpinbox.setValue(
             float(upperThresh) / self.numberOfStepsBetweenIntegers)
@@ -524,8 +525,8 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.signalOverlayLowerThreshChange.emit(
             lowerThresh, self.upperThreshSpinbox.value())
 
-    def upperThreshSpinBoxChanged(self, upperThresh):       
-        self.blockedSetValue(self.upperThreshSlider, self.upperThreshSlider.maximum() - int(upperThresh*self.numberOfStepsBetweenIntegers))
+    def upperThreshSpinBoxChanged(self, upperThresh):          
+        self.blockedSetValue(self.upperThreshSlider, -int(upperThresh*self.numberOfStepsBetweenIntegers))
         if upperThresh<self.lowerThreshSpinbox.value():            
             self.blockedSetValue(self.lowerThreshSlider, int(upperThresh*self.numberOfStepsBetweenIntegers))
             self.blockedSetValue(self.lowerThreshSpinbox, upperThresh)

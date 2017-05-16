@@ -227,7 +227,12 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
                                                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
     return _startViewer(viewer, block, windowTitle)
 
-
+def toList(array, axis=-1, step=1):
+    slicesToGet=np.arange(0,array.shape[axis],step)
+    tmp=np.take(array,slicesToGet,axis=axis)
+    return np.split(tmp,tmp.shape[axis],axis=axis)
+    
+    
 def convertToListIfNecessary(inputData):
     if type(inputData) != list and type(inputData) != tuple:
         inputData = [inputData, ]

@@ -151,8 +151,9 @@ class _MainWindow(QtGui.QMainWindow):
         initInterval = self.controls.movieIntervalSpinbox.value()
         #initInterval = initFPS#1.0 / initFPS * 1e3
         self.moviePlayer = FuncAnimationCustom(self.imagePanelsList[0].fig, self.movieUpdate, frames=range(
-            numFrames), interval=initInterval, blit=True, repeat_delay=0)
-        self.currentMovieFrame=0
+            numFrames), interval=initInterval, blit=True, repeat_delay=0)               
+        self.currentMovieFrame=0        
+        
 
         #
         # Set up plots
@@ -196,11 +197,12 @@ class _MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(splitter)
         # self.statusBar().showMessage('Ready')
 
-        self.makeConnections()
+        self.makeConnections()        
         
         self.show()
         self.setFocus()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        
 
     def makeConnections(self):
         # Connect signals from controls
@@ -546,7 +548,7 @@ class _MainWindow(QtGui.QMainWindow):
     #==================================================================
     # slots for movie tool
     #==================================================================    
-    def movieUpdate(self, frame):
+    def movieUpdate(self, frame):                
         z = self.loc[2]
         self.currentMovieFrame=frame
         imageType = self.imagePanelsList[0]._imageType
@@ -569,14 +571,18 @@ class _MainWindow(QtGui.QMainWindow):
             if currimagePanelToolbar._movieActive:
                 numActive += 1
         if numActive == 1:
-            self.controls.movieWidget.setEnabled(True)
+            self.controls.movieWidget.setEnabled(True)            
+            self.controls.moviePauseButton.setChecked(False)
+            self.moviePlayer.moviePaused=False
             if not self.moviePlayer.moviePaused:
                 self.moviePlayer.event_source.start()
         self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
             self.ChangeLocation)
         self.imagePanelsList[imgIndex].overlay.set_visible(False)
-        self.movieUpdate(self.currentMovieFrame)        
-        self.imagePanelsList[imgIndex].BlitImageAndLines()
+        artistsToUpdate=self.movieUpdate(self.currentMovieFrame)
+        #self.imagePanelsList[imgIndex].BlitImageAndLines()        
+        self.moviePlayer._blit_draw(artistsToUpdate,self.moviePlayer._blit_cache)
+        self.moviePlayer._blit()
 
     def destructMovie(self, imgIndex):
         atLeastOneActive = False
@@ -586,6 +592,7 @@ class _MainWindow(QtGui.QMainWindow):
         if not atLeastOneActive:
             self.controls.movieWidget.setEnabled(False)
             self.moviePlayer.event_source.stop()
+            self.moviePlayer.moviePaused=True
         self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
             self.ChangeLocation)
         self.imagePanelsList[imgIndex].overlay.set_visible(True)        
@@ -596,10 +603,10 @@ class _MainWindow(QtGui.QMainWindow):
         self.moviePlayer.event_source.interval = interval
         
     def pauseMovie(self):
-        self.moviePlayer.moviePaused=not self.moviePlayer.moviePaused
+        self.moviePlayer.moviePaused= self.controls.moviePauseButton.isChecked()
         if self.moviePlayer.moviePaused:
             self.moviePlayer.event_source.stop()
-        else:
+        else:            
             self.moviePlayer.event_source.start()
         
     def movieGotoFrame(self,frame):
@@ -645,14 +652,33 @@ class _MplImageSlice(_MplImage._MplImage):
         self.signalZLocationChange.emit(clipVal)
 
 class FuncAnimationCustom(animation.FuncAnimation):
-    def __init__(self, *args, **keywords):
-        self.moviePaused=False        
-        animation.FuncAnimation.__init__(self,*args, **keywords)
-    def _end_redraw(self, evt):
+    def __init__(self, *args, **keywords):        
+        animation.FuncAnimation.__init__(self,*args, **keywords)   
+        self.moviePaused=True     
+    def _start(self, *args):
+        '''
+        Starts interactive animation. Adds the draw frame command to the GUI
+        handler, calls show to start the event loop.
+        '''
+        # First disconnect our draw event handler
+        self._fig.canvas.mpl_disconnect(self._first_draw_id)
+        self._first_draw_id = None  # So we can check on save
+
+        # Now do any initial draw
+        self._init_draw()
+
+        # Add our callback for stepping the animation and
+        # actually start the event_source.
+        self.event_source.add_callback(self._step)
+        #AK: ADDED A CHECK FOR MOVIE PAUSE
+        if not self.moviePaused:
+            self.event_source.start()        
+    def _end_redraw(self, evt):        
         # Now that the redraw has happened, do the post draw flushing and
         # blit handling. Then re-enable all of the original events.
-        self._post_draw(None, False)
-        if not self.moviePaused:
+        self._post_draw(None, False)    
+        #AK: ADDED A CHECK FOR MOVIE PAUSE
+        if not self.moviePaused:            
             self.event_source.start()
         self._fig.canvas.mpl_disconnect(self._resize_id)
         self._resize_id = self._fig.canvas.mpl_connect('resize_event',
@@ -667,7 +693,7 @@ class FuncAnimationCustom(animation.FuncAnimation):
             # to automate the process.
             if a.axes not in bg_cache:
                 # bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.bbox)
-                #CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+                #AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
                 bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(
                     a.axes.figure.bbox)
             a.axes.draw_artist(a)
@@ -675,7 +701,7 @@ class FuncAnimationCustom(animation.FuncAnimation):
 
         # After rendering all the needed artists, blit each axes individually.
         for ax in set(updated_ax):
-            #CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+            #AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
             # ax.figure.canvas.blit(ax.bbox)
             ax.figure.canvas.blit(ax.figure.bbox)
             
@@ -687,7 +713,7 @@ class FuncAnimationCustom(animation.FuncAnimation):
         self._fig.canvas.mpl_disconnect(self._resize_id)
         self.event_source.stop()
         self._blit_cache.clear()
-        #REMOVE THIS SO THE FIRST FRAME ISN'T DRAWN WHEN RESIZING
+        #AK: REMOVE THIS LINE SO THE FIRST FRAME ISN'T DRAWN WHEN RESIZING
         #self._init_draw()
         self._resize_id = self._fig.canvas.mpl_connect('draw_event',
                                                        self._end_redraw)

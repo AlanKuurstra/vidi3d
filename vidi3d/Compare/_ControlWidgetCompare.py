@@ -303,10 +303,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.upperThreshSpinbox = QtGui.QDoubleSpinBox()
         self.lowerThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.upperThreshSlider.setInvertedAppearance(True)
-        overlayMinMax[0]=np.floor(overlayMinMax[0])
-        overlayMinMax[1]=np.ceil(overlayMinMax[1])
-        self.overlayMinMax=overlayMinMax
+        self.upperThreshSlider.setInvertedAppearance(True)        
         overlayDiff=(overlayMinMax[1]-overlayMinMax[0])
         mant,exp=('%.5e' %overlayDiff).split('e')
         if np.double(mant)<5.0:
@@ -316,6 +313,11 @@ class _ControlWidgetCompare(QtGui.QWidget):
         exp=exp-2
         stepsize=10**(exp)
         
+        #add extra to min and max 
+        self.overlayMinMax=overlayMinMax
+        self.overlayMinMax[0]-=stepsize
+        self.overlayMinMax[1]+=stepsize
+        overlayDiff=(self.overlayMinMax[1]-self.overlayMinMax[0])
         """
         self.numberOfStepsBetweenIntegers = max(1/stepsize,1)
         sliderMinMaxLowerThresh = list(

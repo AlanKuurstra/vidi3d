@@ -51,6 +51,7 @@ class _MainWindow(QtGui.QMainWindow):
                     if currentOverlayMax > overlayMinMax[1]:
                         overlayMinMax[1] = currentOverlayMax
         
+        print overlayMinMax
         
         self.complexImList = matchListOfLength1toSecondListsLength(
             complexImList, self.overlayList)        

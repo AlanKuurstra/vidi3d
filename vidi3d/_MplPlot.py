@@ -59,6 +59,8 @@ class _MplPlot(FigureCanvas):
         self.axes = self.fig.add_subplot(111)
         if title is not None:
             self.axes.set_title(title)
+        #autoscale plot?
+        self.lockPlot=False
         # zoom functionality
         self.toolbar = NavigationToolbar2QTAgg(self, self)
         self.toolbar.hide()
@@ -109,12 +111,13 @@ class _MplPlot(FigureCanvas):
         for line in range(len(self.complexDataList)):
             self.lines[line][0].set_ydata(
                 self.applyDataType(self.complexDataList[line]))
-        if self._dataType == dd.ImageType.phase:
-            self.axes.set_ylim(-np.pi, np.pi)
-        else:
-            self.axes.set_ylim(auto=True)
+        #if self._dataType == dd.ImageType.phase:
+        #    self.axes.set_ylim(-np.pi, np.pi)
+        #else:
+        if not self.lockPlot:
+            #self.axes.set_ylim(auto=True)
             self.axes.relim()
-            self.axes.autoscale_view(scalex=False)
+            self.axes.autoscale_view(scalex=False)                
 
     def setMarkers(self):
         if self.markerPosn is not None:
@@ -176,7 +179,7 @@ class _MplPlot(FigureCanvas):
         self.setMarkerPosn(newMarkerPosn)
         self.setLines()
         self.setMarkers()
-        self.drawLinesAndMarkers()
+        self.drawLinesAndMarkers()        
 
     #==================================================================
     # functions related to Qt

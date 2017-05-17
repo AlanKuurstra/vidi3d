@@ -82,13 +82,12 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
 
     Parameters
     -----------
-    data : array_like, shape (x, y) or (x,y,n)
-        The data to be displayed. Can be a single image f(x,y), a list of
-        images [f1(x,y),f2(x,y),...,fn(x,y)], or an array of shape
-        (x,y,n) where dimension n refers to the image number.
+    data : array_like, shape (x, y[, t])
+        The data to be displayed. Can be a single 2d image f(x,y[,t]) or a list of
+        2d images [f1(x,y[,t]),f2(x,y[,t]),...,fn(x,y[,t])].
 
     pixdim : list of voxel sizes for each dimesion. For nifti files this
-             can be found using: nib.load(imgloc).get_header()['pixdim'][1:4]
+             can be found using: nib.load(imgloc).get_header()['pixdim'][1:3]
 
     interpolation : string, optional, default: 'none'
         Acceptable values are 'none', 'nearest', 'bilinear', 'bicubic',
@@ -105,13 +104,11 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         corner of the axes. If None, default to rc `image.origin`.
 
     windowTitle : string, optional, default: None
-        The title to display on the viewer window.  If None, display viewer
-        number.
+        The title to display on the viewer window.  
 
     subplotTitles : strings, optional, default: None
         A list of subplot titles. The number of titles must match the number
-        of subplots otherwise default behaviour will be used. If None, display
-        image number.
+        of subplots otherwise default behaviour will be used. 
 
     block : boolean, optional, default: False
         If true, block execution of further code until all viewers are closed.
@@ -120,10 +117,14 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         A list of cursor line labels. If None, use "X" and "Y".     
 
     maxNumInRow : integer, optional, default: None
-        The maximum number of images to display in a row. If None, arrange
-        images in a square grid.      
+        The maximum number of images to display in a row. 
 
-    colourmap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
+    colormap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
+    
+    overlay : array_like, shape (x, y)
+        Optional overlay.  Useful for viewing masks and parameter maps.
+    
+    overlayColormap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
 
     Returns
     --------
@@ -166,10 +167,9 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
 
     Parameters
     -----------
-    data : array_like, shape (x, y) or (x,y,n)
-        The data to be displayed. Can be a single image f(x,y), a list of
-        images [f1(x,y),f2(x,y),...,fn(x,y)], or an array of shape
-        (x,y,n) where dimension n refers to the image number.
+    data : array_like, shape (x, y, z[, t])
+        The data to be displayed. Can be a single 2d image f(x,y,z[,t]) or a list of
+        3d images [f1(x,y,z[,t]),f2(x,y,z[,t]),...,fn(x,y,z[,t])].
 
     pixdim : list of voxel sizes for each dimesion. For nifti files this
              can be found using: nib.load(imgloc).get_header()['pixdim'][1:4]
@@ -189,13 +189,11 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         corner of the axes. If None, default to rc `image.origin`.
 
     windowTitle : string, optional, default: None
-        The title to display on the viewer window.  If None, display viewer
-        number.
+        The title to display on the viewer window.  
 
     subplotTitles : strings, optional, default: None
         A list of subplot titles. The number of titles must match the number
-        of subplots otherwise default behaviour will be used. If None, display
-        image number.
+        of subplots otherwise default behaviour will be used. 
 
     block : boolean, optional, default: False
         If true, block execution of further code until all viewers are closed.
@@ -204,10 +202,14 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         A list of cursor line labels. If None, use "X" and "Y".     
 
     maxNumInRow : integer, optional, default: None
-        The maximum number of images to display in a row. If None, arrange
-        images in a square grid.      
+        The maximum number of images to display in a row. 
 
     colormap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
+    
+    overlay : array_like, shape (x, y, z)
+        Optional overlay.  Useful for viewing masks and parameter maps.
+    
+    overlayColormap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
 
     Returns
     --------
@@ -228,6 +230,11 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
     return _startViewer(viewer, block, windowTitle)
 
 def toList(array, axis=-1, step=1):
+    """
+    Split a higher dimensional array into a list of lower dimensional arrays.
+    Useful for splitting a 3d image into a list of 2d slices passed to compare2d.
+
+    """
     slicesToGet=np.arange(0,array.shape[axis],step)
     tmp=np.take(array,slicesToGet,axis=axis)
     return np.split(tmp,tmp.shape[axis],axis=axis)
@@ -245,7 +252,7 @@ def close(num=None):
     """
     Close a Viewer.
 
-    close() by itself closes all figures
+    close('all') closes all figures
 
     close(num) closes viewer number num
     """

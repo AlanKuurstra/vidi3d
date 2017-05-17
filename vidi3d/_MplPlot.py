@@ -130,7 +130,7 @@ class _MplPlot(FigureCanvas):
         for line in range(len(self.complexDataList)):
             self.lines.append(self.axes.plot(self.applyDataType(
                 self.complexDataList[line]), self.colors[line]))
-        self.axes.set_xlim(0, self.complexDataList[0].shape[0] - 1)
+        self.axes.set_xlim(0, self.complexDataList[0].shape[0] - 1 +np.finfo('float').eps)
 
     def createMarkers(self):
         if self.markerPosn is not None:

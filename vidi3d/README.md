@@ -1,0 +1,24 @@
+# vidi3d
+Visualizes 3D NumPy arrays using Matplotlib and PyQt4.
+
+### Installation and Requirements
+
+The following libraries are required:
+
+- [Python]
+- [Numpy](http://www.numpy.org/): General purpose array-processing package.
+- [Matplotlib](https://matplotlib.org/):  Python plotting package .
+- [PyQt](https://www.riverbankcomputing.com/software/pyqt/): Python bindings for Qt application framework.
+
+To install, use: pip install vidi3d. Note that PyQt must be installed manually.
+
+The software can also be found at `https://github.com/AlanKuurstra/vidi3d`.  
+
+### Usage
+
+import vidi3d as v
+v.compare2d() - compare a list of 2d images (an additional temporal dimension is optional)
+v.compare3d() - compare a list of 3d images (an additional temporal dimension is optional)
+
+
+Some simple examples can be found in the Examples/ folder

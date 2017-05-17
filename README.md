@@ -1,2 +1,4 @@
 # vidi3d
-Visualizes 3d and 4d NumPy arrays using Matplotlib and PyQt4.
+Visualizes 3D NumPy arrays using Matplotlib and PyQt4.
+
+see vidi3d/README.md

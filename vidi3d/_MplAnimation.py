@@ -8,9 +8,9 @@ import _Core
 from matplotlib.animation import ArtistAnimation
 
 
-
 class _MplAnimation(FigureCanvas, ArtistAnimation):
     from _DisplaySignals import *
+
     def __init__(self, movieArray, figure=None, aspect='equal', parent=None, interpolation='none', origin='lower', colormap=None, vmin=None, vmax=None, interval=50, blit=True):
         #
         # Qt related initialization
@@ -20,7 +20,7 @@ class _MplAnimation(FigureCanvas, ArtistAnimation):
 
         if figure is not None:
             self.fig = figure
-            
+
             self.axes = self.fig.add_axes([.1, .05, .8, .8])
             self.axes.xaxis.set_visible(False)
             self.axes.yaxis.set_visible(False)
@@ -30,7 +30,7 @@ class _MplAnimation(FigureCanvas, ArtistAnimation):
             FigureCanvas.__init__(self, self.fig)
             FigureCanvas.setSizePolicy(
                 self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-            FigureCanvas.updateGeometry(self)            
+            FigureCanvas.updateGeometry(self)
             self.axes = self.fig.add_axes([.1, .05, .8, .8])
             if origin != 'upper' and origin != 'lower':
                 print "origin parameter not understood, defaulting to 'lower'"
@@ -48,7 +48,7 @@ class _MplAnimation(FigureCanvas, ArtistAnimation):
 
         ArtistAnimation.__init__(self, self.fig, self.imshowList,
                                  interval=interval, blit=blit, repeat=True, repeat_delay=0)
-        self.fig.canvas.draw()# gets rid of the clipping in the background
+        self.fig.canvas.draw()  # gets rid of the clipping in the background
 
     #==================================================================
     # functions related to Qt

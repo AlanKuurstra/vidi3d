@@ -59,8 +59,8 @@ class _MplPlot(FigureCanvas):
         self.axes = self.fig.add_subplot(111)
         if title is not None:
             self.axes.set_title(title)
-        #autoscale plot?
-        self.lockPlot=False
+        # autoscale plot?
+        self.lockPlot = False
         # zoom functionality
         self.toolbar = NavigationToolbar2QTAgg(self, self)
         self.toolbar.hide()
@@ -83,9 +83,9 @@ class _MplPlot(FigureCanvas):
                 plt.plot(self.applyDataType(
                     self.complexDataList[line]), self.colors[line])
         """
-        #left mouse button for auto scale was fighting with zoom out
-        #changed auto scale to middle mouse button and removed popout plot
-        if event.button == 2: 
+        # left mouse button for auto scale was fighting with zoom out
+        # changed auto scale to middle mouse button and removed popout plot
+        if event.button == 2:
             self.toolbar.home()
 
     #==================================================================
@@ -111,13 +111,13 @@ class _MplPlot(FigureCanvas):
         for line in range(len(self.complexDataList)):
             self.lines[line][0].set_ydata(
                 self.applyDataType(self.complexDataList[line]))
-        #if self._dataType == dd.ImageType.phase:
+        # if self._dataType == dd.ImageType.phase:
         #    self.axes.set_ylim(-np.pi, np.pi)
-        #else:
+        # else:
         if not self.lockPlot:
-            #self.axes.set_ylim(auto=True)
+            # self.axes.set_ylim(auto=True)
             self.axes.relim()
-            self.axes.autoscale_view(scalex=False)                
+            self.axes.autoscale_view(scalex=False)
 
     def setMarkers(self):
         if self.markerPosn is not None:
@@ -130,7 +130,8 @@ class _MplPlot(FigureCanvas):
         for line in range(len(self.complexDataList)):
             self.lines.append(self.axes.plot(self.applyDataType(
                 self.complexDataList[line]), self.colors[line]))
-        self.axes.set_xlim(0, self.complexDataList[0].shape[0] - 1 +np.finfo('float').eps)
+        self.axes.set_xlim(
+            0, self.complexDataList[0].shape[0] - 1 + np.finfo('float').eps)
 
     def createMarkers(self):
         if self.markerPosn is not None:
@@ -179,7 +180,7 @@ class _MplPlot(FigureCanvas):
         self.setMarkerPosn(newMarkerPosn)
         self.setLines()
         self.setMarkers()
-        self.drawLinesAndMarkers()        
+        self.drawLinesAndMarkers()
 
     #==================================================================
     # functions related to Qt

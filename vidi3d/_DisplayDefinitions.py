@@ -14,6 +14,7 @@ class ImageCMap:
 # If the comparison viewer has more than 8 images, consider adding different
 # colours.
 
+
 class PlotColours:
     colours = ['#00FFFF', '#FF00FF', '#008000', '#FFA500', "#000080", "#808000", "#800080", "#800000",
                '#00FFFF', '#FF00FF', '#008000', '#FFA500', "#000080", "#808000", "#800080", "#800000",

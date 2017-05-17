@@ -13,6 +13,7 @@ import _DisplayDefinitions as dd
 
 class _MplImage(FigureCanvas):
     from _DisplaySignals import *
+
     def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
         #
         # Qt related initialization
@@ -47,10 +48,10 @@ class _MplImage(FigureCanvas):
             self.overlayData = overlay
         self.location = np.minimum(np.maximum(location, [0, 0]), np.subtract(
             self.complexImageData.shape, 1)).astype(np.int)
-        self.imgSliceNumber=imgSliceNumber
+        self.imgSliceNumber = imgSliceNumber
 
         #
-        # Initialize objects visualizing the internal data 
+        # Initialize objects visualizing the internal data
         #
         if colormap is None:
             self.colormap = mpl.cm.Greys_r
@@ -63,14 +64,14 @@ class _MplImage(FigureCanvas):
             self.overlayColormap = overlayColormap
 
         # labels
-        currLabels = [{'color': 'r', 'textLabel': "X"}, 
+        currLabels = [{'color': 'r', 'textLabel': "X"},
                       {'color': 'b', 'textLabel': "Y"},
                       {'color': 'g', 'textLabel': "Z Slice"}]
         if locationLabels is not None:
             currLabels = locationLabels
         # image
         self.fig.patch.set_color(currLabels[2]['color'])
-        self.axes = self.fig.add_axes([.1, .05, .8, .8])        
+        self.axes = self.fig.add_axes([.1, .05, .8, .8])
         if origin != 'upper' and origin != 'lower':
             print "origin parameter not understood, defaulting to 'lower'"
             origin = 'lower'
@@ -80,7 +81,8 @@ class _MplImage(FigureCanvas):
                                         interpolation=interpolation, origin=origin, alpha=0.3, cmap=self.overlayColormap)
         self._imageType = dd.ImageType.mag
         self.setMplImg()
-        self.locationVal = self.img.get_array().data[self.location[1], self.location[0]]
+        self.locationVal = self.img.get_array(
+        ).data[self.location[1], self.location[0]]
         self.title = self.axes.text(
             0.5, 1.08, currLabels[2]['textLabel'], horizontalalignment='center', fontsize=18, transform=self.axes.transAxes)
         self.axes.xaxis.set_visible(False)
@@ -105,7 +107,7 @@ class _MplImage(FigureCanvas):
         self.intensityWindow = 1.0
         self._imageType = dd.ImageType.mag
         self.enableWindowLevel = True
-        
+
         self.setWindowLevelToDefault()
         if imageType is None:
             self.showImageTypeChange(dd.ImageType.mag)
@@ -143,7 +145,7 @@ class _MplImage(FigureCanvas):
                 img, cmap=cmap, origin=origin, vmin=vmin, vmax=vmax, interpolation=interpolation)
             popOutPlot.axes.set_aspect(aspect)
             popOutPlot.axes.xaxis.set_visible(False)
-            popOutPlot.axes.yaxis.set_visible(False)            
+            popOutPlot.axes.yaxis.set_visible(False)
 
         elif event.button == 3:
             self.rightMousePress = True
@@ -187,10 +189,10 @@ class _MplImage(FigureCanvas):
             locationDataCoord = self.axes.transData.inverted().transform([
                 event.x, event.y])
             clippedLocation = np.minimum(np.maximum(
-                locationDataCoord + 0.5, [0, 0]), np.subtract(self.complexImageData.shape, 1))            
+                locationDataCoord + 0.5, [0, 0]), np.subtract(self.complexImageData.shape, 1))
             self._signalCursorChange(clippedLocation)
 
-    def _signalCursorChange(self, location):       
+    def _signalCursorChange(self, location):
         self.signalLocationChange.emit(location[0], location[1])
 
     #==================================================================
@@ -211,8 +213,10 @@ class _MplImage(FigureCanvas):
             self.location = newLocation
             self.locationVal = self.img.get_array(
             ).data[self.location[1], self.location[0]]
-    def setImgSliceNumber(self,newImgSliceNumber):
-        self.imgSliceNumber=newImgSliceNumber
+
+    def setImgSliceNumber(self, newImgSliceNumber):
+        self.imgSliceNumber = newImgSliceNumber
+
     def setImageType(self, imageType):
         self._imageType = imageType
         if imageType == dd.ImageType.mag or imageType == dd.ImageType.imag or imageType == dd.ImageType.real:
@@ -225,7 +229,7 @@ class _MplImage(FigureCanvas):
             self.setWindowLevel(2 * np.pi, 0)
             self.enableWindowLevel = False
 
-    def setWindowLevel(self, newIntensityWindow, newIntensityLevel):        
+    def setWindowLevel(self, newIntensityWindow, newIntensityLevel):
         if self.intensityLevel != newIntensityLevel or self.intensityWindow != newIntensityWindow:
             self.intensityLevel = newIntensityLevel
             self.intensityWindow = max(newIntensityWindow, 0)
@@ -303,20 +307,19 @@ class _MplImage(FigureCanvas):
             #self.blit(self.axes.bbox)
             self.blit(self.fig.bbox)
             #"""
-        
+
     def BlitImageForROIDrawing(self):
-        #not using this function anymore, just always draw the entire canvas
-        if self.fig._cachedRenderer is not None:              
+        # not using this function anymore, just always draw the entire canvas
+        if self.fig._cachedRenderer is not None:
             self.fig.draw_artist(self.fig.patch)
             self.axes.draw_artist(self.title)
             self.axes.draw_artist(self.axes.patch)
             self.axes.draw_artist(self.img)
-            z=self.sliceNum
+            z = self.sliceNum
             if z in self.NavigationToolbar.roiLines.mplLineObjects:
                 for currentLine in self.NavigationToolbar.roiLines.mplLineObjects[z]:
-                    self.axes.draw_artist(currentLine)            
-            self.blit(self.fig.bbox)  
-    
+                    self.axes.draw_artist(currentLine)
+            self.blit(self.fig.bbox)
 
     #==================================================================
     # convenience functions to change data and update visualizing objects
@@ -353,6 +356,7 @@ class _MplImage(FigureCanvas):
     def showSetWindowLevelToDefault(self):
         self.setWindowLevelToDefault()
         self.BlitImageAndLines()
+
     def getImgSliceNumber(self):
         return self.imgSliceNumber
 

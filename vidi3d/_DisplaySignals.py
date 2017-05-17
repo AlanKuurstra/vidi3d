@@ -39,5 +39,6 @@ signalOverlayLowerThreshChange = QtCore.pyqtSignal(
     float, float, name="OverlayLowerThreshChanged")
 signalOverlayUpperThreshChange = QtCore.pyqtSignal(
     float, float, name="OverlayUpperThreshChanged")
+signalOverlayAlphaChange = QtCore.pyqtSignal(float, name="OverlayAlphaChanged")
 
 signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChnaged')

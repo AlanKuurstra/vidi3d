@@ -18,7 +18,7 @@ class _MplImage4D(QtCore.QObject):
 
         self.raw = complexIm3
         self.location = initLocation
-        
+
         if pixdim == None:
             aspz = aspy = aspx = 'equal'
         else:
@@ -45,13 +45,13 @@ class _MplImage4D(QtCore.QObject):
         self.xsliceNav = NavigationToolbar(self.xslice, self.xslice)
 
         self.xplot = _MplPlot._MplPlot(
-            [complexIm3[:, initLocation[1], initLocation[2], initLocation[3]],], title="X Plot", initMarkerPosn=initLocation[0])
+            [complexIm3[:, initLocation[1], initLocation[2], initLocation[3]], ], title="X Plot", initMarkerPosn=initLocation[0])
         self.yplot = _MplPlot._MplPlot(
-            [complexIm3[initLocation[0], :, initLocation[2], initLocation[3]],], title="Y Plot", initMarkerPosn=initLocation[1])
+            [complexIm3[initLocation[0], :, initLocation[2], initLocation[3]], ], title="Y Plot", initMarkerPosn=initLocation[1])
         self.zplot = _MplPlot._MplPlot(
-            [complexIm3[initLocation[0], initLocation[1], :, initLocation[3]],], title="Z Plot", initMarkerPosn=initLocation[2])        
+            [complexIm3[initLocation[0], initLocation[1], :, initLocation[3]], ], title="Z Plot", initMarkerPosn=initLocation[2])
         self.tplot = _MplPlot._MplPlot(
-            [complexIm3[initLocation[0],initLocation[1],initLocation[2], :],], title="T Plot", initMarkerPosn=initLocation[3])
+            [complexIm3[initLocation[0], initLocation[1], initLocation[2], :], ], title="T Plot", initMarkerPosn=initLocation[3])
 
     def onXChange(self, value):
         # clip to valid locations, this is now done inside _MplImage.MoveEvent() before the ChangeLocation signal is emitted
@@ -63,10 +63,11 @@ class _MplImage4D(QtCore.QObject):
         self.zslice.onXChange(value)
 
         self.yplot.showComplexDataAndMarkersChange(
-            [self.raw[value, :, self.location[2], self.location[3]],], self.location[1])
+            [self.raw[value, :, self.location[2], self.location[3]], ], self.location[1])
         self.zplot.showComplexDataAndMarkersChange(
-            [self.raw[value, self.location[1], :, self.location[3]],], self.location[2])       
-        self.tplot.showComplexDataAndMarkersChange([self.raw[self.location[0],self.location[1],self.location[2], :],], self.location[3])
+            [self.raw[value, self.location[1], :, self.location[3]], ], self.location[2])
+        self.tplot.showComplexDataAndMarkersChange(
+            [self.raw[self.location[0], self.location[1], self.location[2], :], ], self.location[3])
 
     def onYChange(self, value):
         # clip to valid locations, this is now done inside _MplImage.MoveEvent() before the ChangeLocation signal is emitted
@@ -78,10 +79,11 @@ class _MplImage4D(QtCore.QObject):
         self.zslice.onYChange(value)
 
         self.xplot.showComplexDataAndMarkersChange(
-            [self.raw[:, value, self.location[2], self.location[3]],], self.location[0])
+            [self.raw[:, value, self.location[2], self.location[3]], ], self.location[0])
         self.zplot.showComplexDataAndMarkersChange(
-            [self.raw[self.location[0], value, :, self.location[3]],], self.location[2])        
-        self.tplot.showComplexDataAndMarkersChange([self.raw[self.location[0],self.location[1],self.location[2], :],], self.location[3])
+            [self.raw[self.location[0], value, :, self.location[3]], ], self.location[2])
+        self.tplot.showComplexDataAndMarkersChange(
+            [self.raw[self.location[0], self.location[1], self.location[2], :], ], self.location[3])
 
     def onZChange(self, value):
         # clip to valid locations, this is now done inside _MplImage.MoveEvent() before the ChangeLocation signal is emitted
@@ -93,10 +95,11 @@ class _MplImage4D(QtCore.QObject):
         self.zslice.onZChange(self.raw[:, :, value, self.location[3]])
 
         self.xplot.showComplexDataAndMarkersChange(
-            [self.raw[:, self.location[1], value, self.location[3]],], self.location[0])
+            [self.raw[:, self.location[1], value, self.location[3]], ], self.location[0])
         self.yplot.showComplexDataAndMarkersChange(
-            [self.raw[self.location[0], :, value, self.location[3]],], self.location[1])        
-        self.tplot.showComplexDataAndMarkersChange([self.raw[self.location[0],self.location[1],self.location[2], :],], self.location[3])
+            [self.raw[self.location[0], :, value, self.location[3]], ], self.location[1])
+        self.tplot.showComplexDataAndMarkersChange(
+            [self.raw[self.location[0], self.location[1], self.location[2], :], ], self.location[3])
 
     def onTChange(self, value):
         # clip to valid locations?
@@ -107,13 +110,14 @@ class _MplImage4D(QtCore.QObject):
         self.zslice.onZChange(self.raw[:, :, self.location[2], value])
 
         self.xplot.showComplexDataAndMarkersChange(
-            [self.raw[:, self.location[1], self.location[2], self.location[3]],], self.location[0])
+            [self.raw[:, self.location[1], self.location[2], self.location[3]], ], self.location[0])
         self.yplot.showComplexDataAndMarkersChange(
-            [self.raw[self.location[0], :, self.location[2], self.location[3]],], self.location[1])
+            [self.raw[self.location[0], :, self.location[2], self.location[3]], ], self.location[1])
         self.zplot.showComplexDataAndMarkersChange(
-            [self.raw[self.location[0], self.location[1], :, self.location[3]],], self.location[2])        
-        self.tplot.showComplexDataAndMarkersChange([self.raw[self.location[0],self.location[1],self.location[2], :],], self.location[3])
-    
+            [self.raw[self.location[0], self.location[1], :, self.location[3]], ], self.location[2])
+        self.tplot.showComplexDataAndMarkersChange(
+            [self.raw[self.location[0], self.location[1], self.location[2], :], ], self.location[3])
+
     """
     def CMapChanged(self,index): 
         self.xslice.setColorMap(index)

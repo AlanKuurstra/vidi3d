@@ -120,10 +120,10 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         The maximum number of images to display in a row. 
 
     colormap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
-    
+
     overlay : array_like, shape (x, y)
         Optional overlay.  Useful for viewing masks and parameter maps.
-    
+
     overlayColormap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
 
     Returns
@@ -205,10 +205,10 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         The maximum number of images to display in a row. 
 
     colormap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
-    
+
     overlay : array_like, shape (x, y, z)
         Optional overlay.  Useful for viewing masks and parameter maps.
-    
+
     overlayColormap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
 
     Returns
@@ -229,17 +229,18 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
                                                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
     return _startViewer(viewer, block, windowTitle)
 
+
 def toList(array, axis=-1, step=1):
     """
     Split a higher dimensional array into a list of lower dimensional arrays.
     Useful for splitting a 3d image into a list of 2d slices passed to compare2d.
 
     """
-    slicesToGet=np.arange(0,array.shape[axis],step)
-    tmp=np.take(array,slicesToGet,axis=axis)
-    return np.split(tmp,tmp.shape[axis],axis=axis)
-    
-    
+    slicesToGet = np.arange(0, array.shape[axis], step)
+    tmp = np.take(array, slicesToGet, axis=axis)
+    return np.split(tmp, tmp.shape[axis], axis=axis)
+
+
 def convertToListIfNecessary(inputData):
     if type(inputData) != list and type(inputData) != tuple:
         inputData = [inputData, ]

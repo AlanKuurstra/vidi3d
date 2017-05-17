@@ -13,8 +13,10 @@ from matplotlib.lines import Line2D
 import _DisplayDefinitions as dd
 import matplotlib.transforms as transforms
 
+
 class NavigationToolbar(NavigationToolbar2QTAgg):
     from ._DisplaySignals import *
+
     def __init__(self, canvas, parent, imgIndex=0):
         super(NavigationToolbar, self).__init__(canvas, parent)
         self.clear()
@@ -29,7 +31,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         a.setToolTip('Zoom to rectangle')
         a = self.addAction(self._icon('move.png'), 'Pan', self.pan)
         a.setToolTip('Pan axes with left mouse, zoom with right')
-        
+
         self.ROIwidget = self.addAction(self._icon(os.path.join(
             os.path.dirname(__file__), "icons/lasso.png")), 'ROI', self.roi)
         self.ROIwidget.setToolTip('Select an ROI for analysis')
@@ -79,7 +81,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.parent.hline.remove()
         self.parent.htxt.remove()
         self.parent.vtxt.remove()
-        #"""        
+        #"""
         """
         self.parent.vline.set_visible(False)
         self.parent.hline.set_visible(False)
@@ -92,13 +94,13 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.parent.axes.texts.remove(self.parent.htxt)
         self.parent.axes.texts.remove(self.parent.vtxt)
         #"""
-        
+
         self.parent.BlitImageAndLines()
         self.signalROIInit.emit(self.imgIndex)
 
     def roi_destructor(self):
-        #use holders different from _idPress because Move and Pan will steal
-        #the reference
+        # use holders different from _idPress because Move and Pan will steal
+        # the reference
         self._idROIPress = self.canvas.mpl_disconnect(self._idROIPress)
         self._idROIRelease = self.canvas.mpl_disconnect(self._idROIRelease)
         self._idROIMove = self.canvas.mpl_disconnect(self._idROIMove)
@@ -172,7 +174,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             if self._ROIactive:
                 self.roi()
             self.ROIwidget.setDisabled(True)
-            
+
             self.parent.axes.texts.remove(self.parent.htxt)
             self.parent.axes.texts.remove(self.parent.vtxt)
             self.parent.axes.lines.remove(self.parent.hline)
@@ -182,13 +184,13 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             axesOffset = transforms.ScaledTranslation(
                 0, .6, self.parent.img.axes.figure.dpi_scale_trans)
             self.movieText = self.parent.img.axes.text(
-                1, -.01, '', fontsize=10, transform=axesTransform,ha='right',va='top')  
-                        
+                1, -.01, '', fontsize=10, transform=axesTransform, ha='right', va='top')
+
             self.parent.BlitImageAndLines()
             self.signalMovieInit.emit(self.imgIndex)
 
         else:
-            
+
             self.movieText.remove()
             del self.movieText
 
@@ -199,8 +201,9 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
 
             self.parent.draw()
             self.parent.blit(self.parent.fig.bbox)
-            self.ROIwidget.setEnabled(True)            
+            self.ROIwidget.setEnabled(True)
             self.signalMovieDestruct.emit(self.imgIndex)
+
 
 class lassoLines():
     def __init__(self):

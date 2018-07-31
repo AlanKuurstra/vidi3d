@@ -10,9 +10,13 @@ The following libraries are required:
 - [Matplotlib](https://matplotlib.org/):  Python plotting package .
 - [PyQt](https://www.riverbankcomputing.com/software/pyqt/): Python bindings for Qt application framework.
 
-To install, use: pip install vidi3d. Note that PyQt must be installed manually.
+To install, use: pip install vidi3d.
 
 The software can also be found at [https://github.com/AlanKuurstra/vidi3d](https://github.com/AlanKuurstra/vidi3d).  
+
+Note that PyQt must be installed manually:
+ubuntu: apt-get install python-qt4
+mac   : brew install cartr/qt4/pyqt
 
 ### Usage
 

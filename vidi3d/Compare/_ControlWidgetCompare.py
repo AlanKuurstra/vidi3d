@@ -335,7 +335,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
 
         self.overlaySliderMinMax = [-np.iinfo('int32').max / 2,
                                     np.iinfo('int32').max / 2]
-        self.overlaySliderToFloat = overlayDiff / \
+        self.overlaySliderToFloat = float(overlayDiff) / \
             (self.overlaySliderMinMax[1] - self.overlaySliderMinMax[0])
         initSliderValue = 0
         initSpinBoxValue = self.overlayMinMax[0] + self.overlaySliderToFloat * (

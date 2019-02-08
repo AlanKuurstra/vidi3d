@@ -65,7 +65,7 @@ class _MainWindow(QtGui.QMainWindow):
         numImages = len(self.complexImList)
         complexImShape = self.complexImList[0].shape
         imageType = dd.ImageType.mag
-        if pixdim != None:
+        if pixdim is not None:
             aspect = np.float(pixdim[1]) / pixdim[0]
         else:
             aspect = 'equal'

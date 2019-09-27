@@ -9,7 +9,7 @@ from .._NavigationToolbar import NavigationToolbar
 from .. import _MplImage as _MplImage
 from .. import _MplPlot as _MplPlot
 from .. import _DisplayDefinitions as dd
-import _ControlWidgetCompare
+from . import _ControlWidgetCompare
 import matplotlib.pyplot as plt
 from matplotlib import path
 import matplotlib.animation as animation
@@ -106,8 +106,8 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up Controls
         #
-        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexImShape, location=self.loc, imageType=imageType, locationLabels=locationLabels, imgVals=zip(
-            subplotTitles, np.zeros(len(subplotTitles))), overlayUsed=overlayUsed, overlayMinMax=overlayMinMax, parent=self)
+        self.controls = _ControlWidgetCompare._ControlWidgetCompare(imgShape=complexImShape, location=self.loc, imageType=imageType, locationLabels=locationLabels, imgVals=list(zip(
+            subplotTitles, np.zeros(len(subplotTitles)))), overlayUsed=overlayUsed, overlayMinMax=overlayMinMax, parent=self)
         if not overlayUsed:
             self.controls.overlayThresholdWidget.setEnabled(False)
         #
@@ -248,14 +248,14 @@ class _MainWindow(QtGui.QMainWindow):
 
         # Connect signals from imagePanel toolbars
         for currimagePanelToolbar in self.imagePanelToolbarsList:
-            currimagePanelToolbar.signalROIInit.connect(self.initializeROI)
-            currimagePanelToolbar.signalROIDestruct.connect(self.destructROI)
-            currimagePanelToolbar.signalROIStart.connect(self.startNewROI)
-            currimagePanelToolbar.signalROIChange.connect(self.updateROI)
-            currimagePanelToolbar.signalROIEnd.connect(self.endROI)
-            currimagePanelToolbar.signalROICancel.connect(self.cancelROI)
-            currimagePanelToolbar.signalMovieInit.connect(self.initializeMovie)
-            currimagePanelToolbar.signalMovieDestruct.connect(
+            currimagePanelToolbar.signals.signalROIInit.connect(self.initializeROI)
+            currimagePanelToolbar.signals.signalROIDestruct.connect(self.destructROI)
+            currimagePanelToolbar.signals.signalROIStart.connect(self.startNewROI)
+            currimagePanelToolbar.signals.signalROIChange.connect(self.updateROI)
+            currimagePanelToolbar.signals.signalROIEnd.connect(self.endROI)
+            currimagePanelToolbar.signals.signalROICancel.connect(self.cancelROI)
+            currimagePanelToolbar.signals.signalMovieInit.connect(self.initializeMovie)
+            currimagePanelToolbar.signals.signalMovieDestruct.connect(
                 self.destructMovie)
 
     def setViewerNumber(self, number):

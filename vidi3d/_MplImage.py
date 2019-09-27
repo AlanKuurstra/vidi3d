@@ -7,13 +7,11 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt4 import QtCore, QtGui
-import _Core
-import _DisplayDefinitions as dd
+from . import _Core
+from . import _DisplayDefinitions as dd
+from ._DisplaySignals import SignalsObject
 
-
-class _MplImage(FigureCanvas):
-    from _DisplaySignals import *
-
+class _MplImage(SignalsObject,FigureCanvas):
     def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
         #
         # Qt related initialization
@@ -73,7 +71,7 @@ class _MplImage(FigureCanvas):
         self.fig.patch.set_color(currLabels[2]['color'])
         self.axes = self.fig.add_axes([.1, .05, .8, .8])
         if origin != 'upper' and origin != 'lower':
-            print "origin parameter not understood, defaulting to 'lower'"
+            print("origin parameter not understood, defaulting to 'lower'")
             origin = 'lower'
         self.img = self.axes.imshow(np.zeros(complexImage.shape).T, aspect=aspect,
                                     interpolation=interpolation, origin=origin, cmap=self.colormap)
@@ -273,7 +271,7 @@ class _MplImage(FigureCanvas):
         elif self._imageType == dd.ImageType.imag:
             intensityImage = np.imag(self.complexImageData)
 
-        self.dynamicRange = np.max(intensityImage) - np.min(intensityImage)
+        self.dynamicRange = np.float(np.max(intensityImage)) - np.float(np.min(intensityImage))
         self.img.set_data(intensityImage.T)
         # reason for transpose:
         # matplotlib shows 10x20 matrix with height of 10 and width of 20

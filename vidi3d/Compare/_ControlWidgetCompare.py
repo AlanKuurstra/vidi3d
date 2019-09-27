@@ -6,11 +6,10 @@ import numpy as np
 from PyQt4 import QtGui, QtCore
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd
+from .._DisplaySignals import SignalsObject
+from PyQt4 import QtCore
 
-
-class _ControlWidgetCompare(QtGui.QWidget):
-    from .._DisplaySignals import *
-
+class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
     def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=[-np.finfo('float').max / 2, np.finfo('float').max / 2]):
         _Core._create_qApp()
         QtGui.QWidget.__init__(self)
@@ -311,7 +310,7 @@ class _ControlWidgetCompare(QtGui.QWidget):
         self.lowerThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider.setInvertedAppearance(True)
-        overlayDiff = (overlayMinMax[1] - overlayMinMax[0])
+        overlayDiff = (np.float(overlayMinMax[1]) - overlayMinMax[0])
         mant, exp = ('%.5e' % overlayDiff).split('e')
         if np.double(mant) < 5.0:
             exp = int(exp)

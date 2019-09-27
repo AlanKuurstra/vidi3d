@@ -7,8 +7,8 @@ classes and functions within this class.
 from PyQt4 import QtGui, QtCore
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd
-import _MplImage4D
-import _ControlWidget4D
+from . import _MplImage4D
+from . import _ControlWidget4D
 
 
 class _MainWindow(QtGui.QMainWindow):

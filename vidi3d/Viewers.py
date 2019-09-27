@@ -7,9 +7,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 # plt.ion()
 from PyQt4 import QtGui, QtCore
-import _Core as _Core
-import Imshow._MainWindow4D
-import Compare._MainWindowCompare
+from . import  _Core
+from .Imshow import _MainWindow4D
+from .Compare import _MainWindowCompare
 import numpy as np
 
 
@@ -64,7 +64,7 @@ def imshow3d(data, pixdim=None, interpolation='none', block=True):
 
     if data.ndim == 3:
         data = data[..., np.newaxis]
-    viewer = Imshow._MainWindow4D._MainWindow(
+    viewer = _MainWindow4D._MainWindow(
         data, pixdim, interpolation=interpolation)
     if not block:
         viewer.imagePanel3D.raw = np.copy(viewer.imagePanel3D.raw)
@@ -225,7 +225,7 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
     if data[0].ndim == 3:
         for indx in range(len(data)):
             data[indx] = data[indx][..., np.newaxis]
-    viewer = Compare._MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
+    viewer = _MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
                                                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
     return _startViewer(viewer, block, windowTitle)
 

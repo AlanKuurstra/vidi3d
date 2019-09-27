@@ -4,7 +4,7 @@ to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import _DisplayDefinitions as dd
+from . import _DisplayDefinitions as dd
 from PyQt4 import QtCore, QtGui
 import numpy as np
 try:
@@ -156,7 +156,7 @@ class _MplPlot(FigureCanvas):
         elif self._dataType == dd.ImageType.imag:
             data = np.imag(complexData)
         else:
-            print "Data type not recognized"
+            print("Data type not recognized")
             return
         return data
 

@@ -14,8 +14,8 @@ To install, use: pip install vidi3d.
 
 The software can also be found at [https://github.com/AlanKuurstra/vidi3d](https://github.com/AlanKuurstra/vidi3d).  
 
-Note that PyQt must be installed manually:
-ubuntu: apt-get install python-qt4
+Note that PyQt must be installed manually:  
+ubuntu: apt-get install python-qt4  
 mac   : brew install cartr/qt4/pyqt
 
 ### Usage

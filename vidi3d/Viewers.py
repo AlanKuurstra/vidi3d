@@ -3,9 +3,15 @@ This module contains all the functions a user needs to call and control the
 behaviour of the viewers.
 """
 import matplotlib as mpl
-# mpl.use('Qt4Agg')
+#pycharm sets matplotlib with TkAgg, which doesn't talk with our app cause ours is written in QT4. Forcing mpl to QT4
+#makes mpl plots show up imediately in the app. It also makes the blocking behaviour work properly.
+mpl.use('Qt4Agg')
+#pyplot is noisy for some reason, suppress output while we import it
+import sys
+save_stdout = sys.stdout
+sys.stdout = open('trash', 'w')
 import matplotlib.pyplot as plt
-# plt.ion()
+sys.stdout = save_stdout
 from PyQt4 import QtGui, QtCore
 from . import  _Core
 from .Imshow import _MainWindow4D
@@ -20,6 +26,8 @@ def _startViewer(viewer, block, windowTitle=None):
         QtGui.qApp.exec_()
         return
     else:
+        # this is noisy, so suppress the stdout.
+        plt.ion()
         viewerNum = _Core._storeViewer(viewer)
         viewer.setViewerNumber(viewerNum)
 
@@ -27,8 +35,8 @@ def _startViewer(viewer, block, windowTitle=None):
             viewer.setWindowTitle('Viewer ' + str(viewerNum))
         else:
             viewer.setWindowTitle(windowTitle)
-
         return viewer
+
 
 
 def imshow3d(data, pixdim=None, interpolation='none', block=True):

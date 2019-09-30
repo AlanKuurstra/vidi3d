@@ -384,8 +384,12 @@ class _MainWindow(QtGui.QMainWindow):
     #==================================================================
     def initializeROI(self, imgIndex):
         self.controls.roiAnalysisWidget.setEnabled(True)
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
-            self.ChangeLocation)
+        #this does what we need and then throws some sort of error. this is a very bad way to suppress the error,
+        #do it anyway until there's time to port everything to QT5
+        try:
+            self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
+        except:
+            pass
 
     def destructROI(self, imgIndex):
         atLeastOneActive = False
@@ -463,6 +467,7 @@ class _MainWindow(QtGui.QMainWindow):
         mask = self.getROIMask()
         imageType = self.imagePanelsList[0]._imageType
         fig = None
+        num_active_plots = 0
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar = self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._ROIactive:
@@ -471,9 +476,10 @@ class _MainWindow(QtGui.QMainWindow):
                 avgTimeseries = data[mask].mean(axis=0)
                 if fig == None:
                     fig = plt.figure()
-                plt.plot(
-                    avgTimeseries, dd.PlotColours.colours[index], label=self.subplotTitles[index])
-        plt.legend()
+                plt.plot(avgTimeseries, dd.PlotColours.colours[index], label=self.subplotTitles[index])
+                num_active_plots+=1
+        if not (num_active_plots<=1 and self.subplotTitles[index]==""):
+            plt.legend()
         plt.xlabel("Volume")
         plt.ylabel("Average Signal")
 
@@ -481,6 +487,7 @@ class _MainWindow(QtGui.QMainWindow):
         mask = self.getROIMask()
         imageType = self.imagePanelsList[0]._imageType
         fig = None
+        num_active_plots = 0
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar = self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._ROIactive:
@@ -494,7 +501,9 @@ class _MainWindow(QtGui.QMainWindow):
                     fig = plt.figure()
                 plt.plot(
                     pscTimeseries, dd.PlotColours.colours[index], label=self.subplotTitles[index])
-        plt.legend()
+                num_active_plots += 1
+        if not (num_active_plots <= 1 and self.subplotTitles[index] == ""):
+            plt.legend()
         plt.xlabel("Volume")
         plt.ylabel("Percent Signal Change")
 
@@ -505,6 +514,7 @@ class _MainWindow(QtGui.QMainWindow):
         colorList = []
         labelList = []
         fig = False
+        num_active_plots = 0
         for index in range(len(self.imagePanelToolbarsList)):
             currimagePanelToolbar = self.imagePanelToolbarsList[index]
             if currimagePanelToolbar._ROIactive:
@@ -517,10 +527,12 @@ class _MainWindow(QtGui.QMainWindow):
                 #bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
                 #plt.plot(bincenters,y,'-',marker="s",color=dd.PlotColours.colours[index], label=self.subplotTitles[index])
                 fig = True
+                num_active_plots += 1
         if fig:
             plt.figure()
             plt.hist(dataList, bins=numBins, color=colorList, label=labelList)
-            plt.legend()
+            if not (num_active_plots <= 1 and self.subplotTitles[index] == ""):
+                plt.legend()
 
     def clearROI(self):
         self.ROIData.verts = {}
@@ -598,8 +610,12 @@ class _MainWindow(QtGui.QMainWindow):
             self.moviePlayer.moviePaused = False
             if not self.moviePlayer.moviePaused:
                 self.moviePlayer.event_source.start()
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(
-            self.ChangeLocation)
+        # this does what we need and then throws some sort of error. this is a very bad way to suppress the error,
+        # do it anyway until there's time to port everything to QT5
+        try:
+            self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
+        except:
+            pass
         self.imagePanelsList[imgIndex].overlay.set_visible(False)
         self.moviePlayer._draw_next_frame(self.currentMovieFrame, True)
 
@@ -631,7 +647,7 @@ class _MainWindow(QtGui.QMainWindow):
     def movieGotoFrame(self, frame):
         newFrameSeq = self.moviePlayer.new_frame_seq()
         for i in range(frame):
-            newFrameSeq.next()
+            next(newFrameSeq)
         self.moviePlayer.frame_seq = newFrameSeq
         self.moviePlayer._draw_next_frame(frame, True)
 

@@ -75,7 +75,8 @@ class _MplImage(SignalsObject,FigureCanvas):
             origin = 'lower'
         self.img = self.axes.imshow(np.zeros(complexImage.shape).T, aspect=aspect,
                                     interpolation=interpolation, origin=origin, cmap=self.colormap)
-        self.overlay = self.axes.imshow(self.overlayData.T, aspect=aspect,
+        if overlay is not None:
+            self.overlay = self.axes.imshow(self.overlayData.T, aspect=aspect,
                                         interpolation=interpolation, origin=origin, alpha=0.3, cmap=self.overlayColormap)
         self._imageType = dd.ImageType.mag
         self.setMplImg()

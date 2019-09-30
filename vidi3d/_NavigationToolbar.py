@@ -137,7 +137,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         #"""
 
         self.parent.BlitImageAndLines()
-        self.signalROIInit.emit(self.imgIndex)
+        self.signals.signalROIInit.emit(self.imgIndex)
 
     def roi_destructor(self):
         # use holders different from _idPress because Move and Pan will steal
@@ -172,7 +172,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 self.ax.lines.remove(currentLine)
 
         self.parent.BlitImageAndLines()
-        self.signalROIDestruct.emit(self.imgIndex)
+        self.signals.signalROIDestruct.emit(self.imgIndex)
 
     def roi_release(self, event):
 
@@ -185,7 +185,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 self.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signalROIEnd.emit(event.xdata, event.ydata)
+        self.signals.signalROIEnd.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = False
 
     def roi_press(self, event):
@@ -194,10 +194,10 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             return
         if event.button != 1:
             if self.roiDrawingEngaged:
-                self.signalROICancel.emit()
+                self.signals.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signalROIStart.emit(event.xdata, event.ydata)
+        self.signals.signalROIStart.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = True
 
     def roi_move(self, event):
@@ -207,7 +207,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             return
         if event.inaxes != self.ax:
             return
-        self.signalROIChange.emit(event.xdata, event.ydata)
+        self.signals.signalROIChange.emit(event.xdata, event.ydata)
 
     def playMovie(self):
         self._movieActive = not self._movieActive
@@ -228,7 +228,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 1, -.01, '', fontsize=10, transform=axesTransform, ha='right', va='top')
 
             self.parent.BlitImageAndLines()
-            self.signalMovieInit.emit(self.imgIndex)
+            self.signals.signalMovieInit.emit(self.imgIndex)
 
         else:
 
@@ -243,7 +243,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             self.parent.draw()
             self.parent.blit(self.parent.fig.bbox)
             self.ROIwidget.setEnabled(True)
-            self.signalMovieDestruct.emit(self.imgIndex)
+            self.signals.signalMovieDestruct.emit(self.imgIndex)
 
 
 class lassoLines():

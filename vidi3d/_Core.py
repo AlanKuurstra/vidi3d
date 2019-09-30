@@ -26,7 +26,7 @@ def _storeViewer(viewer):
     viewerCount = 0
     while(1):
         viewerCount += 1
-        if not _viewerList.has_key(viewerCount):
+        if not viewerCount in _viewerList:
             _viewerList[viewerCount] = viewer
             break
     return viewerCount

@@ -616,7 +616,8 @@ class _MainWindow(QtGui.QMainWindow):
             self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
         except:
             pass
-        self.imagePanelsList[imgIndex].overlay.set_visible(False)
+        if self.overlayList[imgIndex] is not None:
+            self.imagePanelsList[imgIndex].overlay.set_visible(False)
         self.moviePlayer._draw_next_frame(self.currentMovieFrame, True)
 
     def destructMovie(self, imgIndex):
@@ -630,7 +631,8 @@ class _MainWindow(QtGui.QMainWindow):
             self.moviePlayer.moviePaused = True
         self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
             self.ChangeLocation)
-        self.imagePanelsList[imgIndex].overlay.set_visible(True)
+        if self.overlayList[imgIndex] is not None:
+            self.imagePanelsList[imgIndex].overlay.set_visible(True)
         self.imagePanelsList[imgIndex].showComplexImageChange(
             self.complexImList[imgIndex][:, :, self.loc[2], self.loc[3]])
 

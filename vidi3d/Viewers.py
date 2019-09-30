@@ -164,7 +164,7 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
             except:
                 pass
 
-    viewer = Compare._MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
+    viewer = _MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
                                                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
     return _startViewer(viewer, block, windowTitle)
 

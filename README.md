@@ -16,7 +16,7 @@ The software can also be found at [https://github.com/AlanKuurstra/vidi3d](https
 
 Note that PyQt4 must be installed manually:  
 ubuntu: apt-get install python-qt4  
-mac   : brew install cartr/qt4/pyqt  
+mac   : brew install cartr/qt4/pyqt@4 --with-python --without-python@2
 win   : https://stackoverflow.com/questions/22640640/how-to-install-pyqt4-on-windows-using-pip
 
 ### Usage

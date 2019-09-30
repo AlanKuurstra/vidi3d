@@ -18,7 +18,7 @@ class _MainWindow(QtGui.QMainWindow):
         if initLocation is None:
             initLocation = [complexIm3.shape[0] / 2,
                             complexIm3.shape[1] / 2, complexIm3.shape[2] / 2, 0]
-
+        initLocation = list(map(int, initLocation))
         self.setWindowTitle('Imshow Viewer')
         self.viewerNumber = 0
         self.imagePanel4D = _MplImage4D._MplImage4D(

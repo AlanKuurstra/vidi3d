@@ -10,7 +10,7 @@ setup(
   name = 'vidi3d',
   packages = ['vidi3d','vidi3d.Imshow','vidi3d.Compare'],
   package_data={'vidi3d': ['icons/*','Examples/*']},
-  version = '0.2.0',
+  version = '1.0.0',
   install_requires = [
   'numpy',
   #'PyQt4', #no PyQt4 in pipy
@@ -19,7 +19,7 @@ setup(
   author = 'Alan Kuurstra',
   author_email = 'alankuurstra@gmail.com',
   url = 'https://github.com/AlanKuurstra/vidi3d', # use the URL to the github repo
-  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/0.2.0.tar.gz', 
+  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/1.0.0.tar.gz', 
   keywords = ['3d', 'image', 'viewer', 'medical', 'numpy'],
   classifiers = [],
 )

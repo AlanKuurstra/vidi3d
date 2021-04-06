@@ -4,14 +4,14 @@ ControlWidget4D.  Also connections are made between QT signals sent by other
 classes and functions within this class.
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd
 from . import _MplImage4D
 from . import _ControlWidget4D
 
 
-class _MainWindow(QtGui.QMainWindow):
+class _MainWindow(QtWidgets.QMainWindow):
     def __init__(self, complexIm3, pixdim, interpolation='bicubic', initLocation=None, imageType=dd.ImageType.mag):
         _Core._create_qApp()
         super(_MainWindow, self).__init__()
@@ -19,15 +19,15 @@ class _MainWindow(QtGui.QMainWindow):
             initLocation = [complexIm3.shape[0] / 2,
                             complexIm3.shape[1] / 2, complexIm3.shape[2] / 2, 0]
         initLocation = list(map(int, initLocation))
-        self.setWindowTitle('Imshow Viewer')
+        self.setWindowTitle('Vidi3d: Imshow')
         self.viewerNumber = 0
         self.imagePanel4D = _MplImage4D._MplImage4D(
             complexIm3, pixdim, interpolation, initLocation, imageType, parent=self)
         self.controls = _ControlWidget4D._ControlWidget4D(
             complexIm3.shape, initLocation, imageType, parent=self)
 
-        mprWidget = QtGui.QWidget()
-        layoutmpr = QtGui.QGridLayout()
+        mprWidget = QtWidgets.QWidget()
+        layoutmpr = QtWidgets.QGridLayout()
         layoutmpr.addWidget(self.controls, 1, 0)
         layoutmpr.addWidget(self.imagePanel4D.xsliceNav, 2, 0)
         layoutmpr.addWidget(self.imagePanel4D.xslice, 3, 0)
@@ -37,15 +37,15 @@ class _MainWindow(QtGui.QMainWindow):
         layoutmpr.addWidget(self.imagePanel4D.zslice, 3, 1)
         mprWidget.setLayout(layoutmpr)
 
-        plotsWidget = QtGui.QWidget()
-        layoutplots = QtGui.QVBoxLayout()
+        plotsWidget = QtWidgets.QWidget()
+        layoutplots = QtWidgets.QVBoxLayout()
         layoutplots.addWidget(self.imagePanel4D.xplot)
         layoutplots.addWidget(self.imagePanel4D.yplot)
         layoutplots.addWidget(self.imagePanel4D.zplot)
         layoutplots.addWidget(self.imagePanel4D.tplot)
         plotsWidget.setLayout(layoutplots)
 
-        splitter = QtGui.QSplitter()
+        splitter = QtWidgets.QSplitter()
         splitter.addWidget(mprWidget)
         splitter.addWidget(plotsWidget)
 

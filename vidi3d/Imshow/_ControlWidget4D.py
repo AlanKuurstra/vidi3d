@@ -2,25 +2,25 @@
 This class contains the widgets for user control in the 4D viewer.
 """
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from .. import _Core as _Core
 from .._DisplaySignals import SignalsObject
 
-class _ControlWidget4D(SignalsObject,QtGui.QWidget):
+class _ControlWidget4D(SignalsObject,QtWidgets.QWidget):
     def __init__(self, image4DShape, initLocation, imageType, parent=None):
         _Core._create_qApp()
         super(_ControlWidget4D, self).__init__()
         self.image4DShape = image4DShape
-        controlLayout = QtGui.QVBoxLayout(self)
+        controlLayout = QtWidgets.QVBoxLayout(self)
 
         #
         # Image Type
         #
-        imTypeLayout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
+        imTypeLayout = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel()
         label.setText("Image Type")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.imgType = QtGui.QComboBox()
+        self.imgType = QtWidgets.QComboBox()
         # the order of these have to match DisplayDefinitions class...consider changing that class to a dictionary
         # to use here
         self.imgType.addItem("Real")
@@ -29,102 +29,93 @@ class _ControlWidget4D(SignalsObject,QtGui.QWidget):
         self.imgType.addItem("Phase")
         self.imgType.setCurrentIndex(imageType)
 
-        QtCore.QObject.connect(self.imgType, QtCore.SIGNAL(
-            "currentIndexChanged(int)"), self.changeImageType)
+        self.imgType.currentIndexChanged.connect(self.changeImageType)
         imTypeLayout.addWidget(label)
         imTypeLayout.addWidget(self.imgType)
 
         #
         # Window/Level
         #
-        self.wlLayout = QtGui.QHBoxLayout()
-        self.window = QtGui.QDoubleSpinBox()
+        self.wlLayout = QtWidgets.QHBoxLayout()
+        self.window = QtWidgets.QDoubleSpinBox()
         self.window.setMaximumWidth(70)
         self.window.setDecimals(3)
         self.window.setMaximum(1.7 * 10**308)
-        QtCore.QObject.connect(self.window, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeWindow)
-        self.level = QtGui.QDoubleSpinBox()
+        self.window.valueChanged.connect(self.changeWindow)
+        self.level = QtWidgets.QDoubleSpinBox()
         self.level.setMaximumWidth(70)
         self.level.setDecimals(3)
         self.level.setMaximum(1.7 * 10**308)
         self.level.setMinimum(-1.7 * 10**308)
         self.level.setValue(np.floor(self.window.value() / 2))
-        QtCore.QObject.connect(self.level, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeLevel)
-        label = QtGui.QLabel()
+        self.level.valueChanged.connect(self.changeLevel)
+        label = QtWidgets.QLabel()
         label.setText("Window")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         self.wlLayout.addWidget(label)
         self.wlLayout.addWidget(self.window)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("Level")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         self.wlLayout.addWidget(label)
         self.wlLayout.addWidget(self.level)
-        button = QtGui.QPushButton("Default")
-        QtCore.QObject.connect(
-            button, QtCore.SIGNAL("clicked()"), self.reset_wl)
+        button = QtWidgets.QPushButton("Default")
+        button.clicked.connect(self.reset_wl)
         self.wlLayout.addWidget(button)
 
         #
         # Location
         #
-        locLayout = QtGui.QHBoxLayout()
-        self.xcontrol = QtGui.QDoubleSpinBox()
+        locLayout = QtWidgets.QHBoxLayout()
+        self.xcontrol = QtWidgets.QDoubleSpinBox()
         self.xcontrol.setDecimals(0)
         self.xcontrol.setMaximum(self.image4DShape[0] - 1)
         self.xcontrol.setValue(initLocation[0])
-        QtCore.QObject.connect(self.xcontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeXcontrol)
-        self.ycontrol = QtGui.QDoubleSpinBox()
+        self.xcontrol.valueChanged.connect(self.changeXcontrol)
+        self.ycontrol = QtWidgets.QDoubleSpinBox()
         self.ycontrol.setDecimals(0)
         self.ycontrol.setMaximum(self.image4DShape[1] - 1)
         self.ycontrol.setValue(initLocation[1])
-        QtCore.QObject.connect(self.ycontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeYcontrol)
-        self.zcontrol = QtGui.QDoubleSpinBox()
+        self.ycontrol.valueChanged.connect(self.changeYcontrol)
+        self.zcontrol = QtWidgets.QDoubleSpinBox()
         self.zcontrol.setDecimals(0)
         self.zcontrol.setMaximum(self.image4DShape[2] - 1)
         self.zcontrol.setValue(initLocation[2])
-        QtCore.QObject.connect(self.zcontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeZcontrol)
+        self.zcontrol.valueChanged.connect(self.changeZcontrol)
 
-        self.tcontrol = QtGui.QDoubleSpinBox()
+        self.tcontrol = QtWidgets.QDoubleSpinBox()
         self.tcontrol.setDecimals(0)
         self.tcontrol.setMaximum(self.image4DShape[3] - 1)
         self.tcontrol.setValue(initLocation[3])
-        QtCore.QObject.connect(self.tcontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeTcontrol)
+        self.tcontrol.valueChanged.connect(self.changeTcontrol)
 
-        self.tavgradcontrol = QtGui.QDoubleSpinBox()
+        self.tavgradcontrol = QtWidgets.QDoubleSpinBox()
         self.tavgradcontrol.setDecimals(0)
         self.tavgradcontrol.setMaximum(min(self.image4DShape[:-1]) - 1)
         self.tavgradcontrol.setValue(0)
-        QtCore.QObject.connect(self.tavgradcontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeTavgRadcontrol)
+        self.tavgradcontrol.valueChanged.connect(self.changeTavgRadcontrol)
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("X")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locLayout.addWidget(label)
         locLayout.addWidget(self.xcontrol)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("Y")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locLayout.addWidget(label)
         locLayout.addWidget(self.ycontrol)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("Z")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locLayout.addWidget(label)
         locLayout.addWidget(self.zcontrol)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("volume")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locLayout.addWidget(label)
         locLayout.addWidget(self.tcontrol)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("t_avg rad")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         # locLayout.addWidget(label)
@@ -136,8 +127,8 @@ class _ControlWidget4D(SignalsObject,QtGui.QWidget):
         # this makes the controls widget the parent of all wlLayout's widgets
         controlLayout.addLayout(self.wlLayout)
         controlLayout.addStretch()
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                           QtGui.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                           QtWidgets.QSizePolicy.Expanding)
 
     # signals to emit when a control panel dial is changed
     def changeImageType(self, index):

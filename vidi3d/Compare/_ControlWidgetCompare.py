@@ -3,18 +3,18 @@ This class contains the widgets for user control in the compare viewer.
 """
 
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd
 from .._DisplaySignals import SignalsObject
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
-class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
+class _ControlWidgetCompare(SignalsObject,QtWidgets.QWidget):
     def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=[-np.finfo('float').max / 2, np.finfo('float').max / 2]):
         _Core._create_qApp()
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.parent = parent
-        controlLayout = QtGui.QGridLayout(self)
+        controlLayout = QtWidgets.QGridLayout(self)
         self.controlLayout = controlLayout
         layoutRowIndex = 0
         #
@@ -34,10 +34,10 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         self.imageTypeLookup[2] = dd.ImageType.real
         self.imageTypeLookup[3] = dd.ImageType.imag
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("View")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.imgType = QtGui.QComboBox()
+        self.imgType = QtWidgets.QComboBox()
         self.imgType.addItem("Magnitude")
         self.imgType.addItem("Phase")
         self.imgType.addItem("Real")
@@ -49,33 +49,33 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         #
         # Window/Level
         #
-        wlLayout = QtGui.QHBoxLayout()
-        wlSpinboxLayout = QtGui.QGridLayout()
+        wlLayout = QtWidgets.QHBoxLayout()
+        wlSpinboxLayout = QtWidgets.QGridLayout()
         self.currWindow = 0.0
         self.currLevel = 0.0
-        self.window = QtGui.QDoubleSpinBox()
+        self.window = QtWidgets.QDoubleSpinBox()
         self.window.setDecimals(3)
         self.window.setMaximum(1.7 * 10**308)
         self.window.setMaximumWidth(80)
-        self.level = QtGui.QDoubleSpinBox()
+        self.level = QtWidgets.QDoubleSpinBox()
         self.level.setDecimals(3)
         self.level.setMaximum(1.7 * 10**308)
         self.level.setMinimum(-1.7 * 10**308)
         self.level.setMaximumWidth(80)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("W")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
 
         wlSpinboxLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
         wlSpinboxLayout.addWidget(self.window, 0, 1)
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("L")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         wlSpinboxLayout.addWidget(label, 1, 0, alignment=QtCore.Qt.AlignRight)
         wlSpinboxLayout.addWidget(self.level, 1, 1)
         wlLayout.addLayout(wlSpinboxLayout)
-        self.wlbutton = QtGui.QPushButton("Default W/L")
+        self.wlbutton = QtWidgets.QPushButton("Default W/L")
         wlLayout.addWidget(self.wlbutton)
         self.controlLayout.addLayout(
             wlLayout, layoutRowIndex, 0, alignment=QtCore.Qt.AlignLeft)
@@ -84,21 +84,21 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         #
         # Location Controls
         #
-        locationLayout = QtGui.QGridLayout()
+        locationLayout = QtWidgets.QGridLayout()
         self.location = list(np.array(location).copy())
-        self.xcontrol = QtGui.QSpinBox()
+        self.xcontrol = QtWidgets.QSpinBox()
         self.xcontrol.setMinimum(0)
         self.xcontrol.setMaximum(imgShape[0] - 1)
         self.xcontrol.setValue(location[0])
-        self.ycontrol = QtGui.QSpinBox()
+        self.ycontrol = QtWidgets.QSpinBox()
         self.ycontrol.setMinimum(0)
         self.ycontrol.setMaximum(imgShape[1] - 1)
         self.ycontrol.setValue(location[1])
-        self.zcontrol = QtGui.QSpinBox()
+        self.zcontrol = QtWidgets.QSpinBox()
         self.zcontrol.setMinimum(0)
         self.zcontrol.setMaximum(imgShape[2] - 1)
         self.zcontrol.setValue(location[2])
-        self.tcontrol = QtGui.QDoubleSpinBox()
+        self.tcontrol = QtWidgets.QDoubleSpinBox()
         self.tcontrol.setDecimals(0)
         self.tcontrol.setMaximum(imgShape[3] - 1)
         self.tcontrol.setValue(0)
@@ -106,37 +106,37 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         if locationLabels is None:
             locationLabels = ["X", "Y", "Z", "T"]
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText(locationLabels[0])
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locationLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
         locationLayout.addWidget(self.xcontrol, 0, 1)
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText(locationLabels[1])
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locationLayout.addWidget(label, 0, 2, alignment=QtCore.Qt.AlignRight)
         locationLayout.addWidget(self.ycontrol, 0, 3)
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText(locationLabels[2])
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         locationLayout.addWidget(label, 0, 4, alignment=QtCore.Qt.AlignRight)
         locationLayout.addWidget(self.zcontrol, 0, 5)
 
-        temporalLayout = QtGui.QHBoxLayout()  # QtGui.QGridLayout()
+        temporalLayout = QtWidgets.QHBoxLayout()  # QtWidgets.QGridLayout()
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText(locationLabels[3])
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         # , 0, 0, alignment=QtCore.Qt.AlignRight)
         temporalLayout.addWidget(label, alignment=QtCore.Qt.AlignRight)
         temporalLayout.addWidget(self.tcontrol)  # , 0, 1)
         temporalLayout.addStretch(1)
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("Lock 1D Plots:")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.lockPlotsCheckbox = QtGui.QCheckBox()
+        self.lockPlotsCheckbox = QtWidgets.QCheckBox()
         # , 0, 3, alignment=QtCore.Qt.AlignRight)
         temporalLayout.addWidget(label, alignment=QtCore.Qt.AlignRight)
         # , 0, 4, alignment=QtCore.Qt.AlignLeft)
@@ -153,10 +153,10 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         #
         # Movie Controls
         #
-        movieLayout = QtGui.QVBoxLayout()
-        intervalLayout = QtGui.QGridLayout()
+        movieLayout = QtWidgets.QVBoxLayout()
+        intervalLayout = QtWidgets.QGridLayout()
 
-        label = QtGui.QLabel()
+        label = QtWidgets.QLabel()
         label.setText("Interval")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         intervalLayout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
@@ -170,12 +170,12 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         
         movieSliderMin = movieFpsMin * self.numberOfStepsBetweenMovieSliderIntegers
         movieSliderMax = movieFpsMax * self.numberOfStepsBetweenMovieSliderIntegers
-        self.movieFpsSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.movieFpsSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.movieFpsSlider.setMinimum(movieSliderMin)
         self.movieFpsSlider.setMaximum(movieSliderMax)
         self.movieFpsSlider.setValue(
             initFps * self.numberOfStepsBetweenMovieSliderIntegers)
-        self.movieFpsSpinbox = QtGui.QDoubleSpinBox()
+        self.movieFpsSpinbox = QtWidgets.QDoubleSpinBox()
         self.movieFpsSpinbox.setMinimum(movieFpsMin)
         self.movieFpsSpinbox.setMaximum(movieFpsMax)
         self.movieFpsSpinbox.setValue(initFps)
@@ -189,16 +189,16 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
 
         movieSliderMin = movieIntervalMin * self.numberOfStepsBetweenMovieSliderIntegers
         movieSliderMax = movieIntervalMax * self.numberOfStepsBetweenMovieSliderIntegers
-        self.movieIntervalSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.movieIntervalSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.movieIntervalSlider.setMinimum(movieSliderMin)
         self.movieIntervalSlider.setMaximum(movieSliderMax)
         self.movieIntervalSlider.setValue(
             initInterval * self.numberOfStepsBetweenMovieSliderIntegers)
-        self.movieIntervalSpinbox = QtGui.QSpinBox()
+        self.movieIntervalSpinbox = QtWidgets.QSpinBox()
         self.movieIntervalSpinbox.setMinimum(1)
         self.movieIntervalSpinbox.setMaximum(movieIntervalMax)
         self.movieIntervalSpinbox.setValue(initInterval)
-        self.moviePauseButton = QtGui.QPushButton("||")
+        self.moviePauseButton = QtWidgets.QPushButton("||")
         self.moviePauseButton.setCheckable(True)
         self.moviePauseButton.setFixedWidth(40)
 
@@ -206,14 +206,14 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         intervalLayout.addWidget(self.movieIntervalSpinbox, 0, 2)
         intervalLayout.addWidget(self.moviePauseButton, 0, 3)
 
-        frameControlLayout = QtGui.QGridLayout()
-        label = QtGui.QLabel()
+        frameControlLayout = QtWidgets.QGridLayout()
+        label = QtWidgets.QLabel()
         label.setText("Goto frame:")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.movieFrameSpinbox = QtGui.QSpinBox()
+        self.movieFrameSpinbox = QtWidgets.QSpinBox()
         self.movieFrameSpinbox.setMinimum(0)
         self.movieFrameSpinbox.setMaximum(imgShape[-1] - 1)
-        self.movieGotoFrameButton = QtGui.QPushButton("Go")
+        self.movieGotoFrameButton = QtWidgets.QPushButton("Go")
         frameControlLayout.addWidget(label, 0, 0)
         frameControlLayout.addWidget(self.movieFrameSpinbox, 0, 1)
         frameControlLayout.addWidget(self.movieGotoFrameButton, 0, 2)
@@ -221,7 +221,7 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         movieLayout.addLayout(intervalLayout)
         movieLayout.addLayout(frameControlLayout)
 
-        movieWidget = QtGui.QGroupBox()
+        movieWidget = QtWidgets.QGroupBox()
         movieWidget.setTitle('Movie Control')
         movieWidget.setLayout(movieLayout)
         movieWidget.setStyleSheet("\
@@ -242,41 +242,41 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         #
         # ROI Analysis
         #
-        roiLayout = QtGui.QVBoxLayout()
-        tmp = QtGui.QHBoxLayout()
-        self.deleteLastROIButton = QtGui.QPushButton("Delete Last")
+        roiLayout = QtWidgets.QVBoxLayout()
+        tmp = QtWidgets.QHBoxLayout()
+        self.deleteLastROIButton = QtWidgets.QPushButton("Delete Last")
         self.deleteLastROIButton.setToolTip("Delete last drawn ROI")
-        self.clearROIButton = QtGui.QPushButton("Clear All")
+        self.clearROIButton = QtWidgets.QPushButton("Clear All")
         self.clearROIButton.setToolTip("Delete all drawn ROIs")
         tmp.addWidget(self.deleteLastROIButton)
         tmp.addWidget(self.clearROIButton)
         roiLayout.addLayout(tmp)
 
-        tmp = QtGui.QHBoxLayout()
-        self.roiAvgTimecourseButton = QtGui.QPushButton("Avg")
+        tmp = QtWidgets.QHBoxLayout()
+        self.roiAvgTimecourseButton = QtWidgets.QPushButton("Avg")
         self.roiAvgTimecourseButton.setToolTip("Plot average timecourse")
-        self.roiPSCTimecourseButton = QtGui.QPushButton("PSC")
+        self.roiPSCTimecourseButton = QtWidgets.QPushButton("PSC")
         self.roiPSCTimecourseButton.setToolTip(
             "Plot percent signal change timecourse")
         tmp.addWidget(self.roiAvgTimecourseButton)
         tmp.addWidget(self.roiPSCTimecourseButton)
         roiLayout.addLayout(tmp)
 
-        tmp = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
+        tmp = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel()
         label.setText("# of Bins")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
         tmp.addWidget(label)
-        self.numBins = QtGui.QSpinBox()
+        self.numBins = QtWidgets.QSpinBox()
         self.numBins.setMinimum(1)
         self.numBins.setValue(10)
         tmp.addWidget(self.numBins)
-        self.roi1VolHistogramButton = QtGui.QPushButton("Hist")
+        self.roi1VolHistogramButton = QtWidgets.QPushButton("Hist")
         self.roi1VolHistogramButton.setToolTip("Plot 1 volume histogram")
         tmp.addWidget(self.roi1VolHistogramButton)
         roiLayout.addLayout(tmp)
 
-        roiAnalysisWidget = QtGui.QGroupBox()
+        roiAnalysisWidget = QtWidgets.QGroupBox()
         roiAnalysisWidget.setTitle('ROI Analysis')
         roiAnalysisWidget.setLayout(roiLayout)
         roiAnalysisWidget.setStyleSheet("\
@@ -302,13 +302,13 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
             widget.setMaximum(MinMaxValue[1])
             widget.setValue(MinMaxValue[2])
 
-        overlayLayout = QtGui.QVBoxLayout()
+        overlayLayout = QtWidgets.QVBoxLayout()
         # thresholding
-        overlayThresholdLayout = QtGui.QGridLayout()
-        self.lowerThreshSpinbox = QtGui.QDoubleSpinBox()
-        self.upperThreshSpinbox = QtGui.QDoubleSpinBox()
-        self.lowerThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.upperThreshSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        overlayThresholdLayout = QtWidgets.QGridLayout()
+        self.lowerThreshSpinbox = QtWidgets.QDoubleSpinBox()
+        self.upperThreshSpinbox = QtWidgets.QDoubleSpinBox()
+        self.lowerThreshSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.upperThreshSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.upperThreshSlider.setInvertedAppearance(True)
         overlayDiff = (np.float(overlayMinMax[1]) - overlayMinMax[0])
         mant, exp = ('%.5e' % overlayDiff).split('e')
@@ -362,21 +362,21 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         overlayThresholdLayout.addWidget(self.upperThreshSpinbox, 1, 1)
 
         # invert
-        overlayInvertLayout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
+        overlayInvertLayout = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel()
         label.setText("Invert Mask:")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.overlayInvertCheckbox = QtGui.QCheckBox()
+        self.overlayInvertCheckbox = QtWidgets.QCheckBox()
         overlayInvertLayout.addWidget(label)
         overlayInvertLayout.addWidget(self.overlayInvertCheckbox)
 
         # alpha
-        overlayAlphaLayout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel()
+        overlayAlphaLayout = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel()
         label.setText("Alpha")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.overlayAlphaSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.overlayAlphaSpinbox = QtGui.QDoubleSpinBox()
+        self.overlayAlphaSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.overlayAlphaSpinbox = QtWidgets.QDoubleSpinBox()
         alphaMin = 0
         alphaMax = 1
         alphaInit = 0.5
@@ -399,7 +399,7 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         overlayLayout.addLayout(overlayInvertLayout)
         overlayLayout.addLayout(overlayAlphaLayout)
 
-        overlayThresholdWidget = QtGui.QGroupBox()
+        overlayThresholdWidget = QtWidgets.QGroupBox()
         overlayThresholdWidget.setTitle('Overlay Thresholding')
         overlayThresholdWidget.setLayout(overlayLayout)
         overlayThresholdWidget.setStyleSheet("\
@@ -419,21 +419,21 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         #
         # Display Image Values
         #
-        imgValsLayout = QtGui.QGridLayout()
+        imgValsLayout = QtWidgets.QGridLayout()
         self.imgValLabels = []
         if imgVals is not None:
             numImgs = len(imgVals)
             for imNum in range(numImgs):
-                label = QtGui.QLabel()
+                label = QtWidgets.QLabel()
                 label.setText(str(imgVals[imNum][0]) + ":")
                 imgValsLayout.addWidget(
                     label, imNum, 0, alignment=QtCore.Qt.AlignRight)
-                label = QtGui.QLabel()
+                label = QtWidgets.QLabel()
                 label.setText('%.5e' % (imgVals[imNum][1]))
                 self.imgValLabels.append(label)
                 imgValsLayout.addWidget(
                     label, imNum, 1, alignment=QtCore.Qt.AlignLeft)
-        tmp = QtGui.QGroupBox()
+        tmp = QtWidgets.QGroupBox()
         tmp.setTitle('Image Values')
         tmp.setLayout(imgValsLayout)
 
@@ -445,61 +445,36 @@ class _ControlWidgetCompare(SignalsObject,QtGui.QWidget):
         controlLayout.setRowStretch(layoutRowIndex, 10)
 
     def makeConnections(self):
-        QtCore.QObject.connect(self.imgType, QtCore.SIGNAL(
-            "currentIndexChanged(int)"), self.ImageTypeChanged)
-        QtCore.QObject.connect(self.window, QtCore.SIGNAL(
-            "valueChanged(double)"), self.windowChanged)
-        QtCore.QObject.connect(self.level, QtCore.SIGNAL(
-            "valueChanged(double)"), self.levelChanged)
-        QtCore.QObject.connect(self.wlbutton, QtCore.SIGNAL(
-            "clicked()"), self.windowLevelToDefaultPushed)
+        self.imgType.currentIndexChanged.connect(self.ImageTypeChanged)
+        self.window.valueChanged.connect(self.windowChanged)
+        self.level.valueChanged.connect(self.levelChanged)
+        self.wlbutton.clicked.connect(self.windowLevelToDefaultPushed)
 
-        QtCore.QObject.connect(self.xcontrol, QtCore.SIGNAL(
-            "valueChanged(int)"), self.xLocationChanged)
-        QtCore.QObject.connect(self.ycontrol, QtCore.SIGNAL(
-            "valueChanged(int)"), self.yLocationChanged)
-        QtCore.QObject.connect(self.zcontrol, QtCore.SIGNAL(
-            "valueChanged(int)"), self.zLocationChanged)
-        QtCore.QObject.connect(self.tcontrol, QtCore.SIGNAL(
-            "valueChanged(double)"), self.changeTcontrol)
-        QtCore.QObject.connect(self.lockPlotsCheckbox, QtCore.SIGNAL(
-            "clicked()"), self.lockPlotsCheckboxPushed)
+        self.xcontrol.valueChanged.connect(self.xLocationChanged)
+        self.ycontrol.valueChanged.connect(self.yLocationChanged)
+        self.zcontrol.valueChanged.connect(self.zLocationChanged)
+        self.tcontrol.valueChanged.connect(self.changeTcontrol)
+        self.lockPlotsCheckbox.clicked.connect(self.lockPlotsCheckboxPushed)
 
-        QtCore.QObject.connect(self.deleteLastROIButton, QtCore.SIGNAL(
-            "clicked()"), self.deleteLastROIPushed)
-        QtCore.QObject.connect(self.clearROIButton, QtCore.SIGNAL(
-            "clicked()"), self.clearROIPushed)
-        QtCore.QObject.connect(self.roiAvgTimecourseButton, QtCore.SIGNAL(
-            "clicked()"), self.roiAvgTimecoursePushed)
-        QtCore.QObject.connect(self.roiPSCTimecourseButton, QtCore.SIGNAL(
-            "clicked()"), self.roiPSCTimecoursePushed)
-        QtCore.QObject.connect(self.roi1VolHistogramButton, QtCore.SIGNAL(
-            "clicked()"), self.roi1VolHistogramButtonPushed)
+        self.deleteLastROIButton.clicked.connect(self.deleteLastROIPushed)
+        self.clearROIButton.clicked.connect(self.clearROIPushed)
+        self.roiAvgTimecourseButton.clicked.connect(self.roiAvgTimecoursePushed)
+        self.roiPSCTimecourseButton.clicked.connect(self.roiPSCTimecoursePushed)
+        self.roi1VolHistogramButton.clicked.connect(self.roi1VolHistogramButtonPushed)
 
-        QtCore.QObject.connect(self.lowerThreshSlider, QtCore.SIGNAL(
-            "valueChanged(int)"), self.lowerThreshSliderChanged)
-        QtCore.QObject.connect(self.upperThreshSlider, QtCore.SIGNAL(
-            "valueChanged(int)"), self.upperThreshSliderChanged)
-        QtCore.QObject.connect(self.lowerThreshSpinbox, QtCore.SIGNAL(
-            "valueChanged(double)"), self.lowerThreshSpinBoxChanged)
-        QtCore.QObject.connect(self.upperThreshSpinbox, QtCore.SIGNAL(
-            "valueChanged(double)"), self.upperThreshSpinBoxChanged)
-        QtCore.QObject.connect(self.overlayInvertCheckbox, QtCore.SIGNAL(
-            "clicked()"), self.overlayInvertPushed)
-        QtCore.QObject.connect(self.overlayAlphaSlider, QtCore.SIGNAL(
-            "valueChanged(int)"), self.overlayAlphaSliderChanged)
-        QtCore.QObject.connect(self.overlayAlphaSpinbox, QtCore.SIGNAL(
-            "valueChanged(double)"), self.overlayAlphaSpinBoxChanged)
+        self.lowerThreshSlider.valueChanged.connect(self.lowerThreshSliderChanged)
+        self.upperThreshSlider.valueChanged.connect(self.upperThreshSliderChanged)
+        self.lowerThreshSpinbox.valueChanged.connect(self.lowerThreshSpinBoxChanged)
+        self.upperThreshSpinbox.valueChanged.connect(self.upperThreshSpinBoxChanged)
+        self.overlayInvertCheckbox.clicked.connect(self.overlayInvertPushed)
+        self.overlayAlphaSlider.valueChanged.connect(self.overlayAlphaSliderChanged)
+        self.overlayAlphaSpinbox.valueChanged.connect(self.overlayAlphaSpinBoxChanged)
 
-        QtCore.QObject.connect(self.movieIntervalSlider, QtCore.SIGNAL(
-            "valueChanged(int)"), self.movieIntervalSliderChanged)
-        QtCore.QObject.connect(self.movieIntervalSpinbox, QtCore.SIGNAL(
-            "valueChanged(int)"), self.movieIntervalSpinBoxChanged)
+        self.movieIntervalSlider.valueChanged.connect(self.movieIntervalSliderChanged)
+        self.movieIntervalSpinbox.valueChanged.connect(self.movieIntervalSpinBoxChanged)
+        self.movieGotoFrameButton.clicked.connect(self.movieGotoFrame)
+        self.moviePauseButton.clicked.connect(self.moviePause)
 
-        QtCore.QObject.connect(self.movieGotoFrameButton, QtCore.SIGNAL(
-            "clicked()"), self.movieGotoFrame)
-        QtCore.QObject.connect(self.moviePauseButton, QtCore.SIGNAL(
-            "clicked()"), self.moviePause)
 
     def blockedSetValue(self, control, value):
         control.blockSignals(True)

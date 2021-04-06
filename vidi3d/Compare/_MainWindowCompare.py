@@ -2,24 +2,25 @@
 Sets up the main window for the compare viewer. Creates MplImage, MplPlot, 
 and a ControlWidget objects and connects their Qt Signals to local functions.
 """
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import numpy as np
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
+from matplotlib import path
+
+from . import _ControlWidgetCompare
 from .. import _Core as _Core
-from .._NavigationToolbar import NavigationToolbar
+from .. import _DisplayDefinitions as dd
 from .. import _MplImage as _MplImage
 from .. import _MplPlot as _MplPlot
-from .. import _DisplayDefinitions as dd
-from . import _ControlWidgetCompare
-import matplotlib.pyplot as plt
-from matplotlib import path
-import matplotlib.animation as animation
+from .._NavigationToolbar import NavigationToolbar
 
 
-class _MainWindow(QtGui.QMainWindow):
+class _MainWindow(QtWidgets.QMainWindow):
     def __init__(self, complexImList, pixdim=None, interpolation='bicubic', origin='lower', subplotTitles=None, locationLabels=None, maxNumInRow=None, colormapList=[None, ], overlayList=[None, ], overlayColormapList=[None, ]):
         _Core._create_qApp()
         super(_MainWindow, self).__init__()
-        self.setWindowTitle('Compare Viewer')
+        self.setWindowTitle('Vidi3d: Compare')
         self.viewerNumber = 0
 
         #
@@ -113,7 +114,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up image panels and toolbars
         #
-        self.imagePanels = QtGui.QWidget(self)
+        self.imagePanels = QtWidgets.QWidget(self)
         colors = dd.PlotColours.colours
         self.imagePanelsList = []
         self.imagePanelToolbarsList = []
@@ -134,7 +135,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Layout image panels in a grid
         #
-        self.imLayout = QtGui.QGridLayout()
+        self.imLayout = QtWidgets.QGridLayout()
         imLayout = self.imLayout
         if maxNumInRow is None:
             maxNumInRow = int(np.sqrt(numImages) + 1 - 1e-10)
@@ -163,7 +164,7 @@ class _MainWindow(QtGui.QMainWindow):
         #
         # Set up plots
         #
-        self.plotsPanel = QtGui.QWidget(self)
+        self.plotsPanel = QtWidgets.QWidget(self)
         self.plotsPanelList = []
         xPlotDataList = []
         yPlotDataList = []
@@ -186,7 +187,7 @@ class _MainWindow(QtGui.QMainWindow):
         self.tPlotPanel = _MplPlot._MplPlot(
             complexDataList=tPlotDataList, title=locationLabels[3], dataType=imageType, colors=colors, initMarkerPosn=self.loc[3])
         self.plotsPanelList.append(self.tPlotPanel)
-        plotsLayout = QtGui.QVBoxLayout()
+        plotsLayout = QtWidgets.QVBoxLayout()
         plotsLayout.addWidget(self.xPlotPanel)
         plotsLayout.addWidget(self.yPlotPanel)
         plotsLayout.addWidget(self.zPlotPanel)
@@ -194,7 +195,7 @@ class _MainWindow(QtGui.QMainWindow):
         self.plotsPanel.setLayout(plotsLayout)
 
         # make each section resizeable using a splitter
-        self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         splitter = self.splitter
         splitter.addWidget(self.controls)
         splitter.addWidget(self.imagePanels)
@@ -384,12 +385,7 @@ class _MainWindow(QtGui.QMainWindow):
     #==================================================================
     def initializeROI(self, imgIndex):
         self.controls.roiAnalysisWidget.setEnabled(True)
-        #this does what we need and then throws some sort of error. this is a very bad way to suppress the error,
-        #do it anyway until there's time to port everything to QT5
-        try:
-            self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
-        except:
-            pass
+        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
 
     def destructROI(self, imgIndex):
         atLeastOneActive = False
@@ -398,7 +394,7 @@ class _MainWindow(QtGui.QMainWindow):
                 atLeastOneActive = True
         if not atLeastOneActive:
             self.controls.roiAnalysisWidget.setEnabled(False)
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
+        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.connect(
             self.ChangeLocation)
 
     def updateROI(self, x, y):
@@ -482,6 +478,7 @@ class _MainWindow(QtGui.QMainWindow):
             plt.legend()
         plt.xlabel("Volume")
         plt.ylabel("Average Signal")
+        plt.show()
 
     def plotROIPSCTimeseries(self):
         mask = self.getROIMask()
@@ -506,6 +503,7 @@ class _MainWindow(QtGui.QMainWindow):
             plt.legend()
         plt.xlabel("Volume")
         plt.ylabel("Percent Signal Change")
+        plt.show()
 
     def plotROI1VolHistogram(self, numBins):
         mask = self.getROIMask()
@@ -533,6 +531,7 @@ class _MainWindow(QtGui.QMainWindow):
             plt.hist(dataList, bins=numBins, color=colorList, label=labelList)
             if not (num_active_plots <= 1 and self.subplotTitles[index] == ""):
                 plt.legend()
+        plt.show()
 
     def clearROI(self):
         self.ROIData.verts = {}
@@ -610,12 +609,7 @@ class _MainWindow(QtGui.QMainWindow):
             self.moviePlayer.moviePaused = False
             if not self.moviePlayer.moviePaused:
                 self.moviePlayer.event_source.start()
-        # this does what we need and then throws some sort of error. this is a very bad way to suppress the error,
-        # do it anyway until there's time to port everything to QT5
-        try:
-            self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.disconnect(self.ChangeLocation)
-        except:
-            pass
+        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
         if self.overlayList[imgIndex] is not None:
             self.imagePanelsList[imgIndex].overlay.set_visible(False)
         self.moviePlayer._draw_next_frame(self.currentMovieFrame, True)
@@ -629,7 +623,7 @@ class _MainWindow(QtGui.QMainWindow):
             self.controls.movieWidget.setEnabled(False)
             self.moviePlayer.event_source.stop()
             self.moviePlayer.moviePaused = True
-        self.imagePanelToolbarsList[imgIndex].parent.signalLocationChange.connect(
+        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.connect(
             self.ChangeLocation)
         if self.overlayList[imgIndex] is not None:
             self.imagePanelsList[imgIndex].overlay.set_visible(True)
@@ -637,7 +631,7 @@ class _MainWindow(QtGui.QMainWindow):
             self.complexImList[imgIndex][:, :, self.loc[2], self.loc[3]])
 
     def changeMovieInterval(self, interval):
-        self.moviePlayer.event_source.interval = interval
+        self.moviePlayer._interval = interval
 
     def pauseMovie(self):
         self.moviePlayer.moviePaused = self.controls.moviePauseButton.isChecked()
@@ -681,7 +675,7 @@ class _MplImageSlice(_MplImage._MplImage):
         self.maxSliceNum = maxSliceNum
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.getImgSliceNumber() + 1, 0), self.maxSliceNum - 1)
         else:
@@ -689,7 +683,7 @@ class _MplImageSlice(_MplImage._MplImage):
                 self.getImgSliceNumber() - 1, 0), self.maxSliceNum - 1)
         self.signalZLocationChange.emit(clipVal)
 
-
+animation.FuncAnimation
 class FuncAnimationCustom(animation.FuncAnimation):
     def __init__(self, *args, **keywords):
         animation.FuncAnimation.__init__(self, *args, **keywords)
@@ -723,31 +717,33 @@ class FuncAnimationCustom(animation.FuncAnimation):
             self.event_source.start()
         self._fig.canvas.mpl_disconnect(self._resize_id)
         self._resize_id = self._fig.canvas.mpl_connect('resize_event',
-                                                       self._handle_resize)
+                                                       self._on_resize)
 
-    def _blit_draw(self, artists, bg_cache):
+    def _blit_draw(self, artists):
         # Handles blitted drawing, which renders only the artists given instead
         # of the entire figure.
-        updated_ax = []
-        for a in artists:
-            # If we haven't cached the background for this axes object, do
-            # so now. This might not always be reliable, but it's an attempt
-            # to automate the process.
-            if a.axes not in bg_cache:
-                # bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(a.axes.bbox)
+        updated_ax = {a.axes for a in artists}
+        # Enumerate artists to cache axes' backgrounds. We do not draw
+        # artists yet to not cache foreground from plots with shared axes
+        for ax in updated_ax:
+            # If we haven't cached the background for the current view of this
+            # axes object, do so now. This might not always be reliable, but
+            # it's an attempt to automate the process.
+            cur_view = ax._get_view()
+            view, bg = self._blit_cache.get(ax, (object(), None))
+            if cur_view != view:
                 # AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
-                bg_cache[a.axes] = a.figure.canvas.copy_from_bbox(
-                    a.axes.figure.bbox)
+                self._blit_cache[ax] = (
+                    cur_view, ax.figure.canvas.copy_from_bbox(ax.figure.bbox))
+        # Make a separate pass to draw foreground.
+        for a in artists:
             a.axes.draw_artist(a)
-            updated_ax.append(a.axes)
-
         # After rendering all the needed artists, blit each axes individually.
-        for ax in set(updated_ax):
+        for ax in updated_ax:
             # AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
-            # ax.figure.canvas.blit(ax.bbox)
             ax.figure.canvas.blit(ax.figure.bbox)
 
-    def _handle_resize(self, *args):
+    def _on_resize(self, *args):
         # On resize, we need to disable the resize event handling so we don't
         # get too many events. Also stop the animation events, so that
         # we're paused. Reset the cache and re-init. Set up an event handler

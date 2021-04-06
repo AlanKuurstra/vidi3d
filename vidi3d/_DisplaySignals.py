@@ -1,9 +1,9 @@
 """
 QT event signals.
 """
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-class SignalsObject(QtGui.QWidget):
+class SignalsObject(QtWidgets.QWidget):
     signalImageTypeChange = QtCore.pyqtSignal(int, name='imageTypeChanged')
     signalImageCmapChange = QtCore.pyqtSignal(int, name='imageCmapChanged')
 

@@ -53,14 +53,14 @@ phantomMask = np.abs(imgAvg) > 0.1
 # RANDOM EFFECTS ANALYSIS
 #
 
-print "random effects analysis on ROI (mean as summary value):"
+print("random effects analysis on ROI (mean as summary value):")
 mask = phantomMask * roi
 mean1 = restImg[mask].mean(axis=-1)
 mean2 = activationImg[mask].mean(axis=-1)
 t, p = stats.ttest_ind(mean1, mean2, equal_var=False)
-print "difference in means: ", mean1.mean() - mean2.mean()
-print "p value: ", p
-print "coehn's d: ", cohen_d(mean1, mean2)
+print("difference in means: ", mean1.mean() - mean2.mean())
+print("p value: ", p)
+print("coehn's d: ", cohen_d(mean1, mean2))
 
 #
 # VOXELWISE T-TEST

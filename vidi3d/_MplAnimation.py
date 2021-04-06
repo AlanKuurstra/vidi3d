@@ -3,7 +3,7 @@ Class to show movies of an fmri slice. Currently unused.
 """
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 import _Core
 from matplotlib.animation import ArtistAnimation
 

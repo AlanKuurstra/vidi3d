@@ -5,8 +5,8 @@ class are also used to show the 3 cross sectional views of a 3D image.
 """
 import numpy as np
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt4 import QtCore, QtGui
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5 import QtCore, QtGui, QtWidgets
 from . import _Core
 from . import _DisplayDefinitions as dd
 from ._DisplaySignals import SignalsObject
@@ -20,7 +20,7 @@ class _MplImage(SignalsObject,FigureCanvas):
         self.fig = mpl.figure.Figure()
         FigureCanvas.__init__(self, self.fig)
         FigureCanvas.setSizePolicy(
-            self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
         # the FigureCanvas class doesn't have the option to pass the parent to
         # the __init__() constructer, must set it manually
@@ -134,7 +134,7 @@ class _MplImage(SignalsObject,FigureCanvas):
         elif event.button == 2:
             self.middleMousePress = True
             img = self.img.get_array()
-            cmap = cmap = self.img.get_cmap()
+            cmap = self.img.get_cmap()
             origin = self.img.origin
             vmin, vmax = self.img.get_clim()
             interpolation = self.img.get_interpolation()
@@ -145,6 +145,7 @@ class _MplImage(SignalsObject,FigureCanvas):
             popOutPlot.axes.set_aspect(aspect)
             popOutPlot.axes.xaxis.set_visible(False)
             popOutPlot.axes.yaxis.set_visible(False)
+            mpl.pyplot.show()
 
         elif event.button == 3:
             self.rightMousePress = True

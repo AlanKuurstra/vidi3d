@@ -1,25 +1,28 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 25 15:17:27 2017
+import os
 
-@author: akuurstr
-"""
+import setuptools
 
-from distutils.core import setup
-setup(
-  name = 'vidi3d',
-  packages = ['vidi3d','vidi3d.Imshow','vidi3d.Compare'],
-  package_data={'vidi3d': ['icons/*','Examples/*']},
-  version = '1.0.2',
-  install_requires = [
-  'numpy',
-  'PyQt5',
-  'matplotlib'],
-  description = 'Visualizes 3d NumPy arrays using Matplotlib and PyQt5.',
-  author = 'Alan Kuurstra',
-  author_email = 'alankuurstra@gmail.com',
-  url = 'https://github.com/AlanKuurstra/vidi3d', # use the URL to the github repo
-  download_url = 'https://github.com/AlanKuurstra/vidi3d/archive/1.0.2.tar.gz',
-  keywords = ['3d', 'image', 'viewer', 'medical', 'numpy'],
-  classifiers = [],
+GITHUB_REF = os.getenv('GITHUB_REF')
+version = GITHUB_REF.replace('refs/tags/', '') if (GITHUB_REF and GITHUB_REF.startswith('refs/tags/')) else '1.0.2'
+setuptools.setup(
+    name='vidi3d',
+    version=version,
+    author='Alan Kuurstra',
+    author_email='alankuurstra@gmail.com',
+    description='Visualizes 3d/4d NumPy arrays using Matplotlib and PyQt5.',
+    long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
+    url='https://github.com/AlanKuurstra/vidi3d',
+    packages=['vidi3d', 'vidi3d.Imshow', 'vidi3d.Compare'],
+    package_data={'vidi3d': ['icons/*', 'Examples/*']},
+    install_requires=[
+        'numpy',
+        'PyQt5',
+        'matplotlib'],
+    keywords=['3d', 'image', 'viewer', 'medical', 'numpy'],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+    ],
+    python_requires='>=3',
 )

@@ -1,5 +1,5 @@
 # vidi3d
-Visualizes 3D NumPy arrays using Matplotlib and PyQt5.
+Visualizes 3D/4D NumPy arrays using Matplotlib and PyQt5.
 
 ### Installation and Requirements
 

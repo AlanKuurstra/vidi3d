@@ -181,9 +181,9 @@ class _ControlWidgetCompare(SignalsObject,QtWidgets.QWidget):
         self.movieFpsSpinbox.setValue(initFps)
         """
 
-        initInterval = 250  # ms
+        initInterval = 1000  # ms
         movieIntervalMin = 100
-        movieIntervalMax = 1000
+        movieIntervalMax = 5000
 
         self.numberOfStepsBetweenMovieSliderIntegers = 1
 

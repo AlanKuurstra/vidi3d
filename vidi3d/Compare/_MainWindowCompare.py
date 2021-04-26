@@ -609,7 +609,9 @@ class _MainWindow(QtWidgets.QMainWindow):
             self.moviePlayer.moviePaused = False
             if not self.moviePlayer.moviePaused:
                 self.moviePlayer.event_source.start()
-        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
+
+        if self.imagePanelToolbarsList[imgIndex].canvas.receivers(self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange) > 0:
+            self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
         if self.overlayList[imgIndex] is not None:
             self.imagePanelsList[imgIndex].overlay.set_visible(False)
         self.moviePlayer._draw_next_frame(self.currentMovieFrame, True)
@@ -733,6 +735,8 @@ class FuncAnimationCustom(animation.FuncAnimation):
             view, bg = self._blit_cache.get(ax, (object(), None))
             if cur_view != view:
                 # AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+                # self._blit_cache[ax] = (
+                #     cur_view, ax.figure.canvas.copy_from_bbox(ax.bbox))
                 self._blit_cache[ax] = (
                     cur_view, ax.figure.canvas.copy_from_bbox(ax.figure.bbox))
         # Make a separate pass to draw foreground.
@@ -741,6 +745,7 @@ class FuncAnimationCustom(animation.FuncAnimation):
         # After rendering all the needed artists, blit each axes individually.
         for ax in updated_ax:
             # AK: CHANGED SO WE CAN SEE FRAME TEXT BOX REDRAWN
+            # ax.figure.canvas.blit(ax.bbox)
             ax.figure.canvas.blit(ax.figure.bbox)
 
     def _on_resize(self, *args):

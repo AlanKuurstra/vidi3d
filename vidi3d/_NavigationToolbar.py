@@ -60,6 +60,7 @@ class NavigationToolbar(NavigationToolbarSimple):
         self.movieWidget.setToolTip('Play movie of timeseries')
         self.movieWidget.setCheckable(True)
         self._movieActive = False
+        self.ax = self.canvas.axes
         self.imgIndex = imgIndex
 
     def roi(self, *args):
@@ -149,7 +150,7 @@ class NavigationToolbar(NavigationToolbarSimple):
             return
         if event.inaxes != self.ax:
             if self.roiDrawingEngaged:
-                self.signalROICancel.emit()
+                self.signals.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
         self.signals.signalROIEnd.emit(event.xdata, event.ydata)

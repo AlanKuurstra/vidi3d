@@ -385,7 +385,8 @@ class _MainWindow(QtWidgets.QMainWindow):
     #==================================================================
     def initializeROI(self, imgIndex):
         self.controls.roiAnalysisWidget.setEnabled(True)
-        self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
+        if self.imagePanelToolbarsList[imgIndex].canvas.receivers(self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange) > 0:
+            self.imagePanelToolbarsList[imgIndex].canvas.signalLocationChange.disconnect(self.ChangeLocation)
 
     def destructROI(self, imgIndex):
         atLeastOneActive = False

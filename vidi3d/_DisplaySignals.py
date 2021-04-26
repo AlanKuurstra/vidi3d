@@ -42,7 +42,7 @@ class SignalsObject(QtWidgets.QWidget):
         float, float, name="OverlayUpperThreshChanged")
     signalOverlayAlphaChange = QtCore.pyqtSignal(float, name="OverlayAlphaChanged")
 
-    signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChnaged')
+    signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChanged')
 
 class SignalsObject2(QtCore.QObject):
     signalImageTypeChange = QtCore.pyqtSignal(int, name='imageTypeChanged')
@@ -83,4 +83,4 @@ class SignalsObject2(QtCore.QObject):
         float, float, name="OverlayUpperThreshChanged")
     signalOverlayAlphaChange = QtCore.pyqtSignal(float, name="OverlayAlphaChanged")
 
-    signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChnaged')
+    signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChanged')

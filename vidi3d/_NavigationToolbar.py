@@ -9,8 +9,8 @@ import os
 from matplotlib.lines import Line2D
 from . import _DisplayDefinitions as dd
 import matplotlib.transforms as transforms
-from ._DisplaySignals import SignalsObject2
-from PyQt5 import QtCore, QtWidgets
+from ._DisplaySignals import Signals
+from PyQt5 import QtWidgets
 
 class NavigationToolbarSimple(NavigationToolbarSuper):
     def __init__(self, canvas, parent):
@@ -36,8 +36,7 @@ class NavigationToolbarSimple(NavigationToolbarSuper):
 
 
 
-class NavigationToolbar(NavigationToolbarSimple):
-    signals = SignalsObject2()
+class NavigationToolbar(Signals, NavigationToolbarSimple):
     def __init__(self, canvas, parent, imgIndex=None):
         super(NavigationToolbar, self).__init__(canvas, parent)
         self.ROIwidget = QtWidgets.QAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/lasso.png")),
@@ -105,7 +104,7 @@ class NavigationToolbar(NavigationToolbarSimple):
         #"""
 
         self.canvas.BlitImageAndLines()
-        self.signals.signalROIInit.emit(self.imgIndex)
+        self.signalROIInit.emit(self.imgIndex)
 
     def roi_destructor(self):
         # use holders different from _idPress because Move and Pan will steal
@@ -140,7 +139,7 @@ class NavigationToolbar(NavigationToolbarSimple):
                 self.ax.lines.remove(currentLine)
 
         self.canvas.BlitImageAndLines()
-        self.signals.signalROIDestruct.emit(self.imgIndex)
+        self.signalROIDestruct.emit(self.imgIndex)
 
     def roi_release(self, event):
 
@@ -150,10 +149,10 @@ class NavigationToolbar(NavigationToolbarSimple):
             return
         if event.inaxes != self.ax:
             if self.roiDrawingEngaged:
-                self.signals.signalROICancel.emit()
+                self.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signals.signalROIEnd.emit(event.xdata, event.ydata)
+        self.signalROIEnd.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = False
 
     def roi_press(self, event):
@@ -162,10 +161,10 @@ class NavigationToolbar(NavigationToolbarSimple):
             return
         if event.button != 1:
             if self.roiDrawingEngaged:
-                self.signals.signalROICancel.emit()
+                self.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signals.signalROIStart.emit(event.xdata, event.ydata)
+        self.signalROIStart.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = True
 
     def roi_move(self, event):
@@ -175,7 +174,7 @@ class NavigationToolbar(NavigationToolbarSimple):
             return
         if event.inaxes != self.ax:
             return
-        self.signals.signalROIChange.emit(event.xdata, event.ydata)
+        self.signalROIChange.emit(event.xdata, event.ydata)
 
     def playMovie(self):
         self._movieActive = not self._movieActive
@@ -196,7 +195,7 @@ class NavigationToolbar(NavigationToolbarSimple):
                 1, -.01, '', fontsize=10, transform=axesTransform, ha='right', va='top')
 
             self.canvas.BlitImageAndLines()
-            self.signals.signalMovieInit.emit(self.imgIndex)
+            self.signalMovieInit.emit(self.imgIndex)
 
         else:
 
@@ -211,7 +210,7 @@ class NavigationToolbar(NavigationToolbarSimple):
             self.canvas.draw()
             self.canvas.blit(self.canvas.fig.bbox)
             self.ROIwidget.setEnabled(True)
-            self.signals.signalMovieDestruct.emit(self.imgIndex)
+            self.signalMovieDestruct.emit(self.imgIndex)
 
 
 class lassoLines():

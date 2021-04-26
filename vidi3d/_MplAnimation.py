@@ -6,10 +6,10 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import QtCore, QtGui
 import _Core
 from matplotlib.animation import ArtistAnimation
+from _DisplaySignals import Signals
 
 
-class _MplAnimation(FigureCanvas, ArtistAnimation):
-    from _DisplaySignals import *
+class _MplAnimation(Signals, FigureCanvas, ArtistAnimation):
 
     def __init__(self, movieArray, figure=None, aspect='equal', parent=None, interpolation='none', origin='lower', colormap=None, vmin=None, vmax=None, interval=50, blit=True):
         #
@@ -33,7 +33,7 @@ class _MplAnimation(FigureCanvas, ArtistAnimation):
             FigureCanvas.updateGeometry(self)
             self.axes = self.fig.add_axes([.1, .05, .8, .8])
             if origin != 'upper' and origin != 'lower':
-                print "origin parameter not understood, defaulting to 'lower'"
+                print("origin parameter not understood, defaulting to 'lower'")
                 origin = 'lower'
             #self.title=self.axes.text(0.5, 1.08, currLabels[2]['textLabel'],horizontalalignment='center',fontsize=18,transform = self.axes.transAxes)
             self.axes.xaxis.set_visible(False)

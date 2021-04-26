@@ -6,10 +6,10 @@ import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 from .. import _Core as _Core
 from .. import _DisplayDefinitions as dd
-from .._DisplaySignals import SignalsObject
+from .._DisplaySignals import Signals
 from PyQt5 import QtCore
 
-class _ControlWidgetCompare(SignalsObject,QtWidgets.QWidget):
+class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
     def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=[-np.finfo('float').max / 2, np.finfo('float').max / 2]):
         _Core._create_qApp()
         QtWidgets.QWidget.__init__(self)

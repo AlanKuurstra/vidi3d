@@ -249,14 +249,14 @@ class _MainWindow(QtWidgets.QMainWindow):
 
         # Connect signals from imagePanel toolbars
         for currimagePanelToolbar in self.imagePanelToolbarsList:
-            currimagePanelToolbar.signals.signalROIInit.connect(self.initializeROI)
-            currimagePanelToolbar.signals.signalROIDestruct.connect(self.destructROI)
-            currimagePanelToolbar.signals.signalROIStart.connect(self.startNewROI)
-            currimagePanelToolbar.signals.signalROIChange.connect(self.updateROI)
-            currimagePanelToolbar.signals.signalROIEnd.connect(self.endROI)
-            currimagePanelToolbar.signals.signalROICancel.connect(self.cancelROI)
-            currimagePanelToolbar.signals.signalMovieInit.connect(self.initializeMovie)
-            currimagePanelToolbar.signals.signalMovieDestruct.connect(
+            currimagePanelToolbar.signalROIInit.connect(self.initializeROI)
+            currimagePanelToolbar.signalROIDestruct.connect(self.destructROI)
+            currimagePanelToolbar.signalROIStart.connect(self.startNewROI)
+            currimagePanelToolbar.signalROIChange.connect(self.updateROI)
+            currimagePanelToolbar.signalROIEnd.connect(self.endROI)
+            currimagePanelToolbar.signalROICancel.connect(self.cancelROI)
+            currimagePanelToolbar.signalMovieInit.connect(self.initializeMovie)
+            currimagePanelToolbar.signalMovieDestruct.connect(
                 self.destructMovie)
 
     def setViewerNumber(self, number):

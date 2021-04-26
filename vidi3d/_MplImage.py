@@ -9,9 +9,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import QtCore, QtGui, QtWidgets
 from . import _Core
 from . import _DisplayDefinitions as dd
-from ._DisplaySignals import SignalsObject
+from ._DisplaySignals import Signals
 
-class _MplImage(SignalsObject,FigureCanvas):
+class _MplImage(Signals, FigureCanvas):
     def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
         #
         # Qt related initialization

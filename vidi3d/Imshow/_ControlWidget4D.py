@@ -4,9 +4,9 @@ This class contains the widgets for user control in the 4D viewer.
 import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
 from .. import _Core as _Core
-from .._DisplaySignals import SignalsObject
+from .._DisplaySignals import Signals
 
-class _ControlWidget4D(SignalsObject,QtWidgets.QWidget):
+class _ControlWidget4D(Signals,QtWidgets.QWidget):
     def __init__(self, image4DShape, initLocation, imageType, parent=None):
         _Core._create_qApp()
         super(_ControlWidget4D, self).__init__()

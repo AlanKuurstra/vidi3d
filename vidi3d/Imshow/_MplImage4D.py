@@ -165,7 +165,7 @@ class _zslice(_MplImage._MplImage):
         self.signalYLocationChange.emit(y)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:
@@ -196,7 +196,7 @@ class _yslice(_MplImage._MplImage):
         self.signalZLocationChange.emit(z)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:
@@ -226,7 +226,7 @@ class _xslice(_MplImage._MplImage):
         self.signalYLocationChange.emit(y)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:

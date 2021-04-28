@@ -3,14 +3,11 @@ Base class for plots shown in the viewers. Instances of this clase are used
 to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from . import _DisplayDefinitions as dd
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import numpy as np
-try:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
-except:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbarSuper
 
 
 class _MplPlot(FigureCanvas):
@@ -24,7 +21,7 @@ class _MplPlot(FigureCanvas):
         # the __init__() constructer, must set it manually
         self.setParent(parent)
         FigureCanvas.setSizePolicy(
-            self, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setMinimumSize(200, 200)
         FigureCanvas.updateGeometry(self)
 
@@ -62,7 +59,7 @@ class _MplPlot(FigureCanvas):
         # autoscale plot?
         self.lockPlot = False
         # zoom functionality
-        self.toolbar = NavigationToolbar2QTAgg(self, self)
+        self.toolbar = NavigationToolbarSuper(self, self)
         self.toolbar.hide()
         self.toolbar.zoom()
         # initialization of lines and markers

@@ -4,68 +4,20 @@ Implemented buttons for movie playing and ROI drawing.  Movie and ROI send signa
 so that the MainWindow can implement logic for movie playing and ROI drawing
 """
 
-try:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
-except:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbarSuper
 import os
 from matplotlib.lines import Line2D
 from . import _DisplayDefinitions as dd
 import matplotlib.transforms as transforms
-from ._DisplaySignals import SignalsObject2
-from PyQt4 import QtCore
+from ._DisplaySignals import Signals
+from PyQt5 import QtWidgets
 
-#class NavigationToolbar(SignalsObject,NavigationToolbar2QTAgg):
-class NavigationToolbar(NavigationToolbar2QTAgg):
-    signals = SignalsObject2()
-    if 0:
-        signalImageTypeChange = QtCore.pyqtSignal(int, name='imageTypeChanged')
-        signalImageCmapChange = QtCore.pyqtSignal(int, name='imageCmapChanged')
-
-        signalXLocationChange = QtCore.pyqtSignal(int, name='xLocationChanged')
-        signalYLocationChange = QtCore.pyqtSignal(int, name='yLocationChanged')
-        signalZLocationChange = QtCore.pyqtSignal(int, name='zLocationChanged')
-        signalTLocationChange = QtCore.pyqtSignal(int, name='tLocationChanged')
-        signalLocationChange = QtCore.pyqtSignal(int, int)
-
-        signalWindowLevelChange = QtCore.pyqtSignal(
-            float, float, name='windowLevelChanged')
-        signalWindowLevelReset = QtCore.pyqtSignal(name='windowLevelReset')
-
-        signalROIInit = QtCore.pyqtSignal(int, name='ROIInit')
-        signalROIDestruct = QtCore.pyqtSignal(int, name='ROIDestruct')
-        signalROIDeleteLast = QtCore.pyqtSignal(name='ROIDeleteLast')
-        signalROIClear = QtCore.pyqtSignal(name='ROIClear')
-        signalROIChange = QtCore.pyqtSignal(float, float)
-        signalROIStart = QtCore.pyqtSignal(float, float)
-        signalROIEnd = QtCore.pyqtSignal(float, float)
-        signalROICancel = QtCore.pyqtSignal()
-        signalROIAvgTimecourse = QtCore.pyqtSignal(name='ROIAvgTimecourse')
-        signalROIPSCTimecourse = QtCore.pyqtSignal(name='ROIPSCTimecourse')
-        signalROI1VolHistogram = QtCore.pyqtSignal(int, name='ROI1VolHistogram')
-
-        signalMovieGotoFrame = QtCore.pyqtSignal(int, name='MovieGotoFrame')
-        signalMoviePause = QtCore.pyqtSignal(name='MoviePause')
-        signalMovieInit = QtCore.pyqtSignal(int, name='MovieInit')
-        signalMovieDestruct = QtCore.pyqtSignal(int, name='MovieDestruct')
-        signalMovieIntervalChange = QtCore.pyqtSignal(
-            int, name='MovieIntervalChanged')
-
-        signalOverlayLowerThreshChange = QtCore.pyqtSignal(
-            float, float, name="OverlayLowerThreshChanged")
-        signalOverlayUpperThreshChange = QtCore.pyqtSignal(
-            float, float, name="OverlayUpperThreshChanged")
-        signalOverlayAlphaChange = QtCore.pyqtSignal(float, name="OverlayAlphaChanged")
-
-        signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChnaged')
-    def __init__(self, canvas, parent, imgIndex=0):
-        super(NavigationToolbar, self).__init__(canvas, parent)
+class NavigationToolbarSimple(NavigationToolbarSuper):
+    def __init__(self, canvas, parent):
+        super(NavigationToolbarSimple, self).__init__(canvas, parent)
         self.clear()
-        self.parent = parent
+        self.canvas.parent = parent
         self.canvas = canvas
-        self.ax = parent.axes
-        self.imgIndex = imgIndex
-        self._idMove = None
         a = self.addAction(self._icon('home.png'), 'Home', self.home)
         a.setToolTip('Reset original view')
         a = self.addAction(self._icon('zoom_to_rect.png'), 'Zoom', self.zoom)
@@ -73,8 +25,24 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         a = self.addAction(self._icon('move.png'), 'Pan', self.pan)
         a.setToolTip('Pan axes with left mouse, zoom with right')
 
-        self.ROIwidget = self.addAction(self._icon(os.path.join(
-            os.path.dirname(__file__), "icons/lasso.png")), 'ROI', self.roi)
+        w = QtWidgets.QWidget()
+        w.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.spacer = self.addWidget(w)
+
+        self.addSeparator()
+        a = self.addAction(self._icon('filesave.png'), 'Save',
+                           self.save_figure)
+        a.setToolTip('Save the figure')
+
+
+
+class NavigationToolbar(Signals, NavigationToolbarSimple):
+    def __init__(self, canvas, parent, imgIndex=None):
+        super(NavigationToolbar, self).__init__(canvas, parent)
+        self.ROIwidget = QtWidgets.QAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/lasso.png")),
+                                         'ROI')
+        self.ROIwidget.triggered.connect(self.roi)
+        self.insertAction(self.spacer, self.ROIwidget)
         self.ROIwidget.setToolTip('Select an ROI for analysis')
         self.ROIwidget.setCheckable(True)
         self._ROIactive = False
@@ -84,16 +52,15 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.roiLines = lassoLines()
         self.roiDrawingEngaged = False
 
-        self.movieWidget = self.addAction(self._icon(os.path.join(
-            os.path.dirname(__file__), "icons/movie.png")), 'Movie', self.playMovie)
+        self.movieWidget = QtWidgets.QAction(self._icon(os.path.join(os.path.dirname(__file__), "icons/movie.png")),
+                                         'Movie')
+        self.movieWidget.triggered.connect(self.playMovie)
+        self.insertAction(self.spacer, self.movieWidget)
         self.movieWidget.setToolTip('Play movie of timeseries')
         self.movieWidget.setCheckable(True)
         self._movieActive = False
-
-        self.addSeparator()
-        a = self.addAction(self._icon('filesave.png'), 'Save',
-                           self.save_figure)
-        a.setToolTip('Save the figure')
+        self.ax = self.canvas.axes
+        self.imgIndex = imgIndex
 
     def roi(self, *args):
         if self._ROIactive == True:
@@ -112,7 +79,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             'button_release_event', self.roi_release)
         self.ROIwidget.setChecked(True)
 
-        z = self.parent.getImgSliceNumber()
+        z = self.canvas.getImgSliceNumber()
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.add_line(currentLine)
@@ -130,14 +97,14 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.parent.vtxt.set_visible(False)
         #"""
         #"""
-        self.parent.axes.lines.remove(self.parent.vline)
-        self.parent.axes.lines.remove(self.parent.hline)
-        self.parent.axes.texts.remove(self.parent.htxt)
-        self.parent.axes.texts.remove(self.parent.vtxt)
+        self.canvas.axes.lines.remove(self.canvas.vline)
+        self.canvas.axes.lines.remove(self.canvas.hline)
+        self.canvas.axes.texts.remove(self.canvas.htxt)
+        self.canvas.axes.texts.remove(self.canvas.vtxt)
         #"""
 
-        self.parent.BlitImageAndLines()
-        self.signals.signalROIInit.emit(self.imgIndex)
+        self.canvas.BlitImageAndLines()
+        self.signalROIInit.emit(self.imgIndex)
 
     def roi_destructor(self):
         # use holders different from _idPress because Move and Pan will steal
@@ -160,19 +127,19 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.parent.vtxt.set_visible(True)
         #"""
         #"""
-        self.ax.lines.append(self.parent.hline)
-        self.ax.lines.append(self.parent.vline)
-        self.ax.texts.append(self.parent.htxt)
-        self.ax.texts.append(self.parent.vtxt)
+        self.ax.lines.append(self.canvas.hline)
+        self.ax.lines.append(self.canvas.vline)
+        self.ax.texts.append(self.canvas.htxt)
+        self.ax.texts.append(self.canvas.vtxt)
         #"""
 
-        z = self.parent.getImgSliceNumber()
+        z = self.canvas.getImgSliceNumber()
         if z in self.roiLines.mplLineObjects:
             for currentLine in self.roiLines.mplLineObjects[z]:
                 self.ax.lines.remove(currentLine)
 
-        self.parent.BlitImageAndLines()
-        self.signals.signalROIDestruct.emit(self.imgIndex)
+        self.canvas.BlitImageAndLines()
+        self.signalROIDestruct.emit(self.imgIndex)
 
     def roi_release(self, event):
 
@@ -185,7 +152,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 self.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signals.signalROIEnd.emit(event.xdata, event.ydata)
+        self.signalROIEnd.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = False
 
     def roi_press(self, event):
@@ -194,10 +161,10 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             return
         if event.button != 1:
             if self.roiDrawingEngaged:
-                self.signals.signalROICancel.emit()
+                self.signalROICancel.emit()
                 self.roiDrawingEngaged = False
             return
-        self.signals.signalROIStart.emit(event.xdata, event.ydata)
+        self.signalROIStart.emit(event.xdata, event.ydata)
         self.roiDrawingEngaged = True
 
     def roi_move(self, event):
@@ -207,7 +174,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
             return
         if event.inaxes != self.ax:
             return
-        self.signals.signalROIChange.emit(event.xdata, event.ydata)
+        self.signalROIChange.emit(event.xdata, event.ydata)
 
     def playMovie(self):
         self._movieActive = not self._movieActive
@@ -216,34 +183,34 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
                 self.roi()
             self.ROIwidget.setDisabled(True)
 
-            self.parent.axes.texts.remove(self.parent.htxt)
-            self.parent.axes.texts.remove(self.parent.vtxt)
-            self.parent.axes.lines.remove(self.parent.hline)
-            self.parent.axes.lines.remove(self.parent.vline)
+            self.canvas.axes.texts.remove(self.canvas.htxt)
+            self.canvas.axes.texts.remove(self.canvas.vtxt)
+            self.canvas.axes.lines.remove(self.canvas.hline)
+            self.canvas.axes.lines.remove(self.canvas.vline)
 
-            axesTransform = self.parent.img.axes.transAxes
+            axesTransform = self.canvas.img.axes.transAxes
             axesOffset = transforms.ScaledTranslation(
-                0, .6, self.parent.img.axes.figure.dpi_scale_trans)
-            self.movieText = self.parent.img.axes.text(
+                0, .6, self.canvas.img.axes.figure.dpi_scale_trans)
+            self.movieText = self.canvas.img.axes.text(
                 1, -.01, '', fontsize=10, transform=axesTransform, ha='right', va='top')
 
-            self.parent.BlitImageAndLines()
-            self.signals.signalMovieInit.emit(self.imgIndex)
+            self.canvas.BlitImageAndLines()
+            self.signalMovieInit.emit(self.imgIndex)
 
         else:
 
             self.movieText.remove()
             del self.movieText
 
-            self.parent.axes.texts.append(self.parent.htxt)
-            self.parent.axes.texts.append(self.parent.vtxt)
-            self.parent.axes.lines.append(self.parent.hline)
-            self.parent.axes.lines.append(self.parent.vline)
+            self.canvas.axes.texts.append(self.canvas.htxt)
+            self.canvas.axes.texts.append(self.canvas.vtxt)
+            self.canvas.axes.lines.append(self.canvas.hline)
+            self.canvas.axes.lines.append(self.canvas.vline)
 
-            self.parent.draw()
-            self.parent.blit(self.parent.fig.bbox)
+            self.canvas.draw()
+            self.canvas.blit(self.canvas.fig.bbox)
             self.ROIwidget.setEnabled(True)
-            self.signals.signalMovieDestruct.emit(self.imgIndex)
+            self.signalMovieDestruct.emit(self.imgIndex)
 
 
 class lassoLines():

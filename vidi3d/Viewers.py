@@ -3,16 +3,9 @@ This module contains all the functions a user needs to call and control the
 behaviour of the viewers.
 """
 import matplotlib as mpl
-#pycharm sets matplotlib with TkAgg, which doesn't talk with our app cause ours is written in QT4. Forcing mpl to QT4
-#makes mpl plots show up imediately in the app. It also makes the blocking behaviour work properly.
-mpl.use('Qt4Agg')
-#pyplot is noisy for some reason, suppress output while we import it
-import sys
-save_stdout = sys.stdout
-sys.stdout = open('trash', 'w')
 import matplotlib.pyplot as plt
-sys.stdout = save_stdout
-from PyQt4 import QtGui, QtCore
+plt.ion()
+from PyQt5 import QtGui, QtCore, QtWidgets
 from . import  _Core
 from .Imshow import _MainWindow4D
 from .Compare import _MainWindowCompare
@@ -23,7 +16,7 @@ def _startViewer(viewer, block, windowTitle=None):
     if block:
         if windowTitle is not None:
             viewer.setWindowTitle(windowTitle)
-        QtGui.qApp.exec_()
+        QtWidgets.qApp.exec_()
         return
     else:
         # this is noisy, so suppress the stdout.

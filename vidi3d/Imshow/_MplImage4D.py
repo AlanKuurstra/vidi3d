@@ -4,12 +4,12 @@ to show the cross sections through a 4D object.  Using QT signals, it coordinate
 cursor line changes and image changes to match the current viewing location in the 4D object.
 """
 
-from .._NavigationToolbar import NavigationToolbar
+from .._NavigationToolbar import NavigationToolbarSimple as NavigationToolbar
 from .. import _DisplayDefinitions as dd
 from .. import _MplImage as _MplImage
 from .. import _MplPlot as _MplPlot
 import numpy as np
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
 
 class _MplImage4D(QtCore.QObject):
@@ -52,6 +52,7 @@ class _MplImage4D(QtCore.QObject):
             [complexIm3[initLocation[0], initLocation[1], :, initLocation[3]], ], title="Z Plot", initMarkerPosn=initLocation[2])
         self.tplot = _MplPlot._MplPlot(
             [complexIm3[initLocation[0], initLocation[1], initLocation[2], :], ], title="T Plot", initMarkerPosn=initLocation[3])
+
 
     def onXChange(self, value):
         # clip to valid locations, this is now done inside _MplImage.MoveEvent() before the ChangeLocation signal is emitted
@@ -164,7 +165,7 @@ class _zslice(_MplImage._MplImage):
         self.signalYLocationChange.emit(y)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:
@@ -195,7 +196,7 @@ class _yslice(_MplImage._MplImage):
         self.signalZLocationChange.emit(z)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:
@@ -225,7 +226,7 @@ class _xslice(_MplImage._MplImage):
         self.signalYLocationChange.emit(y)
 
     def wheelEvent(self, event):
-        if event.delta() > 0:
+        if event.angleDelta().y() > 0:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum + 1, 0), self.maxSliceNum - 1)
         else:

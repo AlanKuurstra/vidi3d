@@ -4,14 +4,13 @@ This class contains the widgets for user control in the compare viewer.
 
 import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
-from .. import _Core as _Core
-from .. import _DisplayDefinitions as dd
-from .._DisplaySignals import Signals
+from .. import core as _Core
+from .. import definitions as dd
+from ..signals import Signals
 from PyQt5 import QtCore
 
 class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
     def __init__(self, parent=None, imgShape=None, location=None, locationLabels=None, imageType=None, windowLevel=None, imgVals=None, overlayUsed=False, overlayMinMax=[-np.finfo('float').max / 2, np.finfo('float').max / 2]):
-        _Core._create_qApp()
         QtWidgets.QWidget.__init__(self)
         self.parent = parent
         controlLayout = QtWidgets.QGridLayout(self)
@@ -20,19 +19,19 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
         #
         # Image Type
         #
-        self.currImageType = dd.ImageType.mag
+        self.currImageType = dd.ImageDisplayType.mag
 
         self.imgTypeIndex = np.zeros(4, dtype=np.int)
-        self.imgTypeIndex[dd.ImageType.mag] = 0
-        self.imgTypeIndex[dd.ImageType.phase] = 1
-        self.imgTypeIndex[dd.ImageType.real] = 2
-        self.imgTypeIndex[dd.ImageType.imag] = 3
+        self.imgTypeIndex[dd.ImageDisplayType.mag] = 0
+        self.imgTypeIndex[dd.ImageDisplayType.phase] = 1
+        self.imgTypeIndex[dd.ImageDisplayType.real] = 2
+        self.imgTypeIndex[dd.ImageDisplayType.imag] = 3
 
         self.imageTypeLookup = np.zeros(4, dtype=np.int)
-        self.imageTypeLookup[0] = dd.ImageType.mag
-        self.imageTypeLookup[1] = dd.ImageType.phase
-        self.imageTypeLookup[2] = dd.ImageType.real
-        self.imageTypeLookup[3] = dd.ImageType.imag
+        self.imageTypeLookup[0] = dd.ImageDisplayType.mag
+        self.imageTypeLookup[1] = dd.ImageDisplayType.phase
+        self.imageTypeLookup[2] = dd.ImageDisplayType.real
+        self.imageTypeLookup[3] = dd.ImageDisplayType.imag
 
         label = QtWidgets.QLabel()
         label.setText("View")
@@ -82,7 +81,7 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
         layoutRowIndex = layoutRowIndex + 1
 
         #
-        # Location Controls
+        # Coordinates Controls
         #
         locationLayout = QtWidgets.QGridLayout()
         self.location = list(np.array(location).copy())
@@ -500,7 +499,7 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
         newImageType = self.imageTypeLookup[index]
         if newImageType != self.currImageType:
             self.currImageType = newImageType
-            self.signalImageTypeChange.emit(newImageType)
+            self.sig_img_disp_type_change.emit(newImageType)
 
     def windowChanged(self, value):
         if value != self.currWindow:

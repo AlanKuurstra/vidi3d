@@ -4,9 +4,9 @@ Class to show movies of an fmri slice. Currently unused.
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5 import QtCore, QtGui
-import _Core
+import core
 from matplotlib.animation import ArtistAnimation
-from _DisplaySignals import Signals
+from signals import Signals
 
 
 class _MplAnimation(Signals, FigureCanvas, ArtistAnimation):
@@ -15,7 +15,7 @@ class _MplAnimation(Signals, FigureCanvas, ArtistAnimation):
         #
         # Qt related initialization
         #
-        _Core._create_qApp()
+        core.create_qapp()
         self.parent = parent
 
         if figure is not None:

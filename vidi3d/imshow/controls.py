@@ -3,12 +3,11 @@ This class contains the widgets for user control in the 4D viewer.
 """
 import numpy as np
 from PyQt5 import QtGui, QtCore, QtWidgets
-from .. import _Core as _Core
-from .._DisplaySignals import Signals
+from .. import core as _Core
+from ..signals import Signals
 
 class _ControlWidget4D(Signals,QtWidgets.QWidget):
     def __init__(self, image4DShape, initLocation, imageType, parent=None):
-        _Core._create_qApp()
         super(_ControlWidget4D, self).__init__()
         self.image4DShape = image4DShape
         controlLayout = QtWidgets.QVBoxLayout(self)
@@ -64,7 +63,7 @@ class _ControlWidget4D(Signals,QtWidgets.QWidget):
         self.wlLayout.addWidget(button)
 
         #
-        # Location
+        # Coordinates
         #
         locLayout = QtWidgets.QHBoxLayout()
         self.xcontrol = QtWidgets.QDoubleSpinBox()
@@ -132,7 +131,7 @@ class _ControlWidget4D(Signals,QtWidgets.QWidget):
 
     # signals to emit when a control panel dial is changed
     def changeImageType(self, index):
-        self.signalImageTypeChange.emit(index)
+        self.sig_img_disp_type_change.emit(index)
 
     def changeWindow(self, value):
         if self.window.hasFocus():

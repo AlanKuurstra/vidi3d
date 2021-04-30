@@ -2,34 +2,13 @@
 This module contains all the functions a user needs to call and control the
 behaviour of the viewers.
 """
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+
 plt.ion()
-from PyQt5 import QtGui, QtCore, QtWidgets
-from . import  _Core
-from .Imshow import _MainWindow4D
-from .Compare import _MainWindowCompare
+from .core import start_viewer, to_list
+from vidi3d.imshow.main import _MainWindow as Imshow3d
+from vidi3d.compare.main import _MainWindow as Compare
 import numpy as np
-
-
-def _startViewer(viewer, block, windowTitle=None):
-    if block:
-        if windowTitle is not None:
-            viewer.setWindowTitle(windowTitle)
-        QtWidgets.qApp.exec_()
-        return
-    else:
-        # this is noisy, so suppress the stdout.
-        plt.ion()
-        viewerNum = _Core._storeViewer(viewer)
-        viewer.setViewerNumber(viewerNum)
-
-        if windowTitle is None:
-            viewer.setWindowTitle('Viewer ' + str(viewerNum))
-        else:
-            viewer.setWindowTitle(windowTitle)
-        return viewer
-
 
 
 def imshow3d(data, pixdim=None, interpolation='none', block=True):
@@ -59,14 +38,13 @@ def imshow3d(data, pixdim=None, interpolation='none', block=True):
 
     Returns
     --------
-    viewer : `Imshow._MainWindow4D`
+    viewer : `imshow._MainWindow4D`
 
     """
 
     if data.ndim == 3:
         data = data[..., np.newaxis]
-    viewer = _MainWindow4D._MainWindow(
-        data, pixdim, interpolation=interpolation)
+    viewer = Imshow3d(data, pixdim, interpolation=interpolation)
     if not block:
         viewer.imagePanel3D.raw = np.copy(viewer.imagePanel3D.raw)
         # if the viewer is run as not blocking, then the underlying data
@@ -74,10 +52,11 @@ def imshow3d(data, pixdim=None, interpolation='none', block=True):
         # in the viewer.  Therefore, we must make a copy.  If you have a
         # large data set and don't want to wait for the copy or can't afford
         # the memory, then you should run the viewer with block=True
-    return _startViewer(viewer, block)
+    return start_viewer(viewer, block)
 
 
-def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
+def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True,
+              locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
     """
     A viewer that displays multiple 2D images for comparison.
 
@@ -129,12 +108,12 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
 
     Returns
     --------
-    viewer : `Compare._MainWindowCompare`
+    viewer : `compare._MainWindowCompare`
     """
-    data = convertToListIfNecessary(data)
-    colormap = convertToListIfNecessary(colormap)
-    overlay = convertToListIfNecessary(overlay)
-    overlayColormap = convertToListIfNecessary(overlayColormap)
+    data = to_list(data)
+    colormap = to_list(colormap)
+    overlay = to_list(overlay)
+    overlayColormap = to_list(overlayColormap)
 
     for img in data:
         assert img.shape == data[0].shape
@@ -157,12 +136,15 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
             except:
                 pass
 
-    viewer = _MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
-                                                    locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
-    return _startViewer(viewer, block, windowTitle)
+    viewer = Compare(data, pixdim=pixdim, interpolation=interpolation, origin=origin,
+                     subplotTitles=subplotTitles,
+                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap,
+                     overlayList=overlay, overlayColormapList=overlayColormap)
+    return start_viewer(viewer, block, windowTitle)
 
 
-def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True, locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
+def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True,
+              locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
     """
     A viewer that displays multiple 3D images for comparison.
 
@@ -214,67 +196,20 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
 
     Returns
     --------
-    viewer : `Compare._MainWindowCompare`
+    viewer : `compare._MainWindowCompare`
     """
-    data = convertToListIfNecessary(data)
-    colormap = convertToListIfNecessary(colormap)
-    overlay = convertToListIfNecessary(overlay)
-    overlayColormap = convertToListIfNecessary(overlayColormap)
+    data = to_list(data)
+    colormap = to_list(colormap)
+    overlay = to_list(overlay)
+    overlayColormap = to_list(overlayColormap)
 
     for img in data:
         assert img.shape == data[0].shape
     if data[0].ndim == 3:
         for indx in range(len(data)):
             data[indx] = data[indx][..., np.newaxis]
-    viewer = _MainWindowCompare._MainWindow(data, pixdim=pixdim, interpolation=interpolation, origin=origin, subplotTitles=subplotTitles,
-                                                    locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap, overlayList=overlay, overlayColormapList=overlayColormap)
-    return _startViewer(viewer, block, windowTitle)
-
-
-def toList(array, axis=-1, step=1):
-    """
-    Split a higher dimensional array into a list of lower dimensional arrays.
-    Useful for splitting a 3d image into a list of 2d slices passed to compare2d.
-
-    """
-    slicesToGet = np.arange(0, array.shape[axis], step)
-    tmp = np.take(array, slicesToGet, axis=axis)
-    return np.split(tmp, tmp.shape[axis], axis=axis)
-
-
-def convertToListIfNecessary(inputData):
-    if type(inputData) != list and type(inputData) != tuple:
-        inputData = [inputData, ]
-    elif type(inputData) == tuple:
-        inputData = list(inputData)
-    return inputData
-
-
-def close(num=None):
-    """
-    Close a Viewer.
-
-    close('all') closes all figures
-
-    close(num) closes viewer number num
-    """
-    _Core._checkViewerListExists()
-    if type(num) is int:
-        if num <= len(_Core._viewerList) and _Core._viewerList.has_key(num):
-            _Core._viewerList[num].close()
-    if num.lower() == 'all':
-        _Core._viewerList.clear()
-
-
-def pause(pauseTime):
-    """
-    Pause for pauseTime milliseconds.
-
-    Viewers will be updated and displayed, and the GUI event loop will run during the pause.
-    """
-
-    # pause time is in milliseconds
-    loop = QtCore.QEventLoop()
-    timer = QtCore.QTimer()
-    timer.singleShot(pauseTime, loop.quit)
-    loop.exec_()
+    viewer = Compare(data, pixdim=pixdim, interpolation=interpolation, origin=origin,
+                     subplotTitles=subplotTitles,
+                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap,
+                     overlayList=overlay, overlayColormapList=overlayColormap)
+    return start_viewer(viewer, block, windowTitle)

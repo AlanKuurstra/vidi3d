@@ -7,17 +7,15 @@ so that the MainWindow can implement logic for movie playing and ROI drawing
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbarSuper
 import os
 from matplotlib.lines import Line2D
-from . import _DisplayDefinitions as dd
+from . import definitions as dd
 import matplotlib.transforms as transforms
-from ._DisplaySignals import Signals
+from .signals import Signals
 from PyQt5 import QtWidgets
 
 class NavigationToolbarSimple(NavigationToolbarSuper):
     def __init__(self, canvas, parent):
         super(NavigationToolbarSimple, self).__init__(canvas, parent)
         self.clear()
-        self.canvas.parent = parent
-        self.canvas = canvas
         a = self.addAction(self._icon('home.png'), 'Home', self.home)
         a.setToolTip('Reset original view')
         a = self.addAction(self._icon('zoom_to_rect.png'), 'Zoom', self.zoom)
@@ -29,11 +27,15 @@ class NavigationToolbarSimple(NavigationToolbarSuper):
         w.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.spacer = self.addWidget(w)
 
-        self.addSeparator()
-        a = self.addAction(self._icon('filesave.png'), 'Save',
-                           self.save_figure)
-        a.setToolTip('Save the figure')
-
+        # In order for save to work, need to copy and paste self.save_figure to
+        # overload and change the qt_compat._getSaveFileName call to have parameter:
+        # options=QtWidgets.QFileDialog.DontUseNativeDialog
+        # https://stackoverflow.com/questions/59775385/weird-interaction-between-pycharm-and-pyqt-qfiledialog
+        # However, this action isn't very useful.
+        # self.addSeparator()
+        # a = self.addAction(self._icon('filesave.png'), 'Save',
+        #                    self.save_figure)
+        # a.setToolTip('Save the figure')
 
 
 class NavigationToolbar(Signals, NavigationToolbarSimple):
@@ -220,7 +222,7 @@ class lassoLines():
     def startNewLassoLine(self, x, y, z):
         if z in self.mplLineObjects:
             self.mplLineObjects[z].append(
-                Line2D([x], [y], linestyle='-', color=dd.roiColor, lw=1))
+                Line2D([x], [y], linestyle='-', color=dd.roi_color, lw=1))
         else:
             self.mplLineObjects[z] = [
-                Line2D([x], [y], linestyle='-', color=dd.roiColor, lw=1), ]
+                Line2D([x], [y], linestyle='-', color=dd.roi_color, lw=1), ]

@@ -3,8 +3,9 @@ QT event signals.
 """
 from PyQt5 import QtCore
 
+
 class Signals:
-    signalImageTypeChange = QtCore.pyqtSignal(int, name='imageTypeChanged')
+    sig_img_disp_type_change = QtCore.pyqtSignal(int, name='imageTypeChanged')
     signalImageCmapChange = QtCore.pyqtSignal(int, name='imageCmapChanged')
 
     signalXLocationChange = QtCore.pyqtSignal(int, name='xLocationChanged')

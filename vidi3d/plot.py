@@ -4,7 +4,7 @@ to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from . import _DisplayDefinitions as dd
+from . import definitions as dd
 from PyQt5 import QtCore, QtGui, QtWidgets
 import numpy as np
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbarSuper
@@ -37,7 +37,7 @@ class _MplPlot(FigureCanvas):
         #
         self.setComplexData(complexDataList)
         if dataType is None:
-            self.setDataType(dd.ImageType.mag)
+            self.setDataType(dd.ImageDisplayType.mag)
         else:
             self.setDataType(dataType)
         self.setMarkerPosn(initMarkerPosn)
@@ -108,7 +108,7 @@ class _MplPlot(FigureCanvas):
         for line in range(len(self.complexDataList)):
             self.lines[line][0].set_ydata(
                 self.applyDataType(self.complexDataList[line]))
-        # if self._dataType == dd.ImageType.phase:
+        # if self._dataType == dd.ImageDisplayType.phase:
         #    self.axes.set_ylim(-np.pi, np.pi)
         # else:
         if not self.lockPlot:
@@ -144,13 +144,13 @@ class _MplPlot(FigureCanvas):
     #==================================================================
 
     def applyDataType(self, complexData):
-        if self._dataType == dd.ImageType.mag:
+        if self._dataType == dd.ImageDisplayType.mag:
             data = np.abs(complexData)
-        elif self._dataType == dd.ImageType.phase:
+        elif self._dataType == dd.ImageDisplayType.phase:
             data = np.angle(complexData)
-        elif self._dataType == dd.ImageType.real:
+        elif self._dataType == dd.ImageDisplayType.real:
             data = np.real(complexData)
-        elif self._dataType == dd.ImageType.imag:
+        elif self._dataType == dd.ImageDisplayType.imag:
             data = np.imag(complexData)
         else:
             print("Data type not recognized")

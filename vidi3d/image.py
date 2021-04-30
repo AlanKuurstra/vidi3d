@@ -3,63 +3,68 @@ Base class for images shown in the viewers. Instances of this clase are used
 to setup an arbitrary number of 2D images for comparison.  Instances of this
 class are also used to show the 3 cross sectional views of a 3D image.
 """
-import numpy as np
 import matplotlib as mpl
+import numpy as np
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5 import QtCore, QtGui, QtWidgets
-from . import _Core
-from . import _DisplayDefinitions as dd
-from ._DisplaySignals import Signals
 
-class _MplImage(Signals, FigureCanvas):
-    def __init__(self, complexImage, aspect='equal', overlay=None, parent=None, interpolation='none', origin='lower', imageType=None, windowLevel=None, location=None, imgSliceNumber=0, locationLabels=None, colormap=None, overlayColormap=None):
-        #
-        # Qt related initialization
-        #
-        _Core._create_qApp()
+from . import definitions as dd
+from .signals import Signals
+from .definitions import Coordinates
+
+
+class MplImage(Signals, FigureCanvas):
+    def __init__(self,
+                 complex_image,
+                 aspect='equal',
+                 overlay=None,
+                 parent=None,
+                 interpolation='none',
+                 origin='lower',
+                 display_type=None,
+                 window_level=None,
+                 location=None,
+                 imgSliceNumber=0,
+                 locationLabels=None,
+                 cmap=None,
+                 overlay_cmap=None):
         self.fig = mpl.figure.Figure()
         FigureCanvas.__init__(self, self.fig)
-        FigureCanvas.setSizePolicy(
-            self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
-        # the FigureCanvas class doesn't have the option to pass the parent to
-        # the __init__() constructer, must set it manually
-        self.parent = parent
-        #
+        # can't set parent in FigureCanvas __init__, set it manually
+        #self.parent = parent
+
+
         # Event related initialization
-        #
-        self._idMove = self.mpl_connect('motion_notify_event', self.MoveEvent)
-        self._idPress = self.mpl_connect('button_press_event', self.PressEvent)
-        self._idRelease = self.mpl_connect(
-            'button_release_event', self.ReleaseEvent)
-        self.leftMousePress = False
-        self.middleMousePress = False
-        self.rightMousePress = False
-        #
+        self._idMove = self.mpl_connect('motion_notify_event', self.mouse_move)
+        self._idPress = self.mpl_connect('button_press_event', self.mouse_press)
+        self._idRelease = self.mpl_connect('button_release_event', self.mouse_release)
+        self.left_mouse_press = False
+        self.middle_mouse_press = False
+        self.right_mouse_press = False
+
         # Internal data initialization
-        #
-        self.complexImageData = complexImage
+        self.complex_image_data = complex_image
         if overlay is None:
-            ones = np.ones(complexImage.shape, dtype='bool')
-            self.overlayData = np.ma.masked_where(ones, ones)
+            ones = np.ones(complex_image.shape, dtype='bool')
+            self.overlay_data = np.ma.masked_where(ones, ones)
         else:
-            self.overlayData = overlay
-        self.location = np.minimum(np.maximum(location, [0, 0]), np.subtract(
-            self.complexImageData.shape, 1)).astype(np.int)
+            self.overlay_data = overlay
+        self.cursor_loc = Coordinates(*np.minimum(np.maximum(location, [0, 0]), np.subtract(self.complex_image_data.shape, 1)))
         self.imgSliceNumber = imgSliceNumber
 
-        #
         # Initialize objects visualizing the internal data
-        #
-        if colormap is None:
+        if cmap is None:
             self.colormap = mpl.cm.Greys_r
         else:
-            self.colormap = colormap
+            self.colormap = cmap
 
-        if overlayColormap is None:
+        if overlay_cmap is None:
             self.overlayColormap = mpl.cm.Reds
         else:
-            self.overlayColormap = overlayColormap
+            self.overlayColormap = overlay_cmap
 
         # labels
         currLabels = [{'color': 'r', 'textLabel': "X"},
@@ -73,17 +78,19 @@ class _MplImage(Signals, FigureCanvas):
         if origin != 'upper' and origin != 'lower':
             print("origin parameter not understood, defaulting to 'lower'")
             origin = 'lower'
-        self.img = self.axes.imshow(np.zeros(complexImage.shape).T, aspect=aspect,
-                                    interpolation=interpolation, origin=origin, cmap=self.colormap)
+
+
+        self.img = self.initialize_image(np.zeros(complex_image.shape), aspect=aspect,interpolation=interpolation, origin=origin, cmap=self.colormap)
         if overlay is not None:
             self.overlay = self.axes.imshow(self.overlayData.T, aspect=aspect,
-                                        interpolation=interpolation, origin=origin, alpha=0.3, cmap=self.overlayColormap)
-        self._imageType = dd.ImageType.mag
+                                            interpolation=interpolation, origin=origin, alpha=0.3,
+                                            cmap=self.overlayColormap)
+        self._imageType = dd.ImageDisplayType.mag
         self.setMplImg()
-        self.locationVal = self.img.get_array(
-        ).data[self.location[1], self.location[0]]
+        self.cursor_val = self.get_image_value(self.cursor_loc)
         self.title = self.axes.text(
-            0.5, 1.08, currLabels[2]['textLabel'], horizontalalignment='center', fontsize=18, transform=self.axes.transAxes)
+            0.5, 1.08, currLabels[2]['textLabel'], horizontalalignment='center', fontsize=18,
+            transform=self.axes.transAxes)
         self.axes.xaxis.set_visible(False)
         self.axes.yaxis.set_visible(False)
         self.axes.patch.set_facecolor('black')
@@ -97,42 +104,48 @@ class _MplImage(Signals, FigureCanvas):
         self.vtxt = self.axes.text(location[0], -.5, currLabels[1]['textLabel'], bbox=dict(
             facecolor='white', alpha=0.7), va='top', ha='center')
 
-        #
+
         # Initialize parameters for data visualization
-        #
         self.intensityLevelCache = np.zeros(4)
         self.intensityWindowCache = np.ones(4)
         self.intensityLevel = 0.0
         self.intensityWindow = 1.0
-        self._imageType = dd.ImageType.mag
+        self._imageType = dd.ImageDisplayType.mag
         self.enableWindowLevel = True
 
         self.setWindowLevelToDefault()
-        if imageType is None:
-            self.showImageTypeChange(dd.ImageType.mag)
+        if display_type is None:
+            self.showImageTypeChange(dd.ImageDisplayType.mag)
         else:
-            self.showImageTypeChange(imageType)
+            self.showImageTypeChange(display_type)
 
-    def SaveImage(self, fname):
+    def initialize_image(self, X, *args, **kwargs):
+        # this class uses coordinates complex_image[x,y]
+        # we would like x (first dimension) to be on horizontal axis
+        # imshow visualizes matrices where first column is rows (vertical axis)
+        # therefore, we must transpose the data
+        return self.axes.imshow(X.T, *args, **kwargs)
+
+    def get_image_value(self, coordinates):
+        return self.img.get_array().data[coordinates.y, coordinates.x]
+
+
+    def save(self, fname):
         img = self.img.get_array()
-        cmap = cmap = self.img.get_cmap()
+        cmap = self.img.get_cmap()
         origin = self.img.origin
         vmin, vmax = self.img.get_clim()
+        mpl.pyplot.imsave(fname=fname + '.png', arr=img, cmap=cmap, origin=origin, vmin=vmin, vmax=vmax, format="png")
 
-        mpl.pyplot.imsave(fname=fname + '.png', arr=img, cmap=cmap,
-                          origin=origin, vmin=vmin, vmax=vmax, format="png")
-
-    #==================================================================
-    # slots to deal with mpl mouse events
-    #==================================================================
-    def PressEvent(self, event):
+    # Methods for mouse event slots
+    def mouse_press(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right
         if self.fig.canvas.widgetlock.locked():
             return
         if event.button == 1:
-            self.leftMousePress = True
+            self.left_mouse_press = True
         elif event.button == 2:
-            self.middleMousePress = True
+            self.middle_mouse_press = True
             img = self.img.get_array()
             cmap = self.img.get_cmap()
             origin = self.img.origin
@@ -148,83 +161,80 @@ class _MplImage(Signals, FigureCanvas):
             mpl.pyplot.show()
 
         elif event.button == 3:
-            self.rightMousePress = True
+            self.right_mouse_press = True
 
         self.origIntensityWindow = self.intensityWindow
         self.origIntensityLevel = self.intensityLevel
         self.origPointerLocation = [event.x, event.y]
-        self.MoveEvent(event)
+        self.mouse_move(event)
 
-    def ReleaseEvent(self, event):
+    def mouse_release(self, event):
         if self.fig.canvas.widgetlock.locked():
             return
         if event.button == 1:
-            self.leftMousePress = False
+            self.left_mouse_press = False
         elif event.button == 2:
-            self.middleMousePress = False
+            self.middle_mouse_press = False
         elif event.button == 3:
-            self.rightMousePress = False
+            self.right_mouse_press = False
 
-    def MoveEvent(self, event):
+    def mouse_move(self, event):
         if self.fig.canvas.widgetlock.locked():
             return
-        if (self.rightMousePress and self.enableWindowLevel):
-            #"""
+        if (self.right_mouse_press and self.enableWindowLevel):
+            # """
             levelScale = 0.001
             windowScale = 0.001
 
             dLevel = levelScale * \
-                float(self.origPointerLocation[1] -
-                      event.y) * self.dynamicRange
+                     float(self.origPointerLocation[1] -
+                           event.y) * self.dynamicRange
             dWindow = windowScale * \
-                float(
-                    event.x - self.origPointerLocation[0]) * self.dynamicRange
+                      float(
+                          event.x - self.origPointerLocation[0]) * self.dynamicRange
 
             newIntensityLevel = self.origIntensityLevel + dLevel
             newIntensityWindow = self.origIntensityWindow + dWindow
             self.signalWindowLevelChange.emit(
                 newIntensityWindow, newIntensityLevel)
 
-        if (self.leftMousePress):
-            locationDataCoord = self.axes.transData.inverted().transform([
-                event.x, event.y])
-            clippedLocation = np.minimum(np.maximum(
-                locationDataCoord + 0.5, [0, 0]), np.subtract(self.complexImageData.shape, 1))
-            self._signalCursorChange(clippedLocation)
+        if (self.left_mouse_press):
+            locationDataCoord = self.axes.transData.inverted().transform([event.x, event.y])
+            clippedLocation = np.minimum(np.maximum(locationDataCoord + 0.5, [0, 0]), np.subtract(self.complex_image_data.shape, 1))
+            self.emit_cursor_change(clippedLocation)
 
-    def _signalCursorChange(self, location):
+    def emit_cursor_change(self, location):
         self.signalLocationChange.emit(location[0], location[1])
 
-    #==================================================================
-    # functions that set internal data
-    #==================================================================
-    def setComplexImage(self, newComplexImage):
-        self.complexImageData = newComplexImage
 
-    def setOverlayImage(self, newOverlayImage):
-        self.overlayData = newOverlayImage
+    # Methods that set internal data
+    def set_complex_image(self, new_image):
+        self.complex_image_data = new_image
+
+    def set_overlay(self, new_overlay):
+        self.overlayData = new_overlay
         self.overlay.set_data(self.overlayData.T)
 
-    def setLocation(self, newLocation):
-        # clipping newLocation to valid locations is done in MoveEvent() before the ChangeLocation signal is emitted
-        # however, there could be problems if a control class objec signals a location change that is out of bounds
-        #newLocation = np.minimum(np.maximum(newLocation, [0,0]), np.subtract(self.complexImageData.shape,1)).astype(np.int)
-        if (int(self.location[0]) != newLocation[0]) or (int(self.location[1]) != newLocation[1]):
-            self.location = newLocation
-            self.locationVal = self.img.get_array(
-            ).data[self.location[1], self.location[0]]
+    def set_cursor_loc(self, new_loc):
+        # clipping new_loc to valid locations is done in mouse_move() before the ChangeLocation signal is emitted
+        # however, there could be problems if a control class objec signals a cursor_loc change that is out of bounds
+        # new_loc = np.minimum(np.maximum(new_loc, [0,0]), np.subtract(self.complex_image_data.shape,1)).astype(np.int)
+        new_loc = Coordinates(*new_loc)
+        if self.cursor_loc != new_loc:
+            self.cursor_loc = new_loc
+            self.cursor_val = self.get_image_value(self.cursor_loc)
 
     def setImgSliceNumber(self, newImgSliceNumber):
         self.imgSliceNumber = newImgSliceNumber
 
     def setImageType(self, imageType):
         self._imageType = imageType
-        if imageType == dd.ImageType.mag or imageType == dd.ImageType.imag or imageType == dd.ImageType.real:
+        if imageType == dd.ImageDisplayType.mag or imageType == dd.ImageDisplayType.imag or imageType == dd.ImageDisplayType.real:
             self.setMplImgColorMap(self.colormap)
             self.setWindowLevel(
                 self.intensityWindowCache[imageType], self.intensityLevelCache[imageType])
             self.enableWindowLevel = True
-        elif imageType == dd.ImageType.phase:
+        elif imageType == dd.ImageDisplayType.phase:
             self.setMplImgColorMap(mpl.cm.hsv)
             self.setWindowLevel(2 * np.pi, 0)
             self.enableWindowLevel = False
@@ -240,38 +250,38 @@ class _MplImage(Signals, FigureCanvas):
             self.img.set_clim(vmin, vmax)
 
     def setWindowLevelToDefault(self):
-        maxMag = np.max(np.abs(self.complexImageData))
+        maxMag = np.max(np.abs(self.complex_image_data))
 
-        self.intensityLevelCache[dd.ImageType.imag] = 0.0
-        self.intensityWindowCache[dd.ImageType.imag] = 2.0 * maxMag
+        self.intensityLevelCache[dd.ImageDisplayType.imag] = 0.0
+        self.intensityWindowCache[dd.ImageDisplayType.imag] = 2.0 * maxMag
 
-        self.intensityLevelCache[dd.ImageType.real] = 0.0
-        self.intensityWindowCache[dd.ImageType.real] = 2.0 * maxMag
+        self.intensityLevelCache[dd.ImageDisplayType.real] = 0.0
+        self.intensityWindowCache[dd.ImageDisplayType.real] = 2.0 * maxMag
 
-        self.intensityLevelCache[dd.ImageType.phase] = 0.0
-        self.intensityWindowCache[dd.ImageType.phase] = 2.0 * np.pi
+        self.intensityLevelCache[dd.ImageDisplayType.phase] = 0.0
+        self.intensityWindowCache[dd.ImageDisplayType.phase] = 2.0 * np.pi
 
-        self.intensityLevelCache[dd.ImageType.mag] = maxMag * 0.5
-        self.intensityWindowCache[dd.ImageType.mag] = maxMag
+        self.intensityLevelCache[dd.ImageDisplayType.mag] = maxMag * 0.5
+        self.intensityWindowCache[dd.ImageDisplayType.mag] = maxMag
 
         self.setWindowLevel(
             self.intensityWindowCache[self._imageType], self.intensityLevelCache[self._imageType])
 
-    #==================================================================
+    # ==================================================================
     # functions that update objects visualizing internal data
-    #==================================================================
+    # ==================================================================
     def setMplImgColorMap(self, cmap):
         self.img.set_cmap(cmap)
 
     def setMplImg(self):
-        if self._imageType == dd.ImageType.mag:
-            intensityImage = np.abs(self.complexImageData)
-        elif self._imageType == dd.ImageType.phase:
-            intensityImage = np.angle(self.complexImageData)
-        elif self._imageType == dd.ImageType.real:
-            intensityImage = np.real(self.complexImageData)
-        elif self._imageType == dd.ImageType.imag:
-            intensityImage = np.imag(self.complexImageData)
+        if self._imageType == dd.ImageDisplayType.mag:
+            intensityImage = np.abs(self.complex_image_data)
+        elif self._imageType == dd.ImageDisplayType.phase:
+            intensityImage = np.angle(self.complex_image_data)
+        elif self._imageType == dd.ImageDisplayType.real:
+            intensityImage = np.real(self.complex_image_data)
+        elif self._imageType == dd.ImageDisplayType.imag:
+            intensityImage = np.imag(self.complex_image_data)
 
         self.dynamicRange = np.float(np.max(intensityImage)) - np.float(np.min(intensityImage))
         self.img.set_data(intensityImage.T)
@@ -280,10 +290,10 @@ class _MplImage(Signals, FigureCanvas):
         # but in our matrix the 10 refers to width and the 20 to height
 
     def setMplLines(self):
-        self.hline.set_ydata([self.location[1], self.location[1]])
-        self.vline.set_xdata([self.location[0], self.location[0]])
-        self.htxt.set_y(self.location[1])
-        self.vtxt.set_x(self.location[0])
+        self.hline.set_ydata([self.cursor_loc.y, self.cursor_loc.y])
+        self.vline.set_xdata([self.cursor_loc.x, self.cursor_loc.x])
+        self.htxt.set_y(self.cursor_loc.y)
+        self.vtxt.set_x(self.cursor_loc.x)
 
     def BlitImageAndLines(self):
         if self.fig._cachedRenderer is not None:
@@ -321,22 +331,22 @@ class _MplImage(Signals, FigureCanvas):
                     self.axes.draw_artist(currentLine)
             self.blit(self.fig.bbox)
 
-    #==================================================================
+    # ==================================================================
     # convenience functions to change data and update visualizing objects
-    #==================================================================
+    # ==================================================================
     def showComplexImageChange(self, newComplexImage):
-        self.setComplexImage(newComplexImage)
+        self.set_complex_image(newComplexImage)
         self.setMplImg()
         self.BlitImageAndLines()
 
     def showComplexImageAndOverlayChange(self, newComplexImage, newOverlayImage):
-        self.setComplexImage(newComplexImage)
-        self.setOverlayImage(newOverlayImage)
+        self.set_complex_image(newComplexImage)
+        self.set_overlay(newOverlayImage)
         self.setMplImg()
         self.BlitImageAndLines()
 
     def showLocationChange(self, newLocation):
-        self.setLocation(newLocation)
+        self.set_cursor_loc(newLocation)
         self.setMplLines()
         self.BlitImageAndLines()
 
@@ -360,8 +370,8 @@ class _MplImage(Signals, FigureCanvas):
     def getImgSliceNumber(self):
         return self.imgSliceNumber
 
-    #==================================================================
+    # ==================================================================
     # functions related to Qt
-    #==================================================================
+    # ==================================================================
     def sizeHint(self):
         return QtCore.QSize(450, 450)

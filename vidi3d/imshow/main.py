@@ -5,25 +5,24 @@ classes and functions within this class.
 """
 
 from PyQt5 import QtGui, QtCore, QtWidgets
-from .. import _Core as _Core
-from .. import _DisplayDefinitions as dd
-from . import _MplImage4D
-from . import _ControlWidget4D
+from .. import core as _Core
+from .. import definitions as dd
+from . import image4d
+from . import controls
 
 
 class _MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, complexIm3, pixdim, interpolation='bicubic', initLocation=None, imageType=dd.ImageType.mag):
-        _Core._create_qApp()
+    def __init__(self, complexIm3, pixdim, interpolation='bicubic', initLocation=None, imageType=dd.ImageDisplayType.mag):
         super(_MainWindow, self).__init__()
         if initLocation is None:
             initLocation = [complexIm3.shape[0] / 2,
                             complexIm3.shape[1] / 2, complexIm3.shape[2] / 2, 0]
         initLocation = list(map(int, initLocation))
-        self.setWindowTitle('Vidi3d: Imshow')
+        self.setWindowTitle('Vidi3d: imshow')
         self.viewerNumber = 0
-        self.imagePanel4D = _MplImage4D._MplImage4D(
+        self.imagePanel4D = image4d._MplImage4D(
             complexIm3, pixdim, interpolation, initLocation, imageType, parent=self)
-        self.controls = _ControlWidget4D._ControlWidget4D(
+        self.controls = controls._ControlWidget4D(
             complexIm3.shape, initLocation, imageType, parent=self)
 
         mprWidget = QtWidgets.QWidget()
@@ -60,7 +59,7 @@ class _MainWindow(QtWidgets.QMainWindow):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     def makeConnections(self):
-        self.controls.signalImageTypeChange.connect(
+        self.controls.sig_img_disp_type_change.connect(
             self.imagePanel4D.onImageTypeChange)
         """self.controls.signalImageCmapChanged.connect(self.imagePanel4D.CMapChanged)"""
 
@@ -124,7 +123,7 @@ class _MainWindow(QtWidgets.QMainWindow):
         self.imagePanel4D.zslice.signalWindowLevelChange.connect(
             self.controls.onWindowLevelChange)
 
-        # when location control changes, update lines
+        # when cursor_loc control changes, update lines
         self.controls.signalXLocationChange.connect(
             self.imagePanel4D.onXChange)
         self.controls.signalYLocationChange.connect(
@@ -148,17 +147,17 @@ class _MainWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self, event):
         key = event.key()
         if key == 77:
-            self.imagePanel4D.onImageTypeChange(dd.ImageType.mag)
-            self.controls.onImageTypeChange(dd.ImageType.mag)
+            self.imagePanel4D.onImageTypeChange(dd.ImageDisplayType.mag)
+            self.controls.onImageTypeChange(dd.ImageDisplayType.mag)
         elif key == 80:
-            self.imagePanel4D.onImageTypeChange(dd.ImageType.phase)
-            self.controls.onImageTypeChange(dd.ImageType.phase)
+            self.imagePanel4D.onImageTypeChange(dd.ImageDisplayType.phase)
+            self.controls.onImageTypeChange(dd.ImageDisplayType.phase)
         elif key == 82:
-            self.imagePanel4D.onImageTypeChange(dd.ImageType.real)
-            self.controls.onImageTypeChange(dd.ImageType.real)
+            self.imagePanel4D.onImageTypeChange(dd.ImageDisplayType.real)
+            self.controls.onImageTypeChange(dd.ImageDisplayType.real)
         elif key == 73:
-            self.imagePanel4D.onImageTypeChange(dd.ImageType.imag)
-            self.controls.onImageTypeChange(dd.ImageType.imag)
+            self.imagePanel4D.onImageTypeChange(dd.ImageDisplayType.imag)
+            self.controls.onImageTypeChange(dd.ImageDisplayType.imag)
         event.ignore()
 
     def setViewerNumber(self, number):

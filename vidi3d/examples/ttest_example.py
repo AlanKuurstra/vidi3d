@@ -66,7 +66,7 @@ print("coehn's d: ", cohen_d(mean1, mean2))
 # VOXELWISE T-TEST
 #
 tmap, pmap = ttest(activationImg, restImg, phantomMask)
-# v.compare2d(img,overlay=(tmap,pmap),overlayColormap=('seismic','Reds'),subplotTitles=('tmap','pmap'))
+# v.compare2d(img,overlay=(tmap,pmap),overlay_cmap=('seismic','Reds'),subplotTitles=('tmap','pmap'))
 v.compare2d(img, overlay=(tmap), overlayColormap=(
     'seismic'), subplotTitles='tmap')
 v.compare2d(img, overlay=(pmap), overlayColormap=(

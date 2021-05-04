@@ -1,5 +1,5 @@
 """
-Base class for plots shown in the viewers. Instances of this clase are used 
+Base class for plots shown in the viewers. Instances of this class are used
 to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl

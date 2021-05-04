@@ -5,42 +5,38 @@ from PyQt5 import QtCore
 
 
 class Signals:
-    sig_img_disp_type_change = QtCore.pyqtSignal(int, name='imageTypeChanged')
-    signalImageCmapChange = QtCore.pyqtSignal(int, name='imageCmapChanged')
+    sig_img_disp_type_change = QtCore.pyqtSignal(int)
+    sig_img_cmap_change = QtCore.pyqtSignal(int)
 
-    signalXLocationChange = QtCore.pyqtSignal(int, name='xLocationChanged')
-    signalYLocationChange = QtCore.pyqtSignal(int, name='yLocationChanged')
-    signalZLocationChange = QtCore.pyqtSignal(int, name='zLocationChanged')
-    signalTLocationChange = QtCore.pyqtSignal(int, name='tLocationChanged')
-    signalLocationChange = QtCore.pyqtSignal(int, int)
+    sig_x_change = QtCore.pyqtSignal(int)
+    sig_y_change = QtCore.pyqtSignal(int)
+    sig_z_change = QtCore.pyqtSignal(int)
+    sig_t_change = QtCore.pyqtSignal(int)
+    sig_cursor_change = QtCore.pyqtSignal(int, int)
 
-    signalWindowLevelChange = QtCore.pyqtSignal(
-        float, float, name='windowLevelChanged')
-    signalWindowLevelReset = QtCore.pyqtSignal(name='windowLevelReset')
+    sig_window_level_change = QtCore.pyqtSignal(float, float)
+    sig_window_level_reset = QtCore.pyqtSignal()
 
-    signalROIInit = QtCore.pyqtSignal(int, name='ROIInit')
-    signalROIDestruct = QtCore.pyqtSignal(int, name='ROIDestruct')
-    signalROIDeleteLast = QtCore.pyqtSignal(name='ROIDeleteLast')
-    signalROIClear = QtCore.pyqtSignal(name='ROIClear')
-    signalROIChange = QtCore.pyqtSignal(float, float)
-    signalROIStart = QtCore.pyqtSignal(float, float)
-    signalROIEnd = QtCore.pyqtSignal(float, float)
-    signalROICancel = QtCore.pyqtSignal()
-    signalROIAvgTimecourse = QtCore.pyqtSignal(name='ROIAvgTimecourse')
-    signalROIPSCTimecourse = QtCore.pyqtSignal(name='ROIPSCTimecourse')
-    signalROI1VolHistogram = QtCore.pyqtSignal(int, name='ROI1VolHistogram')
+    sig_roi_init = QtCore.pyqtSignal(int)
+    signal_roi_destruct = QtCore.pyqtSignal(int)
+    sig_roi_del_last = QtCore.pyqtSignal()
+    sig_roi_clear = QtCore.pyqtSignal()
+    sig_roi_change = QtCore.pyqtSignal(float, float)
+    sig_roi_start = QtCore.pyqtSignal(float, float)
+    sig_roi_end = QtCore.pyqtSignal(float, float)
+    sig_roi_cancel = QtCore.pyqtSignal()
+    sig_roi_avg_timecourse = QtCore.pyqtSignal()
+    sig_roi_psc_timecourse = QtCore.pyqtSignal()
+    sig_roi_1vol_histogram = QtCore.pyqtSignal(int)
 
-    signalMovieGotoFrame = QtCore.pyqtSignal(int, name='MovieGotoFrame')
-    signalMoviePause = QtCore.pyqtSignal(name='MoviePause')
-    signalMovieInit = QtCore.pyqtSignal(int, name='MovieInit')
-    signalMovieDestruct = QtCore.pyqtSignal(int, name='MovieDestruct')
-    signalMovieIntervalChange = QtCore.pyqtSignal(
-        int, name='MovieIntervalChanged')
+    sig_movie_goto_frame = QtCore.pyqtSignal(int)
+    sig_movie_pause = QtCore.pyqtSignal()
+    sig_movie_init = QtCore.pyqtSignal(int)
+    sig_movie_destruct = QtCore.pyqtSignal(int)
+    sig_movie_interval_change = QtCore.pyqtSignal(int)
 
-    signalOverlayLowerThreshChange = QtCore.pyqtSignal(
-        float, float, name="OverlayLowerThreshChanged")
-    signalOverlayUpperThreshChange = QtCore.pyqtSignal(
-        float, float, name="OverlayUpperThreshChanged")
-    signalOverlayAlphaChange = QtCore.pyqtSignal(float, name="OverlayAlphaChanged")
+    sig_overlay_lower_thresh_change = QtCore.pyqtSignal(float, float)
+    sig_overlay_upper_thresh_change = QtCore.pyqtSignal(float, float)
+    sig_overlay_alpha_change = QtCore.pyqtSignal(float)
 
-    signalLockPlotsChange = QtCore.pyqtSignal(name='lockPlotsChanged')
+    sig_lock_plots_change = QtCore.pyqtSignal()

@@ -483,17 +483,17 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
     def xLocationChanged(self, x):
         if x != self.location[0]:
             self.location[0] = x
-            self.signalLocationChange.emit(self.location[0], self.location[1])
+            self.sig_cursor_change.emit(self.location[0], self.location[1])
 
     def yLocationChanged(self, y):
         if y != self.location[1]:
             self.location[1] = y
-            self.signalLocationChange.emit(self.location[0], self.location[1])
+            self.sig_cursor_change.emit(self.location[0], self.location[1])
 
     def zLocationChanged(self, z):
         if z != self.location[2]:
             self.location[2] = z
-            self.signalZLocationChange.emit(self.location[2])
+            self.sig_z_change.emit(self.location[2])
 
     def ImageTypeChanged(self, index):
         newImageType = self.imageTypeLookup[index]
@@ -504,15 +504,15 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
     def windowChanged(self, value):
         if value != self.currWindow:
             self.currWindow = value
-            self.signalWindowLevelChange.emit(self.currWindow, self.currLevel)
+            self.sig_window_level_change.emit(self.currWindow, self.currLevel)
 
     def levelChanged(self, value):
         if value != self.currLevel:
             self.currLevel = value
-            self.signalWindowLevelChange.emit(self.currWindow, self.currLevel)
+            self.sig_window_level_change.emit(self.currWindow, self.currLevel)
 
     def windowLevelToDefaultPushed(self):
-        self.signalWindowLevelReset.emit()
+        self.sig_window_level_reset.emit()
 
     def SetImageType(self, newImageType):
         if newImageType != self.currImageType:
@@ -541,25 +541,25 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
 
     def changeTcontrol(self, value):
         if self.tcontrol.hasFocus():
-            self.signalTLocationChange.emit(value)
+            self.sig_t_change.emit(value)
 
     def lockPlotsCheckboxPushed(self):
-        self.signalLockPlotsChange.emit()
+        self.sig_lock_plots_change.emit()
 
     def deleteLastROIPushed(self):
-        self.signalROIDeleteLast.emit()
+        self.sig_roi_del_last.emit()
 
     def clearROIPushed(self):
-        self.signalROIClear.emit()
+        self.sig_roi_clear.emit()
 
     def roiAvgTimecoursePushed(self):
-        self.signalROIAvgTimecourse.emit()
+        self.sig_roi_avg_timecourse.emit()
 
     def roiPSCTimecoursePushed(self):
-        self.signalROIPSCTimecourse.emit()
+        self.sig_roi_psc_timecourse.emit()
 
     def roi1VolHistogramButtonPushed(self):
-        self.signalROI1VolHistogram.emit(self.numBins.value())
+        self.sig_roi_1vol_histogram.emit(self.numBins.value())
 
     def lowerThreshSliderChanged(self, lowerThresh):
         self.lowerThreshSpinbox.setValue(
@@ -605,7 +605,7 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
             self.blockedSetValue(self.upperThreshSlider,int(-lowerThresh * self.numberOfStepsBetweenIntegers))
             self.blockedSetValue(self.upperThreshSpinbox,lowerThresh)     
         """
-        self.signalOverlayLowerThreshChange.emit(
+        self.sig_overlay_lower_thresh_change.emit(
             lowerThresh, self.upperThreshSpinbox.value())
 
     def upperThreshSpinBoxChanged(self, upperThresh):
@@ -621,11 +621,11 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
             self.blockedSetValue(self.lowerThreshSlider, int(upperThresh*self.numberOfStepsBetweenIntegers))
             self.blockedSetValue(self.lowerThreshSpinbox, upperThresh)
         """
-        self.signalOverlayUpperThreshChange.emit(
+        self.sig_overlay_upper_thresh_change.emit(
             self.lowerThreshSpinbox.value(), upperThresh)
 
     def overlayInvertPushed(self):
-        self.signalOverlayUpperThreshChange.emit(
+        self.sig_overlay_upper_thresh_change.emit(
             self.lowerThreshSpinbox.value(), self.upperThreshSpinbox.value())
 
     def overlayAlphaSliderChanged(self, value):
@@ -634,7 +634,7 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
     def overlayAlphaSpinBoxChanged(self, value):
         sliderVal = int(value / self.alphaSpinboxStep)
         self.blockedSetValue(self.overlayAlphaSlider, sliderVal)
-        self.signalOverlayAlphaChange.emit(value)
+        self.sig_overlay_alpha_change.emit(value)
 
     def movieIntervalSliderChanged(self, Interval):
         self.movieIntervalSpinbox.setValue(
@@ -645,11 +645,11 @@ class _ControlWidgetCompare(Signals, QtWidgets.QWidget):
         self.movieIntervalSlider.blockSignals(True)
         self.blockedSetValue(self.movieIntervalSlider, int(
             Interval * self.numberOfStepsBetweenMovieSliderIntegers))
-        self.signalMovieIntervalChange.emit(interval)
+        self.sig_movie_interval_change.emit(interval)
 
     def movieGotoFrame(self):
         frame = self.movieFrameSpinbox.value()
-        self.signalMovieGotoFrame.emit(frame)
+        self.sig_movie_goto_frame.emit(frame)
 
     def moviePause(self):
-        self.signalMoviePause.emit()
+        self.sig_movie_pause.emit()

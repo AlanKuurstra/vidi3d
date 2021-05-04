@@ -135,34 +135,34 @@ class _ControlWidget4D(Signals,QtWidgets.QWidget):
 
     def changeWindow(self, value):
         if self.window.hasFocus():
-            self.signalWindowLevelChange.emit(value, self.level.value())
+            self.sig_window_level_change.emit(value, self.level.value())
 
     def changeLevel(self, value):
         if self.level.hasFocus():
-            self.signalWindowLevelChange.emit(self.window.value(), value)
+            self.sig_window_level_change.emit(self.window.value(), value)
 
     def changeXcontrol(self, value):
         if self.xcontrol.hasFocus():
-            self.signalXLocationChange.emit(value)
+            self.sig_x_change.emit(value)
 
     def changeYcontrol(self, value):
         if self.ycontrol.hasFocus():
-            self.signalYLocationChange.emit(value)
+            self.sig_y_change.emit(value)
 
     def changeZcontrol(self, value):
         if self.zcontrol.hasFocus():
-            self.signalZLocationChange.emit(value)
+            self.sig_z_change.emit(value)
 
     def changeTcontrol(self, value):
         if self.tcontrol.hasFocus():
-            self.signalTLocationChange.emit(value)
+            self.sig_t_change.emit(value)
 
     def changeTavgRadcontrol(self, value):
         if self.tavgradcontrol.hasFocus():
             self.signalTavgRadChange.emit(value)
 
     def reset_wl(self):
-        self.signalWindowLevelReset.emit()
+        self.sig_window_level_reset.emit()
 
     # slots to update control dials when settings are changed
     # using mechanisms other than the control panel

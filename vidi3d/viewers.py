@@ -7,11 +7,14 @@ import matplotlib.pyplot as plt
 plt.ion()
 from .core import start_viewer, to_list
 from vidi3d.imshow.main import _MainWindow as Imshow3d
-from vidi3d.compare.main import _MainWindow as Compare
+from vidi3d.compare.main import Compare as Compare
 import numpy as np
 
 
-def imshow3d(data, pixdim=None, interpolation='none', block=True):
+def imshow3d(data,
+             pixdim=None,
+             interpolation='none',
+             block=True):
     """
     A viewer that displays cross sections of a 3D image.
 
@@ -55,8 +58,18 @@ def imshow3d(data, pixdim=None, interpolation='none', block=True):
     return start_viewer(viewer, block)
 
 
-def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True,
-              locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
+def compare2d(data,
+              pixdim=None,
+              interpolation='none',
+              origin='lower',
+              windowTitle=None,
+              subplotTitles=None,
+              block=True,
+              locationLabels=None,
+              maxNumInRow=None,
+              colormap=None,
+              overlay=None,
+              overlayColormap=None):
     """
     A viewer that displays multiple 2D images for comparison.
 
@@ -136,15 +149,32 @@ def compare2d(data, pixdim=None, interpolation='none', origin='lower', windowTit
             except:
                 pass
 
-    viewer = Compare(data, pixdim=pixdim, interpolation=interpolation, origin=origin,
+    viewer = Compare(data,
+                     pixdim=pixdim,
+                     interpolation=interpolation,
+                     origin=origin,
                      subplotTitles=subplotTitles,
-                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap,
-                     overlayList=overlay, overlayColormapList=overlayColormap)
+                     locationLabels=locationLabels,
+                     maxNumInRow=maxNumInRow,
+                     colormapList=colormap,
+                     overlayList=overlay,
+                     overlayColormapList=overlayColormap)
     return start_viewer(viewer, block, windowTitle)
 
 
-def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTitle=None, subplotTitles=None, block=True,
-              locationLabels=None, maxNumInRow=None, colormap=None, overlay=None, overlayColormap=None):
+def compare3d(data,
+              pixdim=None,
+              interpolation='none',
+              origin='lower',
+              window_title=None,
+              subplot_titles=None,
+              block=True,
+              location_labels=None,
+              max_in_row=None,
+              cmaps=None,
+              overlays=None,
+              overlay_cmaps=None,
+              ):
     """
     A viewer that displays multiple 3D images for comparison.
 
@@ -171,45 +201,51 @@ def compare3d(data, pixdim=None, interpolation='none', origin='lower', windowTit
         Place the [0,0] index of the array in the upper left or lower left
         corner of the axes. If None, default to rc `image.origin`.
 
-    windowTitle : string, optional, default: None
+    window_title : string, optional, default: None
         The title to display on the viewer window.  
 
-    subplotTitles : strings, optional, default: None
+    subplot_titles : strings, optional, default: None
         A list of subplot titles. The number of titles must match the number
         of subplots otherwise default behaviour will be used. 
 
     block : boolean, optional, default: False
         If true, block execution of further code until all viewers are closed.
 
-    locationLabels : strings, optional, default: None
+    location_labels : strings, optional, default: None
         A list of cursor line labels. If None, use "X" and "Y".     
 
-    maxNumInRow : integer, optional, default: None
+    max_in_row : integer, optional, default: None
         The maximum number of images to display in a row. 
 
-    colormap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
+    cmap : `~matplotlib.colors.Colormap`, optional, default: cm.Greys_r
 
     overlay : array_like, shape (x, y, z)
         Optional overlay.  Useful for viewing masks and parameter maps.
 
-    overlayColormap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
+    overlay_cmap : `~matplotlib.colors.Colormap`, optional, default: cm.Reds
 
     Returns
     --------
     viewer : `compare._MainWindowCompare`
     """
     data = to_list(data)
-    colormap = to_list(colormap)
-    overlay = to_list(overlay)
-    overlayColormap = to_list(overlayColormap)
+    cmaps = to_list(cmaps)
+    overlays = to_list(overlays)
+    overlay_cmaps = to_list(overlay_cmaps)
 
     for img in data:
         assert img.shape == data[0].shape
     if data[0].ndim == 3:
         for indx in range(len(data)):
             data[indx] = data[indx][..., np.newaxis]
-    viewer = Compare(data, pixdim=pixdim, interpolation=interpolation, origin=origin,
-                     subplotTitles=subplotTitles,
-                     locationLabels=locationLabels, maxNumInRow=maxNumInRow, colormapList=colormap,
-                     overlayList=overlay, overlayColormapList=overlayColormap)
-    return start_viewer(viewer, block, windowTitle)
+    viewer = Compare(data,
+                     pixdim=pixdim,
+                     interpolation=interpolation,
+                     origin=origin,
+                     subplot_titles=subplot_titles,
+                     location_labels=location_labels,
+                     max_in_row=max_in_row,
+                     cmaps=cmaps,
+                     overlays=overlays,
+                     overlay_cmaps=overlay_cmaps)
+    return start_viewer(viewer, block, window_title)

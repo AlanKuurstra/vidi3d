@@ -64,84 +64,84 @@ class _MainWindow(QtWidgets.QMainWindow):
         """self.controls.signalImageCmapChanged.connect(self.imagePanel4D.CMapChanged)"""
 
         # when cursor moves, update lines
-        self.imagePanel4D.zslice.signalXLocationChange.connect(
+        self.imagePanel4D.zslice.sig_x_change.connect(
             self.imagePanel4D.onXChange)
-        self.imagePanel4D.zslice.signalYLocationChange.connect(
+        self.imagePanel4D.zslice.sig_y_change.connect(
             self.imagePanel4D.onYChange)
-        self.imagePanel4D.zslice.signalZLocationChange.connect(
+        self.imagePanel4D.zslice.sig_z_change.connect(
             self.imagePanel4D.onZChange)
 
-        self.imagePanel4D.xslice.signalXLocationChange.connect(
+        self.imagePanel4D.xslice.sig_x_change.connect(
             self.imagePanel4D.onXChange)
-        self.imagePanel4D.xslice.signalYLocationChange.connect(
+        self.imagePanel4D.xslice.sig_y_change.connect(
             self.imagePanel4D.onYChange)
-        self.imagePanel4D.xslice.signalZLocationChange.connect(
+        self.imagePanel4D.xslice.sig_z_change.connect(
             self.imagePanel4D.onZChange)
 
-        self.imagePanel4D.yslice.signalXLocationChange.connect(
+        self.imagePanel4D.yslice.sig_x_change.connect(
             self.imagePanel4D.onXChange)
-        self.imagePanel4D.yslice.signalYLocationChange.connect(
+        self.imagePanel4D.yslice.sig_y_change.connect(
             self.imagePanel4D.onYChange)
-        self.imagePanel4D.yslice.signalZLocationChange.connect(
+        self.imagePanel4D.yslice.sig_z_change.connect(
             self.imagePanel4D.onZChange)
 
         # when cursor moves, update controls
-        self.imagePanel4D.xslice.signalXLocationChange.connect(
+        self.imagePanel4D.xslice.sig_x_change.connect(
             self.controls.onXChange)
-        self.imagePanel4D.xslice.signalYLocationChange.connect(
+        self.imagePanel4D.xslice.sig_y_change.connect(
             self.controls.onYChange)
-        self.imagePanel4D.xslice.signalZLocationChange.connect(
+        self.imagePanel4D.xslice.sig_z_change.connect(
             self.controls.onZChange)
 
-        self.imagePanel4D.yslice.signalXLocationChange.connect(
+        self.imagePanel4D.yslice.sig_x_change.connect(
             self.controls.onXChange)
-        self.imagePanel4D.yslice.signalYLocationChange.connect(
+        self.imagePanel4D.yslice.sig_y_change.connect(
             self.controls.onYChange)
-        self.imagePanel4D.yslice.signalZLocationChange.connect(
+        self.imagePanel4D.yslice.sig_z_change.connect(
             self.controls.onZChange)
 
-        self.imagePanel4D.zslice.signalXLocationChange.connect(
+        self.imagePanel4D.zslice.sig_x_change.connect(
             self.controls.onXChange)
-        self.imagePanel4D.zslice.signalYLocationChange.connect(
+        self.imagePanel4D.zslice.sig_y_change.connect(
             self.controls.onYChange)
-        self.imagePanel4D.zslice.signalZLocationChange.connect(
+        self.imagePanel4D.zslice.sig_z_change.connect(
             self.controls.onZChange)
 
         # when right button pressed, update window/level of images
-        self.imagePanel4D.xslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.xslice.sig_window_level_change.connect(
             self.imagePanel4D.onWindowLevelChange)
-        self.imagePanel4D.yslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.yslice.sig_window_level_change.connect(
             self.imagePanel4D.onWindowLevelChange)
-        self.imagePanel4D.zslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.zslice.sig_window_level_change.connect(
             self.imagePanel4D.onWindowLevelChange)
 
         # when right button pressed, update window/level controls
-        self.imagePanel4D.xslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.xslice.sig_window_level_change.connect(
             self.controls.onWindowLevelChange)
-        self.imagePanel4D.yslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.yslice.sig_window_level_change.connect(
             self.controls.onWindowLevelChange)
-        self.imagePanel4D.zslice.signalWindowLevelChange.connect(
+        self.imagePanel4D.zslice.sig_window_level_change.connect(
             self.controls.onWindowLevelChange)
 
         # when cursor_loc control changes, update lines
-        self.controls.signalXLocationChange.connect(
+        self.controls.sig_x_change.connect(
             self.imagePanel4D.onXChange)
-        self.controls.signalYLocationChange.connect(
+        self.controls.sig_y_change.connect(
             self.imagePanel4D.onYChange)
-        self.controls.signalZLocationChange.connect(
+        self.controls.sig_z_change.connect(
             self.imagePanel4D.onZChange)
-        self.controls.signalTLocationChange.connect(
+        self.controls.sig_t_change.connect(
             self.imagePanel4D.onTChange)
         # self.controls.signalTavgRadChange.connect(self.imagePanel4D.onTavgRadChange)
 
         # when window/level control changes, update images
-        self.controls.signalWindowLevelChange.connect(
+        self.controls.sig_window_level_change.connect(
             self.imagePanel4D.onWindowLevelChange)
 
         # when window/level reset pressed, update images and control
-        self.controls.signalWindowLevelReset.connect(
+        self.controls.sig_window_level_reset.connect(
             self.controls.onWindowLevelReset)
-        self.controls.signalWindowLevelReset.connect(
+        self.controls.sig_window_level_reset.connect(
             self.imagePanel4D.onWindowLevelReset)
 
     def keyPressEvent(self, event):

@@ -28,20 +28,20 @@ class _MplImage4D(QtCore.QObject):
 
         labels = [{'color': 'r', 'textLabel': "X"}, {'color': 'b',
                                                      'textLabel': "Y"}, {'color': 'g', 'textLabel': "Z Slice"}]
-        self.zslice = _zslice(parent=parent, complex_image=complexIm3[:, :, initLocation[2], initLocation[3]], location=initLocation[0:2], sliceNum=initLocation[2], maxSliceNum=complexIm3.shape[2],
-                              display_type=dd.ImageDisplayType.mag, locationLabels=labels, aspect=aspz, interpolation=interpolation)  # dpi doesn't affect imshow...cause imshow rescales to figure size
+        self.zslice = _zslice(parent=parent, complex_image=complexIm3[:, :, initLocation[2], initLocation[3]], location=initLocation[0:2], slice_num=initLocation[2], maxSliceNum=complexIm3.shape[2],
+                              display_type=dd.ImageDisplayType.mag, location_labels=labels, aspect=aspz, interpolation=interpolation)  # dpi doesn't affect imshow...cause imshow rescales to figure size
         self.zsliceNav = NavigationToolbar(self.zslice, self.zslice)
 
         labels = [{'color': 'g', 'textLabel': "X"}, {'color': 'b',
                                                      'textLabel': "Z"}, {'color': 'r', 'textLabel': "Y Slice"}]
-        self.yslice = _yslice(parent=parent, complex_image=complexIm3[:, initLocation[1], :, initLocation[3]], location=initLocation[0::2], sliceNum=initLocation[1],
-                              maxSliceNum=complexIm3.shape[1], display_type=dd.ImageDisplayType.mag, locationLabels=labels, aspect=aspy, interpolation=interpolation)
+        self.yslice = _yslice(parent=parent, complex_image=complexIm3[:, initLocation[1], :, initLocation[3]], location=initLocation[0::2], slice_num=initLocation[1],
+                              maxSliceNum=complexIm3.shape[1], display_type=dd.ImageDisplayType.mag, location_labels=labels, aspect=aspy, interpolation=interpolation)
         self.ysliceNav = NavigationToolbar(self.yslice, self.yslice)
 
         labels = [{'color': 'r', 'textLabel': "Z"}, {'color': 'g',
                                                      'textLabel': "Y"}, {'color': 'b', 'textLabel': "X Slice"}]
-        self.xslice = _xslice(parent=parent, complex_image=complexIm3[initLocation[0], :, :, initLocation[3]].T, location=initLocation[2:0:-1], sliceNum=initLocation[0],
-                              maxSliceNum=complexIm3.shape[0], display_type=dd.ImageDisplayType.mag, locationLabels=labels, aspect=aspx, interpolation=interpolation)
+        self.xslice = _xslice(parent=parent, complex_image=complexIm3[initLocation[0], :, :, initLocation[3]].T, location=initLocation[2:0:-1], slice_num=initLocation[0],
+                              maxSliceNum=complexIm3.shape[0], display_type=dd.ImageDisplayType.mag, location_labels=labels, aspect=aspx, interpolation=interpolation)
         self.xsliceNav = NavigationToolbar(self.xslice, self.xslice)
 
         self.xplot = _MplPlot._MplPlot(
@@ -127,9 +127,9 @@ class _MplImage4D(QtCore.QObject):
     """
 
     def onImageTypeChange(self, index):
-        self.xslice.showImageTypeChange(index)
-        self.yslice.showImageTypeChange(index)
-        self.zslice.showImageTypeChange(index)
+        self.xslice.show_display_type_change(index)
+        self.yslice.show_display_type_change(index)
+        self.zslice.show_display_type_change(index)
         self.xplot.showDataTypeChange(index)
         self.yplot.showDataTypeChange(index)
         self.zplot.showDataTypeChange(index)
@@ -143,14 +143,14 @@ class _MplImage4D(QtCore.QObject):
         #    _Core.mySignals.emit(QtCore.SIGNAL('imageCmapChanged'), dd.ImageCMap.hsv)
 
     def onWindowLevelChange(self, Window, Level):
-        self.xslice.showWindowLevelChange(Window, Level)
-        self.yslice.showWindowLevelChange(Window, Level)
-        self.zslice.showWindowLevelChange(Window, Level)
+        self.xslice.show_window_level_change(Window, Level)
+        self.yslice.show_window_level_change(Window, Level)
+        self.zslice.show_window_level_change(Window, Level)
 
     def onWindowLevelReset(self):
-        self.xslice.showSetWindowLevelToDefault()
-        self.yslice.showSetWindowLevelToDefault()
-        self.zslice.showSetWindowLevelToDefault()
+        self.xslice.show_set_window_level_to_default()
+        self.yslice.show_set_window_level_to_default()
+        self.zslice.show_set_window_level_to_default()
 
 
 class _zslice(_MplImage.MplImage):
@@ -161,8 +161,8 @@ class _zslice(_MplImage.MplImage):
 
     def emit_cursor_change(self, location):
         x, y = location
-        self.signalXLocationChange.emit(x)
-        self.signalYLocationChange.emit(y)
+        self.sig_x_change.emit(x)
+        self.sig_y_change.emit(y)
 
     def wheelEvent(self, event):
         if event.angleDelta().y() > 0:
@@ -171,17 +171,17 @@ class _zslice(_MplImage.MplImage):
         else:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum - 1, 0), self.maxSliceNum - 1)
-        self.signalZLocationChange.emit(clipVal)
+        self.sig_z_change.emit(clipVal)
 
     def onXChange(self, x):
         # should this be a get function instead of accessing cursor_loc directly?
-        self.showLocationChange([x, self.cursor_loc[1]])
+        self.show_cursor_loc_change([x, self.cursor_loc[1]])
 
     def onYChange(self, y):
-        self.showLocationChange([self.cursor_loc[0], y])
+        self.show_cursor_loc_change([self.cursor_loc[0], y])
 
     def onZChange(self, complexImage):
-        self.showComplexImageChange(complexImage)
+        self.show_complex_image_change(complexImage)
 
 
 class _yslice(_MplImage.MplImage):
@@ -192,8 +192,8 @@ class _yslice(_MplImage.MplImage):
 
     def emit_cursor_change(self, location):
         x, z = location
-        self.signalXLocationChange.emit(x)
-        self.signalZLocationChange.emit(z)
+        self.sig_x_change.emit(x)
+        self.sig_z_change.emit(z)
 
     def wheelEvent(self, event):
         if event.angleDelta().y() > 0:
@@ -202,16 +202,16 @@ class _yslice(_MplImage.MplImage):
         else:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum - 1, 0), self.maxSliceNum - 1)
-        self.signalYLocationChange.emit(clipVal)
+        self.sig_y_change.emit(clipVal)
 
     def onXChange(self, x):
-        self.showLocationChange([x, self.cursor_loc[1]])
+        self.show_cursor_loc_change([x, self.cursor_loc[1]])
 
     def onZChange(self, z):
-        self.showLocationChange([self.cursor_loc[0], z])
+        self.show_cursor_loc_change([self.cursor_loc[0], z])
 
     def onYChange(self, complexImage):
-        self.showComplexImageChange(complexImage)
+        self.show_complex_image_change(complexImage)
 
 
 class _xslice(_MplImage.MplImage):
@@ -222,8 +222,8 @@ class _xslice(_MplImage.MplImage):
 
     def emit_cursor_change(self, location):
         z, y = location
-        self.signalZLocationChange.emit(z)
-        self.signalYLocationChange.emit(y)
+        self.sig_z_change.emit(z)
+        self.sig_y_change.emit(y)
 
     def wheelEvent(self, event):
         if event.angleDelta().y() > 0:
@@ -232,13 +232,13 @@ class _xslice(_MplImage.MplImage):
         else:
             clipVal = np.minimum(np.maximum(
                 self.sliceNum - 1, 0), self.maxSliceNum - 1)
-        self.signalXLocationChange.emit(clipVal)
+        self.sig_x_change.emit(clipVal)
 
     def onZChange(self, z):
-        self.showLocationChange([z, self.cursor_loc[1]])
+        self.show_cursor_loc_change([z, self.cursor_loc[1]])
 
     def onYChange(self, y):
-        self.showLocationChange([self.cursor_loc[0], y])
+        self.show_cursor_loc_change([self.cursor_loc[0], y])
 
     def onXChange(self, complexImage):
-        self.showComplexImageChange(complexImage)
+        self.show_complex_image_change(complexImage)

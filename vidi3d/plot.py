@@ -3,184 +3,125 @@ Base class for plots shown in the viewers. Instances of this class are used
 to show the plot along MpImage cursor lines.
 """
 import matplotlib as mpl
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from . import definitions as dd
-from PyQt5 import QtCore, QtGui, QtWidgets
 import numpy as np
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbarSuper
+from PyQt5 import QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
+from .definitions import ImageDisplayType, PlotColours
+from .helpers import apply_display_type
 
 
-class _MplPlot(FigureCanvas):
-    def __init__(self, complexDataList, parent=None, dataType=None, initMarkerPosn=None, colors=None, title=None):
-        #
+class MplPlot(FigureCanvas):
+    def __init__(self,
+                 complex_data,
+                 display_type=None,
+                 init_marker=None,
+                 colors=None,
+                 title=None):
         # Qt related initialization
-        #
         self.fig = mpl.figure.Figure()
         FigureCanvas.__init__(self, self.fig)
-        # the FigureCanvas class doesn't have the option to pass the parent to
-        # the __init__() constructer, must set it manually
-        self.setParent(parent)
-        FigureCanvas.setSizePolicy(
-            self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        FigureCanvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.setMinimumSize(200, 200)
         FigureCanvas.updateGeometry(self)
 
-        #
         # Event related initialization
-        #
-        self.mpl_connect('button_press_event', self.PressEvent)
-        # self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        # self.mpl_connect('key_press_event',self.keyPressEventsdd)
+        self.mpl_connect('button_press_event', self.press_event)
 
-        #
-        # Internal data model initialization
-        #
-        self.setComplexData(complexDataList)
-        if dataType is None:
-            self.setDataType(dd.ImageDisplayType.mag)
+        # Internal data initialization
+        self.set_complex_data(complex_data)
+        if display_type is None:
+            self.set_display_type(ImageDisplayType.mag)
         else:
-            self.setDataType(dataType)
-        self.setMarkerPosn(initMarkerPosn)
+            self.set_display_type(display_type)
+        self.set_marker_posn(init_marker)
 
-        #
-        # Initialize internal variables that determine how visualization objects display data model
-        #
+        # Initialize objects visualizing the internal data
         self.colors = colors
-        if self.colors == None:
-            self.colors = dd.PlotColours.colours
-
-        #
-        # Initialize objects visualizing the internal data model
-        #
+        if self.colors is None:
+            self.colors = PlotColours.colours
         # 1d plot
         self.axes = self.fig.add_subplot(111)
         if title is not None:
             self.axes.set_title(title)
-        # autoscale plot?
+        # disable plot autoscale
         self.lockPlot = False
         # zoom functionality
-        self.toolbar = NavigationToolbarSuper(self, self)
+        self.toolbar = NavigationToolbar2QT(self, self)
         self.toolbar.hide()
         self.toolbar.zoom()
-        # initialization of lines and markers
-        self.createLines()
-        self.createMarkers()
+        # initialize lines and markers
+        self.create_lines()
+        self.create_markers()
 
-    #==================================================================
-    # slots to deal with mpl mouse events
-    #==================================================================
-    def PressEvent(self, event):
+    # Methods for mouse event slots
+    def press_event(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right
-        """
-        if event.button == 3: 
-            self.toolbar.home()
-        if event.button == 2:
-            plt.figure()
-            for line in range(len(self.complexDataList)):
-                plt.plot(self.applyDataType(
-                    self.complexDataList[line]), self.colors[line])
-        """
-        # left mouse button for auto scale was fighting with zoom out
-        # changed auto scale to middle mouse button and removed popout plot
         if event.button == 2:
             self.toolbar.home()
 
-    #==================================================================
-    # functions that set internal data
-    #==================================================================
-    def setComplexData(self, newComplexDataList):
-        self.complexDataList = newComplexDataList
+    # Methods that set internal data
+    def set_complex_data(self, new_complex_data):
+        self.complex_data = new_complex_data
 
-    def setDataType(self, dataType):
-        self._dataType = dataType
+    def set_display_type(self, display_type):
+        self.display_type = display_type
 
-    def setMarkerPosn(self, newMarkerPosn):
-        if newMarkerPosn is None:
-            self.markerPosn = newMarkerPosn
-        else:
-            self.markerPosn = np.minimum(np.maximum(
-                newMarkerPosn, 0), self.complexDataList[0].shape[0] - 1)
+    def set_marker_posn(self, new_marker_posn):
+        self.marker_posn = np.minimum(np.maximum(new_marker_posn, 0), self.complex_data[0].shape[0] - 1)
 
-    #==================================================================
-    # functions that update objects visualizing internal data
-    #==================================================================
-    def setLines(self):
-        for line in range(len(self.complexDataList)):
-            self.lines[line][0].set_ydata(
-                self.applyDataType(self.complexDataList[line]))
-        # if self._dataType == dd.ImageDisplayType.phase:
-        #    self.axes.set_ylim(-np.pi, np.pi)
-        # else:
+    # Methods updating objects that visualize internal data
+    def set_lines(self):
+        for indx in range(len(self.complex_data)):
+            self.lines[indx][0].set_ydata(apply_display_type(self.complex_data[indx], self.display_type))
         if not self.lockPlot:
             # self.axes.set_ylim(auto=True)
             self.axes.relim()
             self.axes.autoscale_view(scalex=False)
 
-    def setMarkers(self):
-        if self.markerPosn is not None:
-            for plotNum in range(len(self.complexDataList)):
-                self.markers[plotNum][0].set_data(self.markerPosn, self.applyDataType(
-                    self.complexDataList[plotNum][self.markerPosn]))
+    def set_markers(self):
+        if self.marker_posn is not None:
+            for plot_num in range(len(self.complex_data)):
+                self.markers[plot_num][0].set_data(self.marker_posn, apply_display_type(
+                    self.complex_data[plot_num][self.marker_posn], self.display_type))
 
-    def createLines(self):
+    def create_lines(self):
         self.lines = []
-        for line in range(len(self.complexDataList)):
-            self.lines.append(self.axes.plot(self.applyDataType(
-                self.complexDataList[line]), self.colors[line]))
-        self.axes.set_xlim(
-            0, self.complexDataList[0].shape[0] - 1 + np.finfo('float').eps)
+        for indx in range(len(self.complex_data)):
+            self.lines.append(self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
+        self.axes.set_xlim(0, self.complex_data[0].shape[0] - 1 + np.finfo('float').eps)
 
-    def createMarkers(self):
-        if self.markerPosn is not None:
+    def create_markers(self):
+        if self.marker_posn is not None:
             self.markers = []
-            for plotNum in range(len(self.complexDataList)):
-                self.markers.append(self.axes.plot(self.markerPosn, self.applyDataType(
-                    self.complexDataList[plotNum][self.markerPosn]), 'kx'))
+            for plot_num in range(len(self.complex_data)):
+                self.markers.append(self.axes.plot(self.marker_posn, apply_display_type(
+                    self.complex_data[plot_num][self.marker_posn], self.display_type), 'kx'))
 
-    def drawLinesAndMarkers(self):
+    def draw_lines_and_markers(self):
         self.draw()
-    #==================================================================
-    # helper functions
-    #==================================================================
 
-    def applyDataType(self, complexData):
-        if self._dataType == dd.ImageDisplayType.mag:
-            data = np.abs(complexData)
-        elif self._dataType == dd.ImageDisplayType.phase:
-            data = np.angle(complexData)
-        elif self._dataType == dd.ImageDisplayType.real:
-            data = np.real(complexData)
-        elif self._dataType == dd.ImageDisplayType.imag:
-            data = np.imag(complexData)
-        else:
-            print("Data type not recognized")
-            return
-        return data
+    # Convenience methods
+    def show_data_type_change(self, index):
+        self.set_display_type(index)
+        self.set_lines()
+        self.set_markers()
+        self.draw_lines_and_markers()
 
-    #==================================================================
-    # convenience functions to change data and update visualizing objects
-    #==================================================================
-    def showDataTypeChange(self, index):
-        self.setDataType(index)
-        self.setLines()
-        self.setMarkers()
-        self.drawLinesAndMarkers()
+    def show_complex_data_change(self, new_complex_data):
+        self.set_complex_data(new_complex_data)
+        self.set_lines()
+        self.set_markers()
+        self.draw_lines_and_markers()
 
-    def showComplexDataChange(self, newComplexData):
-        self.setComplexData(newComplexData)
-        self.setLines()
-        self.setMarkers()
-        self.drawLinesAndMarkers()
+    def show_complex_data_and_markers_change(self, new_complex_data, new_marker_posn):
+        self.set_complex_data(new_complex_data)
+        self.set_marker_posn(new_marker_posn)
+        self.set_lines()
+        self.set_markers()
+        self.draw_lines_and_markers()
 
-    def showComplexDataAndMarkersChange(self, newComplexData, newMarkerPosn):
-        self.setComplexData(newComplexData)
-        self.setMarkerPosn(newMarkerPosn)
-        self.setLines()
-        self.setMarkers()
-        self.drawLinesAndMarkers()
-
-    #==================================================================
-    # functions related to Qt
-    #==================================================================
+    # Methods related to Qt
     def sizeHint(self):
         return QtCore.QSize(300, 183)

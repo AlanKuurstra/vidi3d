@@ -5,38 +5,27 @@ Created on Thu May 11 14:49:46 2017
 
 @author: akuurstr
 """
-import vidi3d as v
-import numpy as np
 import random
-from generatePhantom import generateFmriPhantom
 
-#
+import numpy as np
+
+from phantom import generate_fmri_phantom
+from vidi3d import compare2d
+
 # IMPORT DATA
-#
 tr = 1  # s
 nVols = 100
 task = np.zeros(nVols)
 activations = np.array(random.sample(range(int(nVols / 10)), 3)) * 10
 task[activations] = 1
-img, boldSignal, roi = generateFmriPhantom(task, tr=tr, SNR=35)
+img, bold_signal, roi = generate_fmri_phantom(task, tr=tr, SNR=35)
 
-#
-# PREPROCESSING
-#
-
-#
 # GLM
-#
-imgReshape = img.reshape((np.prod(img.shape[:-1]), img.shape[-1])).T
-DesignMtx = np.ones((len(task), 2))
-DesignMtx[:, 0] = boldSignal
-coeffMaps, _, _, _ = np.linalg.lstsq(DesignMtx, imgReshape)
-coeffMaps = coeffMaps.T.reshape(img.shape[:-1] + (DesignMtx.shape[-1],))
-activationMap = coeffMaps[..., 0]
+img_reshape = img.reshape((np.prod(img.shape[:-1]), img.shape[-1])).T
+design_mtx = np.ones((len(task), 2))
+design_mtx[:, 0] = bold_signal
+coeff_maps, _, _, _ = np.linalg.lstsq(design_mtx, img_reshape)
+coeff_maps = coeff_maps.T.reshape(img.shape[:-1] + (design_mtx.shape[-1],))
+activation_map = coeff_maps[..., 0]
 
-v.compare2d(img, overlay=activationMap,
-            windowTitle="GLM example", overlayColormap='seismic')
-
-#
-# STATS
-#
+compare2d(img, overlays=activation_map, window_title="GLM example", overlay_cmaps='seismic')

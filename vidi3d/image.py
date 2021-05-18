@@ -9,7 +9,8 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from .definitions import Coordinates, ImageDisplayType
+from .definitions import SliceCoord, ImageDisplayType
+from .helpers import apply_display_type
 from .signals import Signals
 
 
@@ -43,18 +44,15 @@ class MplImage(Signals, FigureCanvas):
 
         # Internal data initialization
         self.complex_image_data = complex_image
-        if overlay is None:
-            ones = np.ones(complex_image.shape, dtype='bool')
-            overlay = np.ma.masked_where(ones, ones)
 
         if isinstance(cursor_loc, list):
-            cursor_loc = Coordinates(*cursor_loc)
+            cursor_loc = SliceCoord(*cursor_loc)
         self.cursor_loc = self.clip_coordinates(cursor_loc)
         self.slice_num = slice_num
 
         # Initialize objects visualizing the internal data
         self.cmap = cmap if cmap is not None else mpl.cm.Greys_r
-        self.overlayColormap = overlay_cmap if overlay_cmap is not None else mpl.cm.Reds
+        self.overlay_cmap = overlay_cmap if overlay_cmap is not None else mpl.cm.Reds
 
         if cursor_labels is None:
             cursor_labels = [{'color': 'r', 'textLabel': "X"},
@@ -70,12 +68,17 @@ class MplImage(Signals, FigureCanvas):
                                          origin=origin,
                                          cmap=self.cmap)
         if overlay is not None:
+            level = self.default_level(overlay)
+            half_window = self.get_dynamic_range(overlay) / 2.0
             self.overlay = self.initialize_image(overlay,
                                                  aspect=aspect,
                                                  interpolation=interpolation,
                                                  origin=origin,
                                                  alpha=0.3,
-                                                 cmap=self.overlayColormap)
+                                                 cmap=self.overlay_cmap,
+                                                 vmin=level - half_window,
+                                                 vmax=level + half_window,
+                                                 )
         self.display_type = ImageDisplayType.mag
         self.set_mpl_img()
         self.title = self.axes.text(0.5,
@@ -179,7 +182,7 @@ class MplImage(Signals, FigureCanvas):
             self.right_mouse_press = True
             self.wl_orig_window = self.intensity_window
             self.wl_orig_level = self.intensity_level
-            self.wl_orig_event_coord = Coordinates(*[event.x, event.y])
+            self.wl_orig_event_coord = SliceCoord(*[event.x, event.y])
         self.mouse_move(event)
 
     def mouse_release(self, event):
@@ -206,7 +209,7 @@ class MplImage(Signals, FigureCanvas):
 
         if self.left_mouse_press:
             data_coord = self.axes.transData.inverted().transform([event.x, event.y]) + 0.5
-            clipped_location = self.clip_coordinates(Coordinates(*data_coord))
+            clipped_location = self.clip_coordinates(SliceCoord(*data_coord))
             self.emit_cursor_change(clipped_location)
 
     def emit_cursor_change(self, coord):
@@ -224,12 +227,11 @@ class MplImage(Signals, FigureCanvas):
         self.overlay.set_data(new_overlay_data.T)
 
     def set_cursor_loc(self, new_loc):
-        # clipping new_loc to valid locations is done in mouse_move() before the ChangeLocation signal is emitted
-        # however, there could be problems if a control class objec signals a cursor_loc change that is out of bounds
-        # new_loc = np.minimum(np.maximum(new_loc, [0,0]), np.subtract(self.complex_image_data.shape,1)).astype(np.int)
-        new_loc = Coordinates(*new_loc)
-        if self.cursor_loc != new_loc:
-            self.cursor_loc = new_loc
+        self.cursor_loc.x = new_loc[0]
+        self.cursor_loc.y = new_loc[1]
+        # clipping new_loc to valid locations is done in mouse_move() before the change_location signal is emitted
+        # however, there could be problems if a control class object signals a cursor_loc change that is out of bounds
+        # self.clip_coordinates(self.cursor_loc)
 
     def set_slice_num(self, new_slice_num):
         self.slice_num = new_slice_num
@@ -290,14 +292,19 @@ class MplImage(Signals, FigureCanvas):
         stdv_prev = np.inf
         stdv = valid_values.std()
         max_iter = 25
-        count=0
+        count = 0
 
-        while np.abs((stdv_prev-stdv)/stdv) > 0.1 and count < max_iter:
+        while np.abs((stdv_prev - stdv) / stdv) > 0.1 and count < max_iter:
+            if stdv == 0:
+                if median:
+                    return 2 * median
+                else:
+                    return 1
             valid_values = valid_values[np.abs(valid_values - median) < 3 * stdv]
             median = np.median(valid_values)
             stdv_prev = stdv
             stdv = valid_values.std()
-            count+=1
+            count += 1
 
         return 3 * stdv
 
@@ -310,18 +317,8 @@ class MplImage(Signals, FigureCanvas):
         default_level = np.median(valid_values)
         return default_level
 
-
     def set_mpl_img(self):
-        intensity_image = None
-        if self.display_type == ImageDisplayType.mag:
-            intensity_image = np.abs(self.complex_image_data)
-        elif self.display_type == ImageDisplayType.phase:
-            intensity_image = np.angle(self.complex_image_data)
-        elif self.display_type == ImageDisplayType.real:
-            intensity_image = np.real(self.complex_image_data)
-        elif self.display_type == ImageDisplayType.imag:
-            intensity_image = np.imag(self.complex_image_data)
-
+        intensity_image = apply_display_type(self.complex_image_data, self.display_type)
         self.img_dynamic_range = self.get_dynamic_range(intensity_image)
         # this class uses coordinates complex_image[x,y]
         # we would like x (first dimension) to be on horizontal axis
@@ -349,8 +346,8 @@ class MplImage(Signals, FigureCanvas):
             self.axes.draw_artist(self.axes.patch)
             self.axes.draw_artist(self.img)
             z = self.sliceNum
-            if z in self.NavigationToolbar.roiLines.mplLineObjects:
-                for currentLine in self.NavigationToolbar.roiLines.mplLineObjects[z]:
+            if z in self.NavigationToolbar.roi_lines.mpl_line_objects:
+                for currentLine in self.NavigationToolbar.roi_lines.mpl_line_objects[z]:
                     self.axes.draw_artist(currentLine)
             self.blit(self.fig.bbox)
 

@@ -63,7 +63,7 @@ class _ControlWidget4D(Signals,QtWidgets.QWidget):
         self.wlLayout.addWidget(button)
 
         #
-        # Coordinates
+        # SliceCoord
         #
         locLayout = QtWidgets.QHBoxLayout()
         self.xcontrol = QtWidgets.QDoubleSpinBox()
@@ -121,9 +121,9 @@ class _ControlWidget4D(Signals,QtWidgets.QWidget):
         # locLayout.addWidget(self.tavgradcontrol)
 
         controlLayout.addLayout(imTypeLayout)
-        """controlLayout.addLayout(cMapLayout)"""
+        """control_layout.addLayout(cMapLayout)"""
         controlLayout.addLayout(locLayout)
-        # this makes the controls widget the parent of all wlLayout's widgets
+        # this makes the control_widget widget the parent of all wlLayout's widgets
         controlLayout.addLayout(self.wlLayout)
         controlLayout.addStretch()
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,

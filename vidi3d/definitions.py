@@ -6,9 +6,22 @@ Map integers to words for readable code.
 from dataclasses import dataclass
 
 @dataclass
-class Coordinates:
+class SliceCoord:
     x: int
     y: int
+
+@dataclass
+class TSliceCoord(SliceCoord):
+    t: int
+
+@dataclass
+class VolumeCoord(SliceCoord):
+    z: int
+
+@dataclass
+class TVolumeCoord(VolumeCoord):
+    t: int
+
 
 class ImageDisplayType:
     real, imag, mag, phase = range(4)

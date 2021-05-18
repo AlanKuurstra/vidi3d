@@ -61,7 +61,7 @@ class _MainWindow(QtWidgets.QMainWindow):
     def makeConnections(self):
         self.controls.sig_img_disp_type_change.connect(
             self.imagePanel4D.onImageTypeChange)
-        """self.controls.signalImageCmapChanged.connect(self.imagePanel4D.CMapChanged)"""
+        """self.control_widget.signalImageCmapChanged.connect(self.imagePanel4D.CMapChanged)"""
 
         # when cursor moves, update lines
         self.imagePanel4D.zslice.sig_x_change.connect(
@@ -85,7 +85,7 @@ class _MainWindow(QtWidgets.QMainWindow):
         self.imagePanel4D.yslice.sig_z_change.connect(
             self.imagePanel4D.onZChange)
 
-        # when cursor moves, update controls
+        # when cursor moves, update control_widget
         self.imagePanel4D.xslice.sig_x_change.connect(
             self.controls.onXChange)
         self.imagePanel4D.xslice.sig_y_change.connect(
@@ -115,7 +115,7 @@ class _MainWindow(QtWidgets.QMainWindow):
         self.imagePanel4D.zslice.sig_window_level_change.connect(
             self.imagePanel4D.onWindowLevelChange)
 
-        # when right button pressed, update window/level controls
+        # when right button pressed, update window/level control_widget
         self.imagePanel4D.xslice.sig_window_level_change.connect(
             self.controls.onWindowLevelChange)
         self.imagePanel4D.yslice.sig_window_level_change.connect(
@@ -132,7 +132,7 @@ class _MainWindow(QtWidgets.QMainWindow):
             self.imagePanel4D.onZChange)
         self.controls.sig_t_change.connect(
             self.imagePanel4D.onTChange)
-        # self.controls.signalTavgRadChange.connect(self.imagePanel4D.onTavgRadChange)
+        # self.control_widget.signalTavgRadChange.connect(self.imagePanel4D.onTavgRadChange)
 
         # when window/level control changes, update images
         self.controls.sig_window_level_change.connect(

@@ -27,7 +27,7 @@ def start_viewer(viewer, block, window_title=None):
         # this is noisy, so suppress the stdout.
         plt.ion()
         viewer_num = store_viewer(viewer)
-        viewer.setViewerNumber(viewer_num)
+        viewer.set_viewer_number(viewer_num)
 
         if window_title is None:
             viewer.setWindowTitle('Viewer ' + str(viewer_num))
@@ -91,6 +91,6 @@ def split_array(array, axis=-1, index_list=None):
 
 
 def to_list(input_data):
-    if isinstance(input_data, np.ndarray) or not isinstance(input_data, Iterable):
+    if isinstance(input_data, (np.ndarray, str)) or not isinstance(input_data, Iterable):
         input_data = [input_data, ]
     return list(input_data)

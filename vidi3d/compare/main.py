@@ -66,12 +66,12 @@ class Compare(QtWidgets.QMainWindow):
         # ensure each image has a title
         if type(subplot_titles) is list and len(subplot_titles) != 1 and len(subplot_titles) != num_images:
             subplot_titles = None
-        if num_images == 1 and subplot_titles is None:
+        if num_images == 1 and subplot_titles in (None, [None]):
             subplot_titles = [""]
         elif num_images > 1 and isinstance(subplot_titles, list) and len(subplot_titles) == 1 and isinstance(
                 subplot_titles[0], str):
             subplot_titles = [f'{subplot_titles[0]} {i}' for i in range(num_images)]
-        elif type(subplot_titles) is list:
+        elif type(subplot_titles) is list and subplot_titles != [None]:
             pass
         else:
             subplot_titles = [f'Image {i}' for i in range(num_images)]
@@ -253,6 +253,7 @@ class Compare(QtWidgets.QMainWindow):
     def set_viewer_number(self, number):
         self.viewer_number = number
 
+    # todo: slot naming convention?
     # slots dealing with image appearance
     def change_display_type(self, display_type):
         self.control_widget.set_display_type(display_type)
@@ -332,8 +333,8 @@ class Compare(QtWidgets.QMainWindow):
         self.update_plots()
 
     def on_t_change(self, value):
-        # clip to valid locations?
-        # value = np.minimum(np.maximum(value+0.5, 0), self.raw.shape[2]-1)
+        # todo: figure out clipping
+        # value = np.minimum(np.maximum(value+0.5, 0), self.complex_image.shape[2]-1)
         self.loc.t = value
         for indx in range(len(self.image_figures)):
             self.image_figures[indx].show_complex_image_change(
@@ -351,14 +352,10 @@ class Compare(QtWidgets.QMainWindow):
             z_plot_data.append(img[self.loc.x, self.loc.y, :, self.loc.t])
             t_plot_data.append(img[self.loc.x, self.loc.y, self.loc.z, :])
 
-        self.xplot.show_complex_data_and_markers_change(
-            x_plot_data, self.loc.x)
-        self.yplot.show_complex_data_and_markers_change(
-            y_plot_data, self.loc.y)
-        self.zplot.show_complex_data_and_markers_change(
-            z_plot_data, self.loc.z)
-        self.tplot.show_complex_data_and_markers_change(
-            t_plot_data, self.loc.t)
+        self.xplot.show_complex_data_and_markers_change(x_plot_data, self.loc.x)
+        self.yplot.show_complex_data_and_markers_change(y_plot_data, self.loc.y)
+        self.zplot.show_complex_data_and_markers_change(z_plot_data, self.loc.z)
+        self.tplot.show_complex_data_and_markers_change(t_plot_data, self.loc.t)
 
     def update_plot_lock(self):
         lock_plots = self.control_widget.lock_plots_checkbox.isChecked()
@@ -489,7 +486,7 @@ class Compare(QtWidgets.QMainWindow):
                 data_list.append(data[..., self.loc.t][mask])
                 color_list.append(PlotColours.colours[index])
                 label_list.append(self.subplot_titles[index])
-                # y,binEdges,_=plt.hist(data[...,self.loc.t][mask],bins=num_bins,color=PlotColours.colours[index], alpha=0.04)
+                # y,binEdges,_=plt.hist(data[...,self.cursor_loc.t][mask],bins=num_bins,color=PlotColours.colours[index], alpha=0.04)
                 # bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
                 # plt.plot(bincenters,y,'-',marker="s",color=PlotColours.colours[index], label=self.subplot_titles[index])
                 fig = True
@@ -637,6 +634,7 @@ class MplImageSlice(MplImage):
         self.max_slice_num = max_slice_num
 
     def wheelEvent(self, event):
+        # todo: figure out clipping
         if event.angleDelta().y() > 0:
             clip_val = np.minimum(np.maximum(self.get_slice_num() + 1, 0), self.max_slice_num - 1)
         else:

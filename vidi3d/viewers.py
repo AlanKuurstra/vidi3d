@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 plt.ion()
 from .core import start_viewer, to_list
-from vidi3d.imshow.main import _MainWindow as Imshow3d
+from vidi3d.imshow.main import Imshow3d as Imshow3d
 from vidi3d.compare.main import Compare as Compare
 import numpy as np
 
@@ -49,7 +49,7 @@ def imshow3d(data,
         data = data[..., np.newaxis]
     viewer = Imshow3d(data, pixdim, interpolation=interpolation)
     if not block:
-        viewer.imagePanel3D.raw = np.copy(viewer.imagePanel3D.raw)
+        viewer.imagePanel3D.complex_image = np.copy(viewer.imagePanel3D.complex_image)
         # if the viewer is run as not blocking, then the underlying data
         # can change later on in the script and effect the results shown
         # in the viewer.  Therefore, we must make a copy.  If you have a

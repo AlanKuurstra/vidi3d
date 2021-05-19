@@ -110,7 +110,7 @@ class MplImage(Signals, FigureCanvas):
                                    ha='center')
 
         # Initialize parameters for data visualization
-        # window level attributes need to be cleaned up
+        # todo: too many window level attributes, need to clean up
         self.intensity_level_cache = np.zeros(4)
         self.intensity_window_cache = np.ones(4)
         self.intensity_level = None
@@ -156,6 +156,7 @@ class MplImage(Signals, FigureCanvas):
                           vmax=vmax,
                           format="png")
 
+    # todo: slot naming convention?
     # Methods for mouse event slots
     def mouse_press(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right
@@ -209,6 +210,7 @@ class MplImage(Signals, FigureCanvas):
 
         if self.left_mouse_press:
             data_coord = self.axes.transData.inverted().transform([event.x, event.y]) + 0.5
+            # todo: figure out clipping
             clipped_location = self.clip_coordinates(SliceCoord(*data_coord))
             self.emit_cursor_change(clipped_location)
 
@@ -229,6 +231,7 @@ class MplImage(Signals, FigureCanvas):
     def set_cursor_loc(self, new_loc):
         self.cursor_loc.x = new_loc[0]
         self.cursor_loc.y = new_loc[1]
+        # todo: figure out clipping
         # clipping new_loc to valid locations is done in mouse_move() before the change_location signal is emitted
         # however, there could be problems if a control class object signals a cursor_loc change that is out of bounds
         # self.clip_coordinates(self.cursor_loc)

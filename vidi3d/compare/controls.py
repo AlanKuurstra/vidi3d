@@ -36,6 +36,8 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.display_type.addItem("Phase")
         self.display_type.addItem("Real")
         self.display_type.addItem("Imaginary")
+
+        # todo: better way of mapping combo box index to display type
         self.combo_index_to_display_type = {
             0: ImageDisplayType.mag,
             1: ImageDisplayType.phase,
@@ -43,11 +45,12 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
             3: ImageDisplayType.imag,
         }
         self.display_type_to_combo_index = {v: k for k, v in self.combo_index_to_display_type.items()}
+
         self.display_type.setCurrentIndex(self.display_type_to_combo_index[self.display_type_val])
         control_layout.addWidget(self.display_type, layout_row_index, 0)
         layout_row_index = layout_row_index + 1
 
-        # Window/Level
+        # window/level
         wl_layout = QtWidgets.QHBoxLayout()
         wl_spinbox_layout = QtWidgets.QGridLayout()
         self.window_val = 0.0
@@ -425,6 +428,7 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         control.setValue(value)
         control.blockSignals(False)
 
+    # todo: slot naming convention?
     def x_location_changed(self, x):
         if x != self.location.x:
             self.location.x = x

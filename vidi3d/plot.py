@@ -55,6 +55,7 @@ class MplPlot(FigureCanvas):
         self.create_lines()
         self.create_markers()
 
+    # todo: slot naming convention?
     # Methods for mouse event slots
     def press_event(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right

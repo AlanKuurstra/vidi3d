@@ -2,189 +2,172 @@
 This class contains the widgets for user control in the 4D viewer.
 """
 import numpy as np
-from PyQt5 import QtGui, QtCore, QtWidgets
-from .. import core as _Core
+from PyQt5 import QtWidgets
+
 from ..signals import Signals
 
-class _ControlWidget4D(Signals,QtWidgets.QWidget):
-    def __init__(self, image4DShape, initLocation, imageType, parent=None):
+
+class _ControlWidget4D(Signals, QtWidgets.QWidget):
+    def __init__(self,
+                 image_shape,
+                 cursor_loc,
+                 display_type):
         super(_ControlWidget4D, self).__init__()
-        self.image4DShape = image4DShape
-        controlLayout = QtWidgets.QVBoxLayout(self)
+        self.image_shape = image_shape
+        control_layout = QtWidgets.QVBoxLayout(self)
 
-        #
-        # Image Type
-        #
-        imTypeLayout = QtWidgets.QHBoxLayout()
+        # Display type
+        disp_type_layout = QtWidgets.QHBoxLayout()
         label = QtWidgets.QLabel()
-        label.setText("Image Type")
+        label.setText("Display Type")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.imgType = QtWidgets.QComboBox()
-        # the order of these have to match DisplayDefinitions class...consider changing that class to a dictionary
-        # to use here
-        self.imgType.addItem("Real")
-        self.imgType.addItem("Imaginary")
-        self.imgType.addItem("Magnitude")
-        self.imgType.addItem("Phase")
-        self.imgType.setCurrentIndex(imageType)
+        self.display_type = QtWidgets.QComboBox()
 
-        self.imgType.currentIndexChanged.connect(self.changeImageType)
-        imTypeLayout.addWidget(label)
-        imTypeLayout.addWidget(self.imgType)
+        # todo: better way of mapping combo box index to display type
+        # the order of these have to match DisplayDefinitions class
+        # consider changing that class to a dictionary to use here
+        self.display_type.addItem("Real")
+        self.display_type.addItem("Imaginary")
+        self.display_type.addItem("Magnitude")
+        self.display_type.addItem("Phase")
 
-        #
-        # Window/Level
-        #
-        self.wlLayout = QtWidgets.QHBoxLayout()
+        self.display_type.setCurrentIndex(display_type)
+
+        self.display_type.currentIndexChanged.connect(self.change_display_type)
+        disp_type_layout.addWidget(label)
+        disp_type_layout.addWidget(self.display_type)
+
+        # window/level
+        self.wl_layout = QtWidgets.QHBoxLayout()
         self.window = QtWidgets.QDoubleSpinBox()
         self.window.setMaximumWidth(70)
         self.window.setDecimals(3)
-        self.window.setMaximum(1.7 * 10**308)
-        self.window.valueChanged.connect(self.changeWindow)
+        self.window.setMaximum(1.7 * 10 ** 308)
+        self.window.valueChanged.connect(self.change_window)
         self.level = QtWidgets.QDoubleSpinBox()
         self.level.setMaximumWidth(70)
         self.level.setDecimals(3)
-        self.level.setMaximum(1.7 * 10**308)
-        self.level.setMinimum(-1.7 * 10**308)
+        self.level.setMaximum(1.7 * 10 ** 308)
+        self.level.setMinimum(-1.7 * 10 ** 308)
         self.level.setValue(np.floor(self.window.value() / 2))
-        self.level.valueChanged.connect(self.changeLevel)
+        self.level.valueChanged.connect(self.change_level)
         label = QtWidgets.QLabel()
-        label.setText("Window")
+        label.setText("window")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.wlLayout.addWidget(label)
-        self.wlLayout.addWidget(self.window)
+        self.wl_layout.addWidget(label)
+        self.wl_layout.addWidget(self.window)
         label = QtWidgets.QLabel()
-        label.setText("Level")
+        label.setText("level")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.wlLayout.addWidget(label)
-        self.wlLayout.addWidget(self.level)
+        self.wl_layout.addWidget(label)
+        self.wl_layout.addWidget(self.level)
         button = QtWidgets.QPushButton("Default")
         button.clicked.connect(self.reset_wl)
-        self.wlLayout.addWidget(button)
+        self.wl_layout.addWidget(button)
 
-        #
-        # SliceCoord
-        #
-        locLayout = QtWidgets.QHBoxLayout()
+        # Coordinates
+        cursor_layout = QtWidgets.QHBoxLayout()
         self.xcontrol = QtWidgets.QDoubleSpinBox()
         self.xcontrol.setDecimals(0)
-        self.xcontrol.setMaximum(self.image4DShape[0] - 1)
-        self.xcontrol.setValue(initLocation[0])
-        self.xcontrol.valueChanged.connect(self.changeXcontrol)
+        self.xcontrol.setMaximum(self.image_shape[0] - 1)
+        self.xcontrol.setValue(cursor_loc.x)
+        self.xcontrol.valueChanged.connect(self.change_x_control)
         self.ycontrol = QtWidgets.QDoubleSpinBox()
         self.ycontrol.setDecimals(0)
-        self.ycontrol.setMaximum(self.image4DShape[1] - 1)
-        self.ycontrol.setValue(initLocation[1])
-        self.ycontrol.valueChanged.connect(self.changeYcontrol)
+        self.ycontrol.setMaximum(self.image_shape[1] - 1)
+        self.ycontrol.setValue(cursor_loc.y)
+        self.ycontrol.valueChanged.connect(self.change_y_control)
         self.zcontrol = QtWidgets.QDoubleSpinBox()
         self.zcontrol.setDecimals(0)
-        self.zcontrol.setMaximum(self.image4DShape[2] - 1)
-        self.zcontrol.setValue(initLocation[2])
-        self.zcontrol.valueChanged.connect(self.changeZcontrol)
-
+        self.zcontrol.setMaximum(self.image_shape[2] - 1)
+        self.zcontrol.setValue(cursor_loc.z)
+        self.zcontrol.valueChanged.connect(self.change_z_control)
         self.tcontrol = QtWidgets.QDoubleSpinBox()
         self.tcontrol.setDecimals(0)
-        self.tcontrol.setMaximum(self.image4DShape[3] - 1)
-        self.tcontrol.setValue(initLocation[3])
-        self.tcontrol.valueChanged.connect(self.changeTcontrol)
-
-        self.tavgradcontrol = QtWidgets.QDoubleSpinBox()
-        self.tavgradcontrol.setDecimals(0)
-        self.tavgradcontrol.setMaximum(min(self.image4DShape[:-1]) - 1)
-        self.tavgradcontrol.setValue(0)
-        self.tavgradcontrol.valueChanged.connect(self.changeTavgRadcontrol)
+        self.tcontrol.setMaximum(self.image_shape[3] - 1)
+        self.tcontrol.setValue(cursor_loc.t)
+        self.tcontrol.valueChanged.connect(self.change_t_control)
 
         label = QtWidgets.QLabel()
         label.setText("X")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        locLayout.addWidget(label)
-        locLayout.addWidget(self.xcontrol)
+        cursor_layout.addWidget(label)
+        cursor_layout.addWidget(self.xcontrol)
         label = QtWidgets.QLabel()
         label.setText("Y")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        locLayout.addWidget(label)
-        locLayout.addWidget(self.ycontrol)
+        cursor_layout.addWidget(label)
+        cursor_layout.addWidget(self.ycontrol)
         label = QtWidgets.QLabel()
         label.setText("Z")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        locLayout.addWidget(label)
-        locLayout.addWidget(self.zcontrol)
+        cursor_layout.addWidget(label)
+        cursor_layout.addWidget(self.zcontrol)
         label = QtWidgets.QLabel()
         label.setText("volume")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        locLayout.addWidget(label)
-        locLayout.addWidget(self.tcontrol)
-        label = QtWidgets.QLabel()
-        label.setText("t_avg rad")
-        label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        # locLayout.addWidget(label)
-        # locLayout.addWidget(self.tavgradcontrol)
+        cursor_layout.addWidget(label)
+        cursor_layout.addWidget(self.tcontrol)
 
-        controlLayout.addLayout(imTypeLayout)
-        """control_layout.addLayout(cMapLayout)"""
-        controlLayout.addLayout(locLayout)
-        # this makes the control_widget widget the parent of all wlLayout's widgets
-        controlLayout.addLayout(self.wlLayout)
-        controlLayout.addStretch()
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                           QtWidgets.QSizePolicy.Expanding)
+        control_layout.addLayout(disp_type_layout)
+        control_layout.addLayout(cursor_layout)
+        # this makes control_widget widget the parent of all wl_layout's widgets
+        control_layout.addLayout(self.wl_layout)
+        control_layout.addStretch()
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-    # signals to emit when a control panel dial is changed
-    def changeImageType(self, index):
+    # todo: slot naming convention?
+    # Relay slots (ie. emit a new signal)
+    def change_display_type(self, index):
         self.sig_img_disp_type_change.emit(index)
 
-    def changeWindow(self, value):
+    def change_window(self, value):
         if self.window.hasFocus():
             self.sig_window_level_change.emit(value, self.level.value())
 
-    def changeLevel(self, value):
+    def change_level(self, value):
         if self.level.hasFocus():
             self.sig_window_level_change.emit(self.window.value(), value)
 
-    def changeXcontrol(self, value):
+    def change_x_control(self, value):
         if self.xcontrol.hasFocus():
             self.sig_x_change.emit(value)
 
-    def changeYcontrol(self, value):
+    def change_y_control(self, value):
         if self.ycontrol.hasFocus():
             self.sig_y_change.emit(value)
 
-    def changeZcontrol(self, value):
+    def change_z_control(self, value):
         if self.zcontrol.hasFocus():
             self.sig_z_change.emit(value)
 
-    def changeTcontrol(self, value):
+    def change_t_control(self, value):
         if self.tcontrol.hasFocus():
             self.sig_t_change.emit(value)
-
-    def changeTavgRadcontrol(self, value):
-        if self.tavgradcontrol.hasFocus():
-            self.signalTavgRadChange.emit(value)
 
     def reset_wl(self):
         self.sig_window_level_reset.emit()
 
-    # slots to update control dials when settings are changed
-    # using mechanisms other than the control panel
-    def onXChange(self, value):
+    # update control dials when settings are updated without controls (ie. mouse movement or button presses)
+    def on_x_change(self, value):
         self.xcontrol.setValue(value)
 
-    def onYChange(self, value):
+    def on_y_change(self, value):
         self.ycontrol.setValue(value)
 
-    def onZChange(self, value):
+    def on_z_change(self, value):
         self.zcontrol.setValue(value)
 
-    def onImageTypeChange(self, index):
-        self.imgType.setCurrentIndex(index)
+    def on_display_type_change(self, index):
+        self.display_type.setCurrentIndex(index)
 
-    def onImageCMapChange(self, index):
+    def on_cmap_change(self, index):
         self.colorMap.setCurrentIndex(index)
 
-    def onWindowLevelChange(self, windowValue, levelValue):
+    def on_window_level_change(self, windowValue, levelValue):
         self.window.setValue(windowValue)
         self.level.setValue(levelValue)
 
-    def onWindowLevelReset(self):
+    def on_window_level_reset(self):
         self.window.setValue(0.0)
         self.level.setValue(0.0)

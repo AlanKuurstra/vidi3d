@@ -429,7 +429,10 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         control.blockSignals(False)
 
     # todo: slot naming convention?
+    # todo: these should be relays simiar to imshow/controls.py, Compare() object should do all the work
+    # todo: is the block if x != self.location.x really necessary? (does it stop an infinite signal_loop, or is it for efficiency...to stop an another assignment of x)
     def x_location_changed(self, x):
+        # todo: loc set multiple times: changes location then signals cursor_change, which is connected to Compare.change_location, which calls controls.change_location both of which set and read the cursor causing a minmanx operation
         if x != self.location.x:
             self.location.x = x
             self.sig_cursor_change.emit(self.location.x, self.location.y)
@@ -468,7 +471,9 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
             self.display_type_val = new_display_type
             self.display_type.setCurrentIndex(self.display_type_to_combo_index[self.display_type_val])
 
+    # todo: perhaps all the change_ slots should just worry about adjusting the visual display and not affect the internal data objects...in fact the self.window and self.value attributes can be removed and we can get the values from the spinbox, and the self.loc object is shared and should be changed by Compare slots, not be Controls slots.
     def change_location(self, x, y):
+        # # todo: loc set multiple times: location already changed by Compare.change_location and Controls.x_location_changed
         self.location.x = x
         self.location.y = y
         self.xcontrol.setValue(x)

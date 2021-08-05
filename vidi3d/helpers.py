@@ -1,5 +1,10 @@
+from collections import namedtuple
+
 import numpy as np
+
 from .definitions import ImageDisplayType
+
+Event = namedtuple('Event', ['x', 'y'])
 
 
 def apply_display_type(complex_values, display_type):

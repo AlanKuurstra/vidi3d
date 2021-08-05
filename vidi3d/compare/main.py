@@ -10,7 +10,8 @@ from matplotlib.animation import FuncAnimation
 
 from . import controls
 from .. import core
-from ..definitions import ImageDisplayType, PlotColours, TVolumeCoord
+from ..definitions import ImageDisplayType, PlotColours
+from ..coordinates import XYZTCoord, XYZCoord
 from ..helpers import apply_display_type
 from ..image import MplImage
 from ..navigation import NavigationToolbar
@@ -29,6 +30,7 @@ class Compare(QtWidgets.QMainWindow):
                  cmaps=[None, ],
                  overlays=[None, ],
                  overlay_cmaps=[None, ],
+                 mmb_callback=None
                  ):
         super().__init__()
         self.setWindowTitle('Vidi3d: compare')
@@ -61,7 +63,7 @@ class Compare(QtWidgets.QMainWindow):
         self.pixdim = pixdim
 
         # initial cursor_loc
-        self.loc = TVolumeCoord(int(img_shape[0] / 2), int(img_shape[1] / 2), int(img_shape[2] / 2), 0)
+        self.loc = XYZTCoord(img_shape, int(img_shape[0] / 2), int(img_shape[1] / 2), int(img_shape[2] / 2), 0)
 
         # ensure each image has a title
         if type(subplot_titles) is list and len(subplot_titles) != 1 and len(subplot_titles) != num_images:
@@ -93,8 +95,6 @@ class Compare(QtWidgets.QMainWindow):
             self.image_figures.append(
                 MplImageSlice(complex_image=self.complex_images[indx][:, :, self.loc.z, self.loc.t],
                               aspect=aspect,
-                              slice_num=self.loc.z,
-                              max_slice_num=img_shape[2],
                               interpolation=interpolation,
                               origin=origin,
                               cursor_loc=self.loc,
@@ -103,6 +103,7 @@ class Compare(QtWidgets.QMainWindow):
                               cmap=cmaps[indx],
                               overlay=overlay,
                               overlay_cmap=overlay_cmaps[indx],
+                              mmb_callback=mmb_callback,
                               ))
             self.image_toolbars.append(NavigationToolbar(self.image_figures[indx], self.image_figures[indx], indx))
             # give MplImageSlice a new attribute NavigationToolbar
@@ -215,6 +216,7 @@ class Compare(QtWidgets.QMainWindow):
     def make_connections(self):
         # Connect signals from control_widget
         self.control_widget.sig_img_disp_type_change.connect(self.change_display_type)
+        # todo: loc set multiple times
         self.control_widget.sig_cursor_change.connect(self.change_location)
         self.control_widget.sig_z_change.connect(self.on_z_change)
         self.control_widget.sig_lock_plots_change.connect(self.update_plot_lock)
@@ -289,6 +291,7 @@ class Compare(QtWidgets.QMainWindow):
 
     # slots dealing with a cursor_loc change
     def change_location(self, x, y):
+        # todo: loc set multiple times: location already changed in control
         self.loc.x = x
         self.loc.y = y
         self.control_widget.change_location(x, y)
@@ -296,6 +299,7 @@ class Compare(QtWidgets.QMainWindow):
         num_images = len(self.image_figures)
         img_vals = []
         for indx in range(num_images):
+            # todo: loc set multiple times: show_cursor_loc_change also changes loc object
             self.image_figures[indx].show_cursor_loc_change([x, y])
             img_vals.append(self.image_figures[indx].cursor_val)
         self.control_widget.change_img_vals(img_vals)
@@ -325,7 +329,7 @@ class Compare(QtWidgets.QMainWindow):
                         image_toolbar.ax.add_line(currentLine)
 
         for image_figure in self.image_figures:
-            image_figure.set_slice_num(newz)
+            image_figure.cursor_loc.z = newz
         for indx in range(len(self.image_figures)):
             self.image_figures[indx].show_complex_image_change(self.complex_images[indx][:, :, self.loc.z, self.loc.t])
             self.threshold_overlay(self.control_widget.lower_thresh_spinbox.value(),
@@ -333,8 +337,6 @@ class Compare(QtWidgets.QMainWindow):
         self.update_plots()
 
     def on_t_change(self, value):
-        # todo: figure out clipping
-        # value = np.minimum(np.maximum(value+0.5, 0), self.complex_image.shape[2]-1)
         self.loc.t = value
         for indx in range(len(self.image_figures)):
             self.image_figures[indx].show_complex_image_change(
@@ -629,17 +631,11 @@ class ROIData():
 
 
 class MplImageSlice(MplImage):
-    def __init__(self, max_slice_num=0, *args, **keywords):
-        super(MplImageSlice, self).__init__(*args, **keywords)
-        self.max_slice_num = max_slice_num
-
     def wheelEvent(self, event):
-        # todo: figure out clipping
         if event.angleDelta().y() > 0:
-            clip_val = np.minimum(np.maximum(self.get_slice_num() + 1, 0), self.max_slice_num - 1)
+            self.sig_z_change.emit(self.cursor_loc.z + 1)
         else:
-            clip_val = np.minimum(np.maximum(self.get_slice_num() - 1, 0), self.max_slice_num - 1)
-        self.sig_z_change.emit(clip_val)
+            self.sig_z_change.emit(self.cursor_loc.z - 1)
 
 
 class FuncAnimationCustom(FuncAnimation):

@@ -174,6 +174,7 @@ def compare3d(data,
               cmaps=None,
               overlays=None,
               overlay_cmaps=None,
+              mmb_callback=None,
               ):
     """
     A viewer that displays multiple 3D images for comparison.
@@ -248,5 +249,7 @@ def compare3d(data,
                      max_in_row=max_in_row,
                      cmaps=cmaps,
                      overlays=overlays,
-                     overlay_cmaps=overlay_cmaps)
+                     overlay_cmaps=overlay_cmaps,
+                     mmb_callback=mmb_callback,
+                     )
     return start_viewer(viewer, block, window_title)

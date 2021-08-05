@@ -9,7 +9,8 @@ from PyQt5 import QtCore, QtWidgets
 from . import controls
 from . import image4d
 from .. import core
-from ..definitions import ImageDisplayType, TVolumeCoord
+from ..definitions import ImageDisplayType
+from ..coordinates import XYZTCoord
 
 
 class Imshow3d(QtWidgets.QMainWindow):
@@ -23,7 +24,7 @@ class Imshow3d(QtWidgets.QMainWindow):
         self.viewer_number = 0
 
         img_shape = complex_image.shape
-        cursor_loc = TVolumeCoord(int(img_shape[0] / 2), int(img_shape[1] / 2), int(img_shape[2] / 2), 0)
+        cursor_loc = XYZTCoord(img_shape, int(img_shape[0] / 2), int(img_shape[1] / 2), int(img_shape[2] / 2), 0)
         display_type = ImageDisplayType.mag
 
         self.image4d = image4d.Image4D(complex_image,

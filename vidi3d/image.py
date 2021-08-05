@@ -9,9 +9,25 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from .definitions import SliceCoord, ImageDisplayType
-from .helpers import apply_display_type
+from .definitions import ImageDisplayType
+from .coordinates import XYCoord
+from .helpers import apply_display_type, Event
 from .signals import Signals
+
+
+def mpl_imshow_popup(self):
+    vmin, vmax = self.img.get_clim()
+    mpl.pyplot.figure()
+    popout_figure = mpl.pyplot.imshow(self.img.get_array(),
+                                      cmap=self.img.get_cmap(),
+                                      origin=self.img.origin,
+                                      aspect=self.img.axes.get_aspect(),
+                                      vmin=vmin,
+                                      vmax=vmax,
+                                      interpolation=self.img.get_interpolation())
+    popout_figure.axes.xaxis.set_visible(False)
+    popout_figure.axes.yaxis.set_visible(False)
+    mpl.pyplot.show()
 
 
 class MplImage(Signals, FigureCanvas):
@@ -23,16 +39,14 @@ class MplImage(Signals, FigureCanvas):
                  origin='lower',
                  display_type=None,
                  cursor_loc=None,
-                 slice_num=0,
                  cursor_labels=None,
                  cmap=None,
-                 overlay_cmap=None):
+                 overlay_cmap=None,
+                 mmb_callback=None):
         self.fig = mpl.figure.Figure()
         FigureCanvas.__init__(self, self.fig)
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
-        # can't set parent in FigureCanvas __init__, set it manually
-        # self.parent = parent
 
         # Event related initialization
         self._idMove = self.mpl_connect('motion_notify_event', self.mouse_move)
@@ -40,15 +54,15 @@ class MplImage(Signals, FigureCanvas):
         self._idRelease = self.mpl_connect('button_release_event', self.mouse_release)
         self.left_mouse_press = False
         self.middle_mouse_press = False
+        MplImage.middle_mouse_callback = mmb_callback or mpl_imshow_popup
         self.right_mouse_press = False
 
         # Internal data initialization
         self.complex_image_data = complex_image
 
         if isinstance(cursor_loc, list):
-            cursor_loc = SliceCoord(*cursor_loc)
-        self.cursor_loc = self.clip_coordinates(cursor_loc)
-        self.slice_num = slice_num
+            cursor_loc = XYCoord(complex_image.shape, *cursor_loc)
+        self.cursor_loc = cursor_loc
 
         # Initialize objects visualizing the internal data
         self.cmap = cmap if cmap is not None else mpl.cm.Greys_r
@@ -110,7 +124,7 @@ class MplImage(Signals, FigureCanvas):
                                    ha='center')
 
         # Initialize parameters for data visualization
-        # todo: too many window level attributes, need to clean up
+        # todo: too many window level attributes, need to clean up, maybe a class for namespace?
         self.intensity_level_cache = np.zeros(4)
         self.intensity_window_cache = np.ones(4)
         self.intensity_level = None
@@ -137,11 +151,6 @@ class MplImage(Signals, FigureCanvas):
     def get_image_value(self, coord):
         return self.img.get_array().data[coord.y, coord.x]
 
-    def clip_coordinates(self, coord):
-        coord.x = np.minimum(np.maximum(coord.x, 0), self.complex_image_data.shape[0] - 1)
-        coord.y = np.minimum(np.maximum(coord.y, 0), self.complex_image_data.shape[1] - 1)
-        return coord
-
     @property
     def cursor_val(self):
         return self.get_image_value(self.cursor_loc)
@@ -166,25 +175,16 @@ class MplImage(Signals, FigureCanvas):
             self.left_mouse_press = True
         elif event.button == 2:
             self.middle_mouse_press = True
-            vmin, vmax = self.img.get_clim()
-            mpl.pyplot.figure()
-            popout_figure = mpl.pyplot.imshow(self.img.get_array(),
-                                              cmap=self.img.get_cmap(),
-                                              origin=self.img.origin,
-                                              aspect=self.img.axes.get_aspect(),
-                                              vmin=vmin,
-                                              vmax=vmax,
-                                              interpolation=self.img.get_interpolation())
-            popout_figure.axes.xaxis.set_visible(False)
-            popout_figure.axes.yaxis.set_visible(False)
-            mpl.pyplot.show()
+            self.middle_mouse_callback()
 
         elif event.button == 3:
             self.right_mouse_press = True
             self.wl_orig_window = self.intensity_window
             self.wl_orig_level = self.intensity_level
-            self.wl_orig_event_coord = SliceCoord(*[event.x, event.y])
+            self.wl_orig_event_coord = Event(event.x, event.y)
         self.mouse_move(event)
+
+
 
     def mouse_release(self, event):
         if self.fig.canvas.widgetlock.locked():
@@ -210,12 +210,10 @@ class MplImage(Signals, FigureCanvas):
 
         if self.left_mouse_press:
             data_coord = self.axes.transData.inverted().transform([event.x, event.y]) + 0.5
-            # todo: figure out clipping
-            clipped_location = self.clip_coordinates(SliceCoord(*data_coord))
-            self.emit_cursor_change(clipped_location)
+            self.emit_cursor_change(data_coord)
 
     def emit_cursor_change(self, coord):
-        self.sig_cursor_change.emit(coord.x, coord.y)
+        self.sig_cursor_change.emit(coord[0], coord[1])
 
     # Methods that set internal data
     def set_complex_image(self, new_image):
@@ -229,15 +227,9 @@ class MplImage(Signals, FigureCanvas):
         self.overlay.set_data(new_overlay_data.T)
 
     def set_cursor_loc(self, new_loc):
+        # todo: loc set multiple times
         self.cursor_loc.x = new_loc[0]
         self.cursor_loc.y = new_loc[1]
-        # todo: figure out clipping
-        # clipping new_loc to valid locations is done in mouse_move() before the change_location signal is emitted
-        # however, there could be problems if a control class object signals a cursor_loc change that is out of bounds
-        # self.clip_coordinates(self.cursor_loc)
-
-    def set_slice_num(self, new_slice_num):
-        self.slice_num = new_slice_num
 
     def set_display_type(self, display_type):
         self.display_type = display_type
@@ -290,35 +282,54 @@ class MplImage(Signals, FigureCanvas):
         # not very robust
         # dynamic_range = np.float(np.max(valid_values)) - np.float(np.min(valid_values))
 
-        # remove outliers and use 3*stdv for dynamic range
-        median = np.median(valid_values)
-        stdv_prev = np.inf
+        # use n_stdv*stdv for dynamic range
         stdv = valid_values.std()
-        max_iter = 25
-        count = 0
+        n_stdv = 3
 
-        while np.abs((stdv_prev - stdv) / stdv) > 0.1 and count < max_iter:
-            if stdv == 0:
-                if median:
-                    return 2 * median
-                else:
-                    return 1
-            valid_values = valid_values[np.abs(valid_values - median) < 3 * stdv]
-            median = np.median(valid_values)
-            stdv_prev = stdv
-            stdv = valid_values.std()
-            count += 1
+        remove_outliers = False
+        if remove_outliers:
+            # remove outliers from stdv
+            mean = valid_values.mean()
+            stdv_prev = np.inf
+            max_iter = 25
+            count = 0
+            while np.abs((stdv_prev - stdv) / stdv) > 0.1 and count < max_iter:
+                if stdv == 0:
+                    if median:
+                        return 2 * median
+                    else:
+                        return 1
+                valid_values = valid_values[np.abs(valid_values - mean) < n_stdv * stdv]
+                #median = np.median(valid_values)
+                mean = valid_values.mean()
+                stdv_prev = stdv
+                stdv = valid_values.std()
+                count += 1
 
-        return 3 * stdv
+        return n_stdv * stdv
 
     @staticmethod
     def default_level(img):
         valid_values = img[np.logical_and(np.isfinite(img), np.abs(img).astype(bool))]
         if valid_values.size == 0:
             return 0
-        # default_level = valid_values.mean() # biased
-        default_level = np.median(valid_values)
-        return default_level
+
+        # background zeroes cause these values to be too small
+        # default_level = valid_values.mean()
+        # default_level = np.median(valid_values) 
+
+        mean_prev = np.inf
+        mean = np.abs(valid_values).mean()
+
+        max_iter = 25
+        count = 0
+        while np.abs((mean_prev - mean) / mean) > 0.1 and count < max_iter:
+            valid_values = valid_values[np.abs(valid_values) > mean * .05]
+            mean_prev = mean
+            mean = np.abs(valid_values).mean()
+            count += 1
+
+        return np.median(valid_values)
 
     def set_mpl_img(self):
         intensity_image = apply_display_type(self.complex_image_data, self.display_type)
@@ -348,7 +359,7 @@ class MplImage(Signals, FigureCanvas):
             self.axes.draw_artist(self.title)
             self.axes.draw_artist(self.axes.patch)
             self.axes.draw_artist(self.img)
-            z = self.sliceNum
+            z = self.cursor_loc.z
             if z in self.NavigationToolbar.roi_lines.mpl_line_objects:
                 for currentLine in self.NavigationToolbar.roi_lines.mpl_line_objects[z]:
                     self.axes.draw_artist(currentLine)
@@ -367,6 +378,7 @@ class MplImage(Signals, FigureCanvas):
         self.blit_image_and_lines()
 
     def show_cursor_loc_change(self, new_cursor_loc):
+        # todo: loc set multiple times
         self.set_cursor_loc(new_cursor_loc)
         self.set_mpl_lines()
         self.blit_image_and_lines()
@@ -387,9 +399,6 @@ class MplImage(Signals, FigureCanvas):
     def show_set_window_level_to_default(self):
         self.set_window_level_to_default()
         self.blit_image_and_lines()
-
-    def get_slice_num(self):
-        return self.slice_num
 
     # Methods related to Qt
     def sizeHint(self):

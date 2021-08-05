@@ -5,26 +5,26 @@ Created on Thu May 11 13:37:52 2017
 
 @author: akuurstr
 """
-from vidi3d import compare2d
-from simulation import phantom
 import numpy as np
 
+from simulation import phantom
 
-def generateFmriPhantom(task, SNR=30, tr=1.5, boldSignalChange=0.05):
+
+def generate_fmri_phantom(task, SNR=30, tr=1.5, boldSignalChange=0.05):
     n = len(task)
     # phantom
-    sheppLogan = phantom()
-    roi = (sheppLogan > 0.29) * (sheppLogan < 0.3)
-    signalLevel = sheppLogan[roi].mean()
-    sheppLogan = np.repeat(sheppLogan[..., np.newaxis], n, axis=-1)
+    shepp_logan = phantom()
+    roi = (shepp_logan > 0.29) * (shepp_logan < 0.3)
+    signal_level = shepp_logan[roi].mean()
+    shepp_logan = np.repeat(shepp_logan[..., np.newaxis], n, axis=-1)
 
     # noise
-    sigma = signalLevel / SNR
-    noise = sigma * np.random.randn(*sheppLogan.shape)
-    noiseyPhantom = sheppLogan + noise
+    sigma = signal_level / SNR
+    noise = sigma * np.random.randn(*shepp_logan.shape)
+    noisey_phantom = shepp_logan + noise
 
     # hrf
-    #(from http://kendrickkay.net/GLMdenoise/doc/GLMdenoise/utilities/getcanonicalhrf.html)
+    # (from http://kendrickkay.net/GLMdenoise/doc/GLMdenoise/utilities/getcanonicalhrf.html)
     hrf = [0, 0.0314738742235483, 0.132892311247317, 0.312329209862644, 0.441154423620173,
            0.506326320948033, 0.465005683404153, 0.339291735120426, 0.189653785392583,
            0.0887497190889423, 0.0269546540274463, -
@@ -45,18 +45,7 @@ def generateFmriPhantom(task, SNR=30, tr=1.5, boldSignalChange=0.05):
     hrf = np.interp(np.arange(len(task)) * tr, range(len(hrf)), hrf)
 
     # fmri phantom
-    boldSignal = np.convolve(task, hrf, 'full')[:len(task)]
-    boldSignal = boldSignal / boldSignal.max() * signalLevel * boldSignalChange
-    fmriPhantom = noiseyPhantom + \
-        np.repeat(roi[..., np.newaxis], n, axis=-1) * boldSignal
-    return fmriPhantom, boldSignal, roi
-
-
-if __name__ == "__main__":
-    import random
-    n = 100
-    task = np.zeros(n)
-    activations = np.array(random.sample(range(10), 3)) * 10
-    task[activations] = 1
-    img, _, _ = generateFmriPhantom(task)
-    compare2d(img)
+    bold_signal = np.convolve(task, hrf, 'full')[:len(task)]
+    bold_signal = bold_signal / bold_signal.max() * signal_level * boldSignalChange
+    fmri_phantom = noisey_phantom + np.repeat(roi[..., np.newaxis], n, axis=-1) * bold_signal
+    return fmri_phantom, bold_signal, roi

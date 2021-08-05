@@ -3,7 +3,7 @@ import os
 import setuptools
 
 GITHUB_REF = os.getenv('GITHUB_REF')
-version = GITHUB_REF.replace('refs/tags/', '') if (GITHUB_REF and GITHUB_REF.startswith('refs/tags/')) else '1.0.3'
+version = GITHUB_REF.replace('refs/tags/', '') if (GITHUB_REF and GITHUB_REF.startswith('refs/tags/')) else '1.0.5'
 setuptools.setup(
     name='vidi3d',
     version=version,
@@ -13,8 +13,8 @@ setuptools.setup(
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
     url='https://github.com/AlanKuurstra/vidi3d',
-    packages=['vidi3d', 'vidi3d.Imshow', 'vidi3d.Compare'],
-    package_data={'vidi3d': ['icons/*', 'Examples/*']},
+    packages=['vidi3d', 'vidi3d.imshow', 'vidi3d.compare'],
+    package_data={'vidi3d': ['icons/*', 'examples/*']},
     install_requires=[
         'numpy',
         'PyQt5',

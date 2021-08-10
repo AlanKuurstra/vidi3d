@@ -80,7 +80,7 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
         self._id_roi_move = self.canvas.mpl_connect('button_release_event', self.roi_release)
         self.roi_widget.setChecked(True)
 
-        z = self.canvas.get_slice_num()
+        z = self.canvas.cursor_loc.z
         if z in self.roi_lines.mpl_line_objects:
             for currentLine in self.roi_lines.mpl_line_objects[z]:
                 self.ax.add_line(currentLine)
@@ -105,7 +105,7 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
         self.ax.texts.append(self.canvas.htxt)
         self.ax.texts.append(self.canvas.vtxt)
 
-        z = self.canvas.get_slice_num()
+        z = self.canvas.cursor_loc.z
         if z in self.roi_lines.mpl_line_objects:
             for currentLine in self.roi_lines.mpl_line_objects[z]:
                 self.ax.lines.remove(currentLine)

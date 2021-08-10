@@ -295,8 +295,8 @@ class MplImage(Signals, FigureCanvas):
             count = 0
             while np.abs((stdv_prev - stdv) / stdv) > 0.1 and count < max_iter:
                 if stdv == 0:
-                    if median:
-                        return 2 * median
+                    if mean:
+                        return 2 * mean
                     else:
                         return 1
                 valid_values = valid_values[np.abs(valid_values - mean) < n_stdv * stdv]

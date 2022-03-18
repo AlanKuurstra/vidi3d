@@ -33,6 +33,7 @@ def mpl_imshow_popup(self):
 class MplImage(Signals, FigureCanvas):
     def __init__(self,
                  complex_image,
+                 background_threshold=0.05,
                  aspect='equal',
                  overlay=None,
                  interpolation='none',
@@ -59,6 +60,9 @@ class MplImage(Signals, FigureCanvas):
 
         # Internal data initialization
         self.complex_image_data = complex_image
+
+        # Threshold to use to ignore background values in stats used for default window/level values
+        self.background_threshold = background_threshold
 
         if isinstance(cursor_loc, list):
             cursor_loc = XYCoord(complex_image.shape, *cursor_loc)
@@ -252,16 +256,19 @@ class MplImage(Signals, FigureCanvas):
             self.img.set_clim(vmin, vmax)
 
     def set_window_level_to_default(self):
-        self.intensity_level_cache[ImageDisplayType.imag] = self.default_level(self.complex_image_data.imag)
+        self.intensity_level_cache[ImageDisplayType.imag] = self.default_level(self.complex_image_data.imag,
+                                                                               self.background_threshold)
         self.intensity_window_cache[ImageDisplayType.imag] = self.get_dynamic_range(self.complex_image_data.imag)
 
-        self.intensity_level_cache[ImageDisplayType.real] = self.default_level(self.complex_image_data.real)
+        self.intensity_level_cache[ImageDisplayType.real] = self.default_level(self.complex_image_data.real,
+                                                                               self.background_threshold)
         self.intensity_window_cache[ImageDisplayType.real] = self.get_dynamic_range(self.complex_image_data.real)
 
         self.intensity_level_cache[ImageDisplayType.phase] = 0.0
         self.intensity_window_cache[ImageDisplayType.phase] = 2.0 * np.pi
 
-        self.intensity_level_cache[ImageDisplayType.mag] = self.default_level(np.abs(self.complex_image_data))
+        self.intensity_level_cache[ImageDisplayType.mag] = self.default_level(np.abs(self.complex_image_data),
+                                                                              self.background_threshold)
         self.intensity_window_cache[ImageDisplayType.mag] = self.get_dynamic_range(np.abs(self.complex_image_data))
 
         self.set_window_level(self.intensity_window_cache[self.display_type],
@@ -310,7 +317,7 @@ class MplImage(Signals, FigureCanvas):
         return n_stdv * stdv
 
     @staticmethod
-    def default_level(img):
+    def default_level(img, background_threshold=0.05):
         valid_values = img[np.logical_and(np.isfinite(img), img.astype(bool))]
         if valid_values.size == 0:
             return 0
@@ -329,7 +336,7 @@ class MplImage(Signals, FigureCanvas):
         max_iter = 25
         count = 0
         while np.abs((mean_prev - mean) / mean) > 0.1 and count < max_iter:
-            valid_values = valid_values[np.abs(valid_values) > mean * .05]
+            valid_values = valid_values[np.abs(valid_values) > mean * background_threshold]
             mean_prev = mean
             mean = np.abs(valid_values).mean()
             count += 1

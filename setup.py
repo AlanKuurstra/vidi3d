@@ -1,9 +1,11 @@
 import os
 
 import setuptools
+from datetime import datetime
 
 GITHUB_REF = os.getenv('GITHUB_REF')
-version = GITHUB_REF.replace('refs/tags/', '') if (GITHUB_REF and GITHUB_REF.startswith('refs/tags/')) else '1.0.5'
+version = GITHUB_REF.replace('refs/tags/', '') if (
+            GITHUB_REF and GITHUB_REF.startswith('refs/tags/')) else datetime.now().strftime("%Y.%m.%d.%H.%M")
 setuptools.setup(
     name='vidi3d',
     version=version,

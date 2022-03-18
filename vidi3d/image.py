@@ -283,8 +283,11 @@ class MplImage(Signals, FigureCanvas):
         # dynamic_range = np.float(np.max(valid_values)) - np.float(np.min(valid_values))
 
         # use n_stdv*stdv for dynamic range
-        stdv = valid_values.std()
         n_stdv = 3
+        stdv = valid_values.std()
+        # for masks, stdv of valid values is 0 but we still want a dynamic range
+        if stdv == 0:
+            return 1
 
         remove_outliers = False
         if remove_outliers:

@@ -77,9 +77,10 @@ class MplPlot(FigureCanvas):
         for indx in range(len(self.complex_data)):
             self.lines[indx][0].set_ydata(apply_display_type(self.complex_data[indx], self.display_type))
         if not self.lockPlot:
-            # self.axes.set_ylim(auto=True)
             self.axes.relim()
-            self.axes.autoscale_view(scalex=False)
+            # self.axes.set_ylim(auto=True)
+            # self.axes.autoscale_view(scalex=False)
+            self.axes.autoscale(axis='y')
 
     def set_markers(self):
         if self.marker_posn is not None:
@@ -90,7 +91,8 @@ class MplPlot(FigureCanvas):
     def create_lines(self):
         self.lines = []
         for indx in range(len(self.complex_data)):
-            self.lines.append(self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
+            self.lines.append(
+                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
         self.axes.set_xlim(0, self.complex_data[0].shape[0] - 1 + np.finfo('float').eps)
 
     def create_markers(self):
@@ -106,8 +108,11 @@ class MplPlot(FigureCanvas):
     # Convenience methods
     def show_data_type_change(self, index):
         self.set_display_type(index)
-        self.set_lines()
+        # set_markers() must occur before set_lines()
+        # set_lines contains the autoscaling of the axes and the if the marker
+        # is not set before the autoscaling, then it will scale to old data
         self.set_markers()
+        self.set_lines()
         self.draw_lines_and_markers()
 
     def show_complex_data_change(self, new_complex_data):

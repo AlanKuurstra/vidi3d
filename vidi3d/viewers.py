@@ -49,13 +49,14 @@ def imshow3d(data,
         data = data[..., np.newaxis]
     viewer = Imshow3d(data, pixdim, interpolation=interpolation)
     if not block:
-        viewer.imagePanel3D.complex_image = np.copy(viewer.imagePanel3D.complex_image)
+        viewer.image4d.complex_image = np.copy(viewer.image4d.complex_image)
         # if the viewer is run as not blocking, then the underlying data
         # can change later on in the script and effect the results shown
         # in the viewer.  Therefore, we must make a copy.  If you have a
         # large data set and don't want to wait for the copy or can't afford
         # the memory, then you should run the viewer with block=True
     return start_viewer(viewer, block)
+
 
 def compare2d(data,
               pixdim=None,

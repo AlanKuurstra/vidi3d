@@ -10,8 +10,8 @@ from matplotlib.animation import FuncAnimation
 
 from . import controls
 from .. import core
-from ..definitions import ImageDisplayType, PlotColours
 from ..coordinates import XYZTCoord, XYZCoord
+from ..definitions import ImageDisplayType, PlotColours
 from ..helpers import apply_display_type
 from ..image import MplImage
 from ..navigation import NavigationToolbar
@@ -296,11 +296,14 @@ class Compare(QtWidgets.QMainWindow):
         self.loc.y = y
         self.control_widget.change_location(x, y)
         self.update_plots()
+        self.update_display_values()
+
+    def update_display_values(self):
         num_images = len(self.image_figures)
         img_vals = []
         for indx in range(num_images):
             # todo: loc set multiple times: show_cursor_loc_change also changes loc object
-            self.image_figures[indx].show_cursor_loc_change([x, y])
+            self.image_figures[indx].show_cursor_loc_change([self.loc.x, self.loc.y])
             img_vals.append(self.image_figures[indx].cursor_val)
         self.control_widget.change_img_vals(img_vals)
 
@@ -335,6 +338,7 @@ class Compare(QtWidgets.QMainWindow):
             self.threshold_overlay(self.control_widget.lower_thresh_spinbox.value(),
                                    self.control_widget.upper_thresh_spinbox.value())
         self.update_plots()
+        self.update_display_values()
 
     def on_t_change(self, value):
         self.loc.t = value
@@ -342,6 +346,7 @@ class Compare(QtWidgets.QMainWindow):
             self.image_figures[indx].show_complex_image_change(
                 self.complex_images[indx][:, :, self.loc.z, self.loc.t])
         self.update_plots()
+        self.update_display_values()
 
     def update_plots(self):
         x_plot_data = []

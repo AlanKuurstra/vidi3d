@@ -77,9 +77,10 @@ class MplPlot(FigureCanvas):
         for indx in range(len(self.complex_data)):
             self.lines[indx][0].set_ydata(apply_display_type(self.complex_data[indx], self.display_type))
         if not self.lockPlot:
-            # self.axes.set_ylim(auto=True)
             self.axes.relim()
-            self.axes.autoscale_view(scalex=False)
+            # self.axes.set_ylim(auto=True)
+            # self.axes.autoscale_view(scalex=False)
+            self.axes.autoscale(axis='y')
 
     def set_markers(self):
         if self.marker_posn is not None:

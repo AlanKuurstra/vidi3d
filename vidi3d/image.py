@@ -9,8 +9,8 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from .definitions import ImageDisplayType
 from .coordinates import XYCoord
+from .definitions import ImageDisplayType
 from .helpers import apply_display_type, Event
 from .signals import Signals
 
@@ -184,8 +184,6 @@ class MplImage(Signals, FigureCanvas):
             self.wl_orig_event_coord = Event(event.x, event.y)
         self.mouse_move(event)
 
-
-
     def mouse_release(self, event):
         if self.fig.canvas.widgetlock.locked():
             return
@@ -303,7 +301,7 @@ class MplImage(Signals, FigureCanvas):
                     else:
                         return 1
                 valid_values = valid_values[np.abs(valid_values - mean) < n_stdv * stdv]
-                #median = np.median(valid_values)
+                # median = np.median(valid_values)
                 mean = valid_values.mean()
                 stdv_prev = stdv
                 stdv = valid_values.std()
@@ -313,7 +311,7 @@ class MplImage(Signals, FigureCanvas):
 
     @staticmethod
     def default_level(img):
-        valid_values = img[np.logical_and(np.isfinite(img), np.abs(img).astype(bool))]
+        valid_values = img[np.logical_and(np.isfinite(img), img.astype(bool))]
         if valid_values.size == 0:
             return 0
 
@@ -321,6 +319,10 @@ class MplImage(Signals, FigureCanvas):
         # default_level = valid_values.mean()
         # default_level = np.median(valid_values) 
 
+        # background removal
+        # compare the absolute pixel value to the mean value of the absolute image
+        # keep all values whose absolute value is above 5% of the absolute mean value
+        # then recalculate the absolute mean and iterate, gradually removing the low outlier values
         mean_prev = np.inf
         mean = np.abs(valid_values).mean()
 

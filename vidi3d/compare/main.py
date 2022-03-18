@@ -10,8 +10,8 @@ from matplotlib.animation import FuncAnimation
 
 from . import controls
 from .. import core
-from ..definitions import ImageDisplayType, PlotColours
 from ..coordinates import XYZTCoord, XYZCoord
+from ..definitions import ImageDisplayType, PlotColours
 from ..helpers import apply_display_type
 from ..image import MplImage
 from ..navigation import NavigationToolbar

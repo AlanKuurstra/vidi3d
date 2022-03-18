@@ -91,7 +91,8 @@ class MplPlot(FigureCanvas):
     def create_lines(self):
         self.lines = []
         for indx in range(len(self.complex_data)):
-            self.lines.append(self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
+            self.lines.append(
+                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
         self.axes.set_xlim(0, self.complex_data[0].shape[0] - 1 + np.finfo('float').eps)
 
     def create_markers(self):

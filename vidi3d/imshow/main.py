@@ -9,13 +9,14 @@ from PyQt5 import QtCore, QtWidgets
 from . import controls
 from . import image4d
 from .. import core
-from ..definitions import ImageDisplayType
 from ..coordinates import XYZTCoord
+from ..definitions import ImageDisplayType
 
 
 class Imshow3d(QtWidgets.QMainWindow):
     def __init__(self,
                  complex_image,
+                 background_threshold=0.05,
                  pixdim=None,
                  interpolation='bicubic',
                  ):
@@ -28,6 +29,7 @@ class Imshow3d(QtWidgets.QMainWindow):
         display_type = ImageDisplayType.mag
 
         self.image4d = image4d.Image4D(complex_image,
+                                       background_threshold,
                                        cursor_loc,
                                        display_type,
                                        pixdim,

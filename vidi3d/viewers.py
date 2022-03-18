@@ -47,7 +47,7 @@ def imshow3d(data,
 
     if data.ndim == 3:
         data = data[..., np.newaxis]
-    viewer = Imshow3d(data, pixdim, interpolation=interpolation)
+    viewer = Imshow3d(data, pixdim=pixdim, interpolation=interpolation)
     if not block:
         viewer.image4d.complex_image = np.copy(viewer.image4d.complex_image)
         # if the viewer is run as not blocking, then the underlying data

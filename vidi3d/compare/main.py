@@ -21,6 +21,7 @@ from ..plot import MplPlot
 class Compare(QtWidgets.QMainWindow):
     def __init__(self,
                  complex_images,
+                 background_threshold=0.05,
                  pixdim=None,
                  interpolation='bicubic',
                  origin='lower',
@@ -94,6 +95,7 @@ class Compare(QtWidgets.QMainWindow):
             overlay = self.overlays[indx][:, :, self.loc.z] if self.overlays[indx] is not None else None
             self.image_figures.append(
                 MplImageSlice(complex_image=self.complex_images[indx][:, :, self.loc.z, self.loc.t],
+                              background_threshold=background_threshold,
                               aspect=aspect,
                               interpolation=interpolation,
                               origin=origin,

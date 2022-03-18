@@ -7,7 +7,7 @@ cursor line changes and image changes to match the current viewing cursor_loc in
 import numpy as np
 from PyQt5 import QtCore
 
-from ..coordinates import XYCoord, XYZCoord
+from ..coordinates import XYZCoord
 from ..image import MplImage
 from ..navigation import NavigationToolbarSimple as NavigationToolbar
 from ..plot import MplPlot
@@ -16,6 +16,7 @@ from ..plot import MplPlot
 class Image4D(QtCore.QObject):
     def __init__(self,
                  complex_image,
+                 background_threshold,
                  cursor_loc,
                  display_type,
                  pixdim,
@@ -38,7 +39,8 @@ class Image4D(QtCore.QObject):
         labels = [{'color': 'r', 'textLabel': "X"}, {'color': 'b', 'textLabel': "Y"},
                   {'color': 'g', 'textLabel': "Z Slice"}]
         self.zslice = ZSlice(complex_image=complex_image[:, :, cursor_loc.z, cursor_loc.t],
-                             cursor_loc=XYZCoord(img_shape[[0,1,2]], cursor_loc.x, cursor_loc.y, cursor_loc.z),
+                             background_threshold=background_threshold,
+                             cursor_loc=XYZCoord(img_shape[[0, 1, 2]], cursor_loc.x, cursor_loc.y, cursor_loc.z),
                              display_type=display_type,
                              cursor_labels=labels,
                              aspect=aspect_z,
@@ -48,7 +50,8 @@ class Image4D(QtCore.QObject):
         labels = [{'color': 'g', 'textLabel': "X"}, {'color': 'b', 'textLabel': "Z"},
                   {'color': 'r', 'textLabel': "Y Slice"}]
         self.yslice = YSlice(complex_image=complex_image[:, cursor_loc.y, :, cursor_loc.t],
-                             cursor_loc=XYZCoord(img_shape[[0,2,1]], cursor_loc.x, cursor_loc.z, cursor_loc.y),
+                             background_threshold=background_threshold,
+                             cursor_loc=XYZCoord(img_shape[[0, 2, 1]], cursor_loc.x, cursor_loc.z, cursor_loc.y),
                              display_type=display_type,
                              cursor_labels=labels,
                              aspect=aspect_y,
@@ -58,7 +61,8 @@ class Image4D(QtCore.QObject):
         labels = [{'color': 'r', 'textLabel': "Z"}, {'color': 'g', 'textLabel': "Y"},
                   {'color': 'b', 'textLabel': "X Slice"}]
         self.xslice = XSlice(complex_image=complex_image[cursor_loc.x, :, :, self.cursor_loc.t].T,
-                             cursor_loc=XYZCoord(img_shape[[2,1,0]], cursor_loc.z, cursor_loc.y, cursor_loc.x),
+                             background_threshold=background_threshold,
+                             cursor_loc=XYZCoord(img_shape[[2, 1, 0]], cursor_loc.z, cursor_loc.y, cursor_loc.x),
                              display_type=display_type,
                              cursor_labels=labels,
                              aspect=aspect_x,

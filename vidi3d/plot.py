@@ -106,8 +106,11 @@ class MplPlot(FigureCanvas):
     # Convenience methods
     def show_data_type_change(self, index):
         self.set_display_type(index)
-        self.set_lines()
+        # set_markers() must occur before set_lines()
+        # set_lines contains the autoscaling of the axes and the if the marker
+        # is not set before the autoscaling, then it will scale to old data
         self.set_markers()
+        self.set_lines()
         self.draw_lines_and_markers()
 
     def show_complex_data_change(self, new_complex_data):

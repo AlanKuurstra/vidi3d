@@ -177,6 +177,8 @@ class MplImage(Signals, FigureCanvas):
             return
         if event.button == 1:
             self.left_mouse_press = True
+            # mouse_move to update the 1d plots on single click
+            self.mouse_move(event)
         elif event.button == 2:
             self.middle_mouse_press = True
             self.middle_mouse_callback()

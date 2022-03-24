@@ -221,7 +221,8 @@ class Compare(QtWidgets.QMainWindow):
         # todo: loc set multiple times
         self.control_widget.sig_cursor_change.connect(self.change_location)
         self.control_widget.sig_z_change.connect(self.on_z_change)
-        self.control_widget.sig_lock_plots_change.connect(self.update_plot_lock)
+        self.control_widget.sig_lock_plots_x_change.connect(self.update_plot_lock)
+        self.control_widget.sig_lock_plots_y_change.connect(self.update_plot_lock)
         self.control_widget.sig_window_level_change.connect(self.change_window_level)
         self.control_widget.sig_window_level_reset.connect(self.set_window_level_to_default)
         self.control_widget.sig_t_change.connect(self.on_t_change)
@@ -367,9 +368,11 @@ class Compare(QtWidgets.QMainWindow):
         self.tplot.show_complex_data_and_markers_change(t_plot_data, self.loc.t)
 
     def update_plot_lock(self):
-        lock_plots = self.control_widget.lock_plots_checkbox.isChecked()
+        lock_plot_x = self.control_widget.lock_plots_x_checkbox.isChecked()
+        lock_plot_y = self.control_widget.lock_plots_y_checkbox.isChecked()
         for curr_plot in self.plots:
-            curr_plot.lockPlot = lock_plots
+            curr_plot.lock_xaxis = lock_plot_x
+            curr_plot.lock_yaxis = lock_plot_y
 
     # slots for ROI tool
     def initialize_roi(self, img_index):

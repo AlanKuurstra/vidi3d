@@ -2,11 +2,10 @@
 This class contains the widgets for user control in the compare viewer.
 """
 
-from copy import deepcopy
-
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from copy import deepcopy
 
 from ..definitions import ImageDisplayType
 from ..signals import Signals
@@ -132,16 +131,27 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         time_layout.addWidget(label, alignment=QtCore.Qt.AlignRight)
         time_layout.addWidget(self.tcontrol)  # , 0, 1)
         time_layout.addStretch(1)
+
+        lock_layout = QtWidgets.QGridLayout()
         label = QtWidgets.QLabel()
-        label.setText("Lock 1D Plots:")
+        label.setText("Lock 1D plot x-axis:")
         label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
-        self.lock_plots_checkbox = QtWidgets.QCheckBox()
-        time_layout.addWidget(label, alignment=QtCore.Qt.AlignRight)
-        time_layout.addWidget(self.lock_plots_checkbox, alignment=QtCore.Qt.AlignLeft)
+        self.lock_plots_x_checkbox = QtWidgets.QCheckBox()
+        lock_layout.addWidget(label, 0, 0, alignment=QtCore.Qt.AlignRight)
+        lock_layout.addWidget(self.lock_plots_x_checkbox, 0, 1, alignment=QtCore.Qt.AlignLeft)
+        label = QtWidgets.QLabel()
+        label.setText("Lock 1D plot y-axis:")
+        label.setFixedWidth(label.fontMetrics().width(label.text()) + 5)
+        self.lock_plots_y_checkbox = QtWidgets.QCheckBox()
+        lock_layout.addWidget(label, 1, 0, alignment=QtCore.Qt.AlignRight)
+        lock_layout.addWidget(self.lock_plots_y_checkbox, 1, 1, alignment=QtCore.Qt.AlignLeft)
+
+        time_layout.addLayout(lock_layout)
 
         self.control_layout.addLayout(location_layout, layout_row_index, 0, alignment=QtCore.Qt.AlignLeft)
         layout_row_index = layout_row_index + 1
         self.control_layout.addLayout(time_layout, layout_row_index, 0, alignment=QtCore.Qt.AlignLeft)
+        # self.control_layout.addLayout(lock_layout, layout_row_index, 1, alignment=QtCore.Qt.AlignLeft)
         layout_row_index = layout_row_index + 1
 
         # Movie Controls
@@ -293,10 +303,10 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
 
         self.overlay_slider_minmax = [-np.iinfo('int32').max / 2, np.iinfo('int32').max / 2]
         self.overlay_slider_to_float = float(overlay_diff) / (
-                    self.overlay_slider_minmax[1] - self.overlay_slider_minmax[0])
+                self.overlay_slider_minmax[1] - self.overlay_slider_minmax[0])
         init_slider_value = 0
         init_spin_box_value = self.overlay_minmax[0] + self.overlay_slider_to_float * (
-                    float(init_slider_value) - self.overlay_slider_minmax[0])
+                float(init_slider_value) - self.overlay_slider_minmax[0])
         set_min_max_value(self.lower_thresh_spinbox, overlay_range + [init_spin_box_value, ])
         self.lower_thresh_spinbox.setSingleStep(stepsize)
         set_min_max_value(self.upper_thresh_spinbox, overlay_range + [init_spin_box_value, ])
@@ -402,7 +412,8 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.ycontrol.valueChanged.connect(self.y_location_changed)
         self.zcontrol.valueChanged.connect(self.z_location_changed)
         self.tcontrol.valueChanged.connect(self.change_t_control)
-        self.lock_plots_checkbox.clicked.connect(self.lock_plots_checkbox_pushed)
+        self.lock_plots_x_checkbox.clicked.connect(self.lock_plots_x_checkbox_pushed)
+        self.lock_plots_y_checkbox.clicked.connect(self.lock_plots_y_checkbox_pushed)
 
         self.delete_last_roi_button.clicked.connect(self.delete_last_roi_pushed)
         self.clear_roi_button.clicked.connect(self.clear_roi_pushed)
@@ -497,8 +508,11 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         if self.tcontrol.hasFocus():
             self.sig_t_change.emit(value)
 
-    def lock_plots_checkbox_pushed(self):
-        self.sig_lock_plots_change.emit()
+    def lock_plots_x_checkbox_pushed(self):
+        self.sig_lock_plots_x_change.emit()
+
+    def lock_plots_y_checkbox_pushed(self):
+        self.sig_lock_plots_y_change.emit()
 
     def delete_last_roi_pushed(self):
         self.sig_roi_del_last.emit()
@@ -517,14 +531,14 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
 
     def lower_thresh_slider_changed(self, lower_thresh):
         self.lower_thresh_spinbox.setValue(self.overlay_minmax[0] + self.overlay_slider_to_float * (
-                    float(lower_thresh) - self.overlay_slider_minmax[0]))
+                float(lower_thresh) - self.overlay_slider_minmax[0]))
         if lower_thresh > -self.upper_thresh_slider.value():
             self.upper_thresh_slider.setValue(-lower_thresh)
 
     def upper_thresh_slider_changed(self, upper_thresh):
         upper_thresh = -upper_thresh
         self.upper_thresh_spinbox.setValue(self.overlay_minmax[0] + self.overlay_slider_to_float * (
-                    float(upper_thresh) - self.overlay_slider_minmax[0]))
+                float(upper_thresh) - self.overlay_slider_minmax[0]))
         if upper_thresh < self.lower_thresh_slider.value():
             self.lower_thresh_slider.setValue(upper_thresh)
 

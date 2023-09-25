@@ -205,9 +205,14 @@ class Compare(QtWidgets.QMainWindow):
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 1)
 
+        screen_sz = QtWidgets.QApplication.instance().primaryScreen().availableGeometry().size()
+        for child in splitter.children():
+            child.setMaximumSize(screen_sz-self.menuBar().size())
+
         # used when inheriting from QMainWindow
         self.setCentralWidget(splitter)
         # self.statusBar().showMessage('Ready')
+
 
         self.make_connections()
 

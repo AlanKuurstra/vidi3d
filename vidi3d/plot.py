@@ -40,13 +40,14 @@ class MplPlot(FigureCanvas):
         # Initialize objects visualizing the internal data
         self.colors = colors
         if self.colors is None:
-            self.colors = PlotColours.colours
+            self.colors = PlotColours(len(self.complex_data)).colours
         # 1d plot
         self.axes = self.fig.add_subplot(111)
         if title is not None:
             self.axes.set_title(title)
         # disable plot autoscale
-        self.lockPlot = False
+        self.lock_xaxis = False
+        self.lock_yaxis = False
         # zoom functionality
         self.toolbar = NavigationToolbar2QT(self, self)
         self.toolbar.hide()
@@ -60,7 +61,11 @@ class MplPlot(FigureCanvas):
     def press_event(self, event):
         # with matplotlib event, button 1 is left, 2 is middle, 3 is right
         if event.button == 2:
-            self.toolbar.home()
+            # the toolbar home button does not always respect that the graph has new limits
+            #self.toolbar.home()
+            self.axes.relim()
+            self.axes.autoscale()
+            self.draw()
 
     # Methods that set internal data
     def set_complex_data(self, new_complex_data):
@@ -76,11 +81,19 @@ class MplPlot(FigureCanvas):
     def set_lines(self):
         for indx in range(len(self.complex_data)):
             self.lines[indx][0].set_ydata(apply_display_type(self.complex_data[indx], self.display_type))
-        if not self.lockPlot:
-            self.axes.relim()
-            # self.axes.set_ylim(auto=True)
-            # self.axes.autoscale_view(scalex=False)
-            self.axes.autoscale(axis='y')
+
+        if self.lock_xaxis and self.lock_yaxis:
+            return
+        elif self.lock_yaxis:
+            axis='x'
+        elif self.lock_xaxis:
+            axis='y'
+        else:
+            axis='both'
+        self.axes.relim()
+        # self.axes.set_ylim(auto=True)
+        # self.axes.autoscale_view()
+        self.axes.autoscale(axis=axis)
 
     def set_markers(self):
         if self.marker_posn is not None:
@@ -92,7 +105,7 @@ class MplPlot(FigureCanvas):
         self.lines = []
         for indx in range(len(self.complex_data)):
             self.lines.append(
-                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
+                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), color=self.colors[indx]))
         self.axes.set_xlim(0, self.complex_data[0].shape[0] - 1 + np.finfo('float').eps)
 
     def create_markers(self):

@@ -177,6 +177,8 @@ class MplImage(Signals, FigureCanvas):
             return
         if event.button == 1:
             self.left_mouse_press = True
+            # mouse_move to update the 1d plots on single click
+            #self.mouse_move(event)
         elif event.button == 2:
             self.middle_mouse_press = True
             self.middle_mouse_callback()
@@ -359,14 +361,15 @@ class MplImage(Signals, FigureCanvas):
         self.vtxt.set_x(self.cursor_loc.x)
 
     def blit_image_and_lines(self):
-        if self.fig._cachedRenderer is not None:
+        #if self.fig._cachedRenderer is not None:
+            #print(hasattr(self.fig,'_cachedRenderer'))
             self.fig.canvas.draw()
             self.blit(self.fig.bbox)
             return
 
     def blit_image_for_roi_drawing(self):
         # not using this function anymore, just always draw the entire canvas
-        if self.fig._cachedRenderer is not None:
+        #if self.fig._cachedRenderer is not None:
             self.fig.draw_artist(self.fig.patch)
             self.axes.draw_artist(self.title)
             self.axes.draw_artist(self.axes.patch)

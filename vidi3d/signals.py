@@ -39,4 +39,5 @@ class Signals:
     sig_overlay_upper_thresh_change = QtCore.pyqtSignal(float, float)
     sig_overlay_alpha_change = QtCore.pyqtSignal(float)
 
-    sig_lock_plots_change = QtCore.pyqtSignal()
+    sig_lock_plots_x_change = QtCore.pyqtSignal()
+    sig_lock_plots_y_change = QtCore.pyqtSignal()

@@ -151,7 +151,6 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.control_layout.addLayout(location_layout, layout_row_index, 0, alignment=QtCore.Qt.AlignLeft)
         layout_row_index = layout_row_index + 1
         self.control_layout.addLayout(time_layout, layout_row_index, 0, alignment=QtCore.Qt.AlignLeft)
-        # self.control_layout.addLayout(lock_layout, layout_row_index, 1, alignment=QtCore.Qt.AlignLeft)
         layout_row_index = layout_row_index + 1
 
         # Movie Controls
@@ -286,7 +285,7 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.lower_thresh_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.upper_thresh_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.upper_thresh_slider.setInvertedAppearance(True)
-        overlay_diff = (np.float(overlay_range[1]) - overlay_range[0])
+        overlay_diff = (float(overlay_range[1]) - overlay_range[0])
         mant, exp = ('%.5e' % overlay_diff).split('e')
         if np.double(mant) < 5.0:
             exp = int(exp)

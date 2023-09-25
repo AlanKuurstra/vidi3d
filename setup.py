@@ -20,11 +20,11 @@ setuptools.setup(
     install_requires=[
         'numpy',
         'PyQt5',
-        'matplotlib'],
+        'matplotlib>=3.7'],
     keywords=['3d', 'image', 'viewer', 'medical', 'numpy'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
-    python_requires='>=3',
+    python_requires='>=3.8',
 )

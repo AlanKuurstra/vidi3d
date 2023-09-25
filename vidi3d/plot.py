@@ -40,7 +40,7 @@ class MplPlot(FigureCanvas):
         # Initialize objects visualizing the internal data
         self.colors = colors
         if self.colors is None:
-            self.colors = PlotColours.colours
+            self.colors = PlotColours(len(self.complex_data)).colours
         # 1d plot
         self.axes = self.fig.add_subplot(111)
         if title is not None:
@@ -82,9 +82,6 @@ class MplPlot(FigureCanvas):
         for indx in range(len(self.complex_data)):
             self.lines[indx][0].set_ydata(apply_display_type(self.complex_data[indx], self.display_type))
 
-        self.axes.relim()
-        # self.axes.set_ylim(auto=True)
-        # self.axes.autoscale_view()
         if self.lock_xaxis and self.lock_yaxis:
             return
         elif self.lock_yaxis:
@@ -93,6 +90,9 @@ class MplPlot(FigureCanvas):
             axis='y'
         else:
             axis='both'
+        self.axes.relim()
+        # self.axes.set_ylim(auto=True)
+        # self.axes.autoscale_view()
         self.axes.autoscale(axis=axis)
 
     def set_markers(self):
@@ -105,7 +105,7 @@ class MplPlot(FigureCanvas):
         self.lines = []
         for indx in range(len(self.complex_data)):
             self.lines.append(
-                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), self.colors[indx]))
+                self.axes.plot(apply_display_type(self.complex_data[indx], self.display_type), color=self.colors[indx]))
         self.axes.set_xlim(0, self.complex_data[0].shape[0] - 1 + np.finfo('float').eps)
 
     def create_markers(self):

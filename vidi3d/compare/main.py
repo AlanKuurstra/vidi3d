@@ -82,7 +82,7 @@ class Compare(QtWidgets.QMainWindow):
 
         # Set up image panels and toolbars
         self.image_panel_widget = QtWidgets.QWidget(self)
-        colors = PlotColours.colours
+        self.colours = PlotColours(num_images).colours
         self.image_figures = []
         self.image_toolbars = []
         if location_labels is None:
@@ -90,7 +90,7 @@ class Compare(QtWidgets.QMainWindow):
         for indx in range(num_images):
             labels = [{'color': 'r', 'textLabel': location_labels[0]},
                       {'color': 'b', 'textLabel': location_labels[1]},
-                      {'color': colors[indx], 'textLabel': subplot_titles[indx]},
+                      {'color': self.colours[indx], 'textLabel': subplot_titles[indx]},
                       ]
             overlay = self.overlays[indx][:, :, self.loc.z] if self.overlays[indx] is not None else None
             self.image_figures.append(
@@ -163,28 +163,28 @@ class Compare(QtWidgets.QMainWindow):
         self.xplot = MplPlot(complex_data=x_plot_data,
                              title=location_labels[0],
                              display_type=display_type,
-                             colors=colors,
+                             colors=self.colours,
                              init_marker=self.loc.y,
                              )
         self.plots.append(self.xplot)
         self.yplot = MplPlot(complex_data=y_plot_data,
                              title=location_labels[1],
                              display_type=display_type,
-                             colors=colors,
+                             colors=self.colours,
                              init_marker=self.loc.x
                              )
         self.plots.append(self.yplot)
         self.zplot = MplPlot(complex_data=z_plot_data,
                              title=location_labels[2],
                              display_type=display_type,
-                             colors=colors,
+                             colors=self.colours,
                              init_marker=self.loc.z
                              )
         self.plots.append(self.zplot)
         self.tplot = MplPlot(complex_data=t_plot_data,
                              title=location_labels[3],
                              display_type=display_type,
-                             colors=colors,
+                             colors=self.colours,
                              init_marker=self.loc.t
                              )
         self.plots.append(self.tplot)
@@ -326,18 +326,19 @@ class Compare(QtWidgets.QMainWindow):
                 drawing_engaged = True
                 image_toolbar.roi_drawing_engaged = False
         for image_toolbar in self.image_toolbars:
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 if prevz in image_toolbar.roi_lines.mpl_line_objects:
                     for currentLine in image_toolbar.roi_lines.mpl_line_objects[prevz]:
-                        image_toolbar.ax.lines.remove(currentLine)
+                        currentLine.set_visible(False)
             if drawing_engaged:
                 image_toolbar.roi_lines.mpl_line_objects[prevz].pop()
 
         for image_toolbar in self.image_toolbars:
-            if image_toolbar.roi_active:
-                if newz in image_toolbar.roi_lines.mpl_line_objects:
-                    for currentLine in image_toolbar.roi_lines.mpl_line_objects[newz]:
-                        image_toolbar.ax.add_line(currentLine)
+            if image_toolbar.mode.name=='ROI':
+                # newz can be out of bounds, so use self.loc.z which is class XYZTCoord and has boundaries enforced
+                if self.loc.z in image_toolbar.roi_lines.mpl_line_objects:
+                    for currentLine in image_toolbar.roi_lines.mpl_line_objects[self.loc.z]:
+                        currentLine.set_visible(True)
 
         for image_figure in self.image_figures:
             image_figure.cursor_loc.z = newz
@@ -388,7 +389,7 @@ class Compare(QtWidgets.QMainWindow):
     def destruct_roi(self, img_index):
         at_least_one_active = False
         for image_toolbar in self.image_toolbars:
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 at_least_one_active = True
         if not at_least_one_active:
             self.control_widget.roi_analysis_widget.setEnabled(False)
@@ -403,7 +404,7 @@ class Compare(QtWidgets.QMainWindow):
             self.draw_roi(image_toolbar)
 
     def draw_roi(self, image_toolbar):
-        if image_toolbar.roi_active:
+        if image_toolbar.mode.name=="ROI":
             # do we need to draw all these lines?
             for currentLine in image_toolbar.roi_lines.mpl_line_objects[self.loc.z]:
                 image_toolbar.ax.draw_artist(currentLine)
@@ -413,7 +414,7 @@ class Compare(QtWidgets.QMainWindow):
         self.roi_data.start_new_lasso(x, y, self.loc.z)
         for image_toolbar in self.image_toolbars:
             image_toolbar.roi_lines.start_new_lasso_line(x, y, self.loc.z)
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 currentline = image_toolbar.roi_lines.mpl_line_objects[self.loc.z][-1]
                 image_toolbar.ax.add_line(currentline)
 
@@ -428,7 +429,7 @@ class Compare(QtWidgets.QMainWindow):
     def cancel_roi(self):
         for image_toolbar in self.image_toolbars:
             curr_line = image_toolbar.roi_lines.mpl_line_objects[self.loc.z].pop()
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 image_toolbar.ax.lines.remove(curr_line)
                 image_toolbar.canvas.draw()
         self.roi_data.verts[self.loc.z].pop()
@@ -450,13 +451,13 @@ class Compare(QtWidgets.QMainWindow):
         num_active_plots = 0
         for index in range(len(self.image_toolbars)):
             image_toolbar = self.image_toolbars[index]
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 data = self.complex_images[index]
                 data = apply_display_type(data, display_type)
                 avgTimeseries = data[mask].mean(axis=0)
                 if fig == None:
                     fig = plt.figure()
-                plt.plot(avgTimeseries, PlotColours.colours[index], label=self.subplot_titles[index])
+                plt.plot(avgTimeseries, self.colours[index], label=self.subplot_titles[index])
                 num_active_plots += 1
         if not (num_active_plots <= 1 and self.subplot_titles[index] == ""):
             plt.legend()
@@ -471,7 +472,7 @@ class Compare(QtWidgets.QMainWindow):
         num_active_plots = 0
         for index in range(len(self.image_toolbars)):
             image_toolbar = self.image_toolbars[index]
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 data = self.complex_images[index]
                 data = apply_display_type(data, display_type)
                 psc_timeseries = data[mask].mean(axis=0)
@@ -479,7 +480,7 @@ class Compare(QtWidgets.QMainWindow):
                 psc_timeseries = (psc_timeseries - psc_timeseries[0]) / psc_timeseries[0] * 100
                 if fig == None:
                     fig = plt.figure()
-                plt.plot(psc_timeseries, PlotColours.colours[index], label=self.subplot_titles[index])
+                plt.plot(psc_timeseries, self.colours[index], label=self.subplot_titles[index])
                 num_active_plots += 1
         if not (num_active_plots <= 1 and self.subplot_titles[index] == ""):
             plt.legend()
@@ -497,15 +498,15 @@ class Compare(QtWidgets.QMainWindow):
         num_active_plots = 0
         for index in range(len(self.image_toolbars)):
             image_toolbar = self.image_toolbars[index]
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 data = self.complex_images[index]
                 data = apply_display_type(data, display_type)
                 data_list.append(data[..., self.loc.t][mask])
-                color_list.append(PlotColours.colours[index])
+                color_list.append(self.colours[index])
                 label_list.append(self.subplot_titles[index])
-                # y,binEdges,_=plt.hist(data[...,self.cursor_loc.t][mask],bins=num_bins,color=PlotColours.colours[index], alpha=0.04)
+                # y,binEdges,_=plt.hist(data[...,self.cursor_loc.t][mask],bins=num_bins,color=self.colours[index], alpha=0.04)
                 # bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
-                # plt.plot(bincenters,y,'-',marker="s",color=PlotColours.colours[index], label=self.subplot_titles[index])
+                # plt.plot(bincenters,y,'-',marker="s",color=self.colours[index], label=self.subplot_titles[index])
                 fig = True
                 num_active_plots += 1
         if fig:
@@ -519,10 +520,11 @@ class Compare(QtWidgets.QMainWindow):
         self.roi_data.verts = {}
         z = self.loc.z
         for image_toolbar in self.image_toolbars:
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 if z in image_toolbar.roi_lines.mpl_line_objects:
                     for currentLine in image_toolbar.roi_lines.mpl_line_objects[z]:
-                        image_toolbar.ax.lines.remove(currentLine)
+                        #image_toolbar.ax.lines.remove(currentLine)
+                        currentLine.remove()
             image_toolbar.roi_lines.mpl_line_objects = {}
             image_toolbar.canvas.draw()
             image_toolbar.canvas.blit(image_toolbar.ax.bbox)
@@ -531,10 +533,11 @@ class Compare(QtWidgets.QMainWindow):
         z = self.loc.z
         self.roi_data.verts[z].pop()
         for image_toolbar in self.image_toolbars:
-            if image_toolbar.roi_active:
+            if image_toolbar.mode.name=='ROI':
                 if z in image_toolbar.roi_lines.mpl_line_objects:
                     curr_line = image_toolbar.roi_lines.mpl_line_objects[z][-1]
-                    image_toolbar.ax.lines.remove(curr_line)
+                    #image_toolbar.ax.lines.remove(curr_line)
+                    curr_line.remove()
             image_toolbar.roi_lines.mpl_line_objects[z].pop()
             image_toolbar.canvas.draw()
             image_toolbar.canvas.blit(image_toolbar.ax.bbox)
@@ -567,7 +570,7 @@ class Compare(QtWidgets.QMainWindow):
         artists_to_update = []
         for indx in range(len(self.image_toolbars)):
             image_toolbar = self.image_toolbars[indx]
-            if image_toolbar._movie_active:
+            if image_toolbar.mode.name == "MOVIE":
                 new_data = apply_display_type(self.complex_images[indx][..., z, frame].T, display_type)
                 image_toolbar.movieText.set_text("frame: " + str(frame))
                 self.image_figures[indx].img.set_data(new_data)
@@ -578,7 +581,7 @@ class Compare(QtWidgets.QMainWindow):
     def initialize_movie(self, img_index):
         num_active = 0
         for image_toolbar in self.image_toolbars:
-            if image_toolbar._movie_active:
+            if image_toolbar.mode.name=='MOVIE':
                 num_active += 1
         if num_active == 1:
             self.control_widget.movie_widget.setEnabled(True)
@@ -597,7 +600,7 @@ class Compare(QtWidgets.QMainWindow):
     def destruct_movie(self, img_index):
         at_least_one_active = False
         for image_toolbar in self.image_toolbars:
-            if image_toolbar._movie_active:
+            if image_toolbar.mode.name=="MOVIE":
                 at_least_one_active = True
         if not at_least_one_active:
             self.control_widget.movie_widget.setEnabled(False)

@@ -5,9 +5,9 @@ so that the MainWindow can implement logic for movie playing and ROI drawing
 """
 
 import os
+# import matplotlib.transforms as transforms
+from enum import Enum
 
-import matplotlib.transforms as transforms
-from PyQt5 import QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.lines import Line2D
 
@@ -16,105 +16,152 @@ from .signals import Signals
 
 
 class NavigationToolbarSimple(NavigationToolbar2QT):
-    def __init__(self, canvas, parent):
-        super(NavigationToolbarSimple, self).__init__(canvas, parent)
+    toolitems = [item for item in NavigationToolbar2QT.toolitems if item[0] in ['Home', 'Pan', 'Zoom']]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.clear()
-        tmp = self.addAction(self._icon('home.png'), 'Home', self.home)
-        tmp.setToolTip('Reset original view')
-        tmp = self.addAction(self._icon('zoom_to_rect.png'), 'Zoom', self.zoom)
-        tmp.setToolTip('Zoom to rectangle')
-        tmp = self.addAction(self._icon('move.png'), 'Pan', self.pan)
-        tmp.setToolTip('Pan axes with left mouse, zoom with right')
 
-        w = QtWidgets.QWidget()
-        w.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.spacer = self.addWidget(w)
+        for text, tooltip_text, image_file, callback in self.toolitems:
+            if text is None:
+                self.addSeparator()
+            else:
+                a = self.addAction(self._icon(image_file + '.png'),
+                                   text, getattr(self, callback))
+                self._actions[callback] = a
+                if callback in ['zoom', 'pan', 'roi', 'play_movie']:
+                    a.setCheckable(True)
+                if tooltip_text is not None:
+                    a.setToolTip(tooltip_text)
 
-        # In order for save to work, need to copy and paste self.save_figure to
-        # overload and change the qt_compat._getSaveFileName call to have parameter:
-        # options=QtWidgets.QFileDialog.DontUseNativeDialog
-        # https://stackoverflow.com/questions/59775385/weird-interaction-between-pycharm-and-pyqt-qfiledialog
-        # However, this action isn't very useful.
-        # self.addSeparator()
-        # tmp = self.addAction(self._icon('filesave.png'), 'Save', self.save_figure)
-        # tmp.setToolTip('Save the figure')
+        # w = QtWidgets.QWidget()
+        # w.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # self.spacer = self.addWidget(w)
+
+
+# extend matplotlib.backend_bases._Mode
+class _Mode(str, Enum):
+    NONE = ""
+    PAN = "pan/zoom"
+    ZOOM = "zoom rect"
+    ROI = 'roi'
+    MOVIE = 'movie'
+
+    def __str__(self):
+        return self.value
+
+    @property
+    def _navigate_mode(self):
+        return self.name if self is not _Mode.NONE else None
 
 
 class NavigationToolbar(Signals, NavigationToolbarSimple):
+    # text, tooltip_text, image_file, callback
+    toolitems = NavigationToolbarSimple.toolitems + [('Roi',
+                                                      'Select an ROI for analysis',
+                                                      os.path.join(os.path.dirname(__file__), "icons", "lasso"),
+                                                      'roi'),
+                                                     ('Movie',
+                                                      'Play movie of timeseries',
+                                                      os.path.join(os.path.dirname(__file__), "icons", "movie"),
+                                                      'play_movie'
+                                                      )
+                                                     ]
+
     def __init__(self, canvas, parent, img_index=None):
         super(NavigationToolbar, self).__init__(canvas, parent)
-        self.roi_widget = QtWidgets.QAction(
-            QtGui.QIcon(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons", "lasso.png"))), 'ROI')
-        self.roi_widget.triggered.connect(self.roi)
-        self.insertAction(self.spacer, self.roi_widget)
-        self.roi_widget.setToolTip('Select an ROI for analysis')
-        self.roi_widget.setCheckable(True)
-        self.roi_active = False
-        self._id_roi_press = None
-        self._id_roi_release = None
-        self._id_roi_move = None
+
         self.roi_lines = LassoLines()
         self.roi_drawing_engaged = False
 
-        self.movie_widget = QtWidgets.QAction(
-            QtGui.QIcon(QtGui.QPixmap(os.path.join(os.path.dirname(__file__), "icons", "movie.png"))), 'Movie')
-        self.movie_widget.triggered.connect(self.play_movie)
-        self.insertAction(self.spacer, self.movie_widget)
-        self.movie_widget.setToolTip('Play movie of timeseries')
-        self.movie_widget.setCheckable(True)
-        self._movie_active = False
         self.ax = self.canvas.axes
         self.img_index = img_index
 
+        self.mode = _Mode.NONE
+
+    def _update_buttons_checked(self):
+        super()._update_buttons_checked()
+        # sync button checkstates to match active mode
+        if 'roi' in self._actions:
+            self._actions['roi'].setChecked(self.mode.name == 'ROI')
+        if 'play_movie' in self._actions:
+            self._actions['play_movie'].setChecked(self.mode.name == 'MOVIE')
+
+    def deactivate_current_mode(self):
+        if self.mode.name == 'ROI':
+            self.roi_deactivate()
+        if self.mode.name == 'MOVIE':
+            self.movie_deactivate()
+
+    def clear_axes(self):
+        self.canvas.htxt.set_visible(False)
+        self.canvas.vtxt.set_visible(False)
+        self.canvas.hline.set_visible(False)
+        self.canvas.vline.set_visible(False)
+
+    def populate_axes(self):
+        self.canvas.htxt.set_visible(True)
+        self.canvas.vtxt.set_visible(True)
+        self.canvas.hline.set_visible(True)
+        self.canvas.vline.set_visible(True)
+
+    def initialize_default(self):
+        self.populate_axes()
+        self.canvas.blit_image_and_lines()
+
+    def zoom(self, *args):
+        self.deactivate_current_mode()
+        # intialize and draw
+        super().zoom(*args)
+        self.initialize_default()
+
+    def pan(self, *args):
+        self.deactivate_current_mode()
+        # intialize and draw
+        super().pan(*args)
+        self.initialize_default()
+
     def roi(self, *args):
-        if self.roi_active == True:
-            self.roi_active = False
-            self.roi_destructor()
+        self.deactivate_current_mode()
+        if self.mode.name == 'ROI':
+            self.mode = _Mode.NONE
+            self.initialize_default()
         else:
-            self.roi_active = True
+            self.mode = _Mode.ROI
             self.roi_initialize()
 
     def roi_initialize(self):
+        # intialize and draw
         self._id_roi_press = self.canvas.mpl_connect('button_press_event', self.roi_press)
         self._id_roi_release = self.canvas.mpl_connect('motion_notify_event', self.roi_move)
         self._id_roi_move = self.canvas.mpl_connect('button_release_event', self.roi_release)
-        self.roi_widget.setChecked(True)
+        self._update_buttons_checked()
 
         z = self.canvas.cursor_loc.z
         if z in self.roi_lines.mpl_line_objects:
             for currentLine in self.roi_lines.mpl_line_objects[z]:
-                self.ax.add_line(currentLine)
+                currentLine.set_visible(True)
 
-        self.canvas.axes.lines.remove(self.canvas.vline)
-        self.canvas.axes.lines.remove(self.canvas.hline)
-        self.canvas.axes.texts.remove(self.canvas.htxt)
-        self.canvas.axes.texts.remove(self.canvas.vtxt)
+        self.clear_axes()
 
         self.canvas.blit_image_and_lines()
         self.sig_roi_init.emit(self.img_index)
 
-    def roi_destructor(self):
+    def roi_deactivate(self):
         # use holders different from _idPress because Move and Pan will steal the reference
         self._id_roi_press = self.canvas.mpl_disconnect(self._id_roi_press)
         self._id_roi_release = self.canvas.mpl_disconnect(self._id_roi_release)
         self._id_roi_move = self.canvas.mpl_disconnect(self._id_roi_move)
-        self.roi_widget.setChecked(False)
-
-        self.ax.lines.append(self.canvas.hline)
-        self.ax.lines.append(self.canvas.vline)
-        self.ax.texts.append(self.canvas.htxt)
-        self.ax.texts.append(self.canvas.vtxt)
 
         z = self.canvas.cursor_loc.z
         if z in self.roi_lines.mpl_line_objects:
             for currentLine in self.roi_lines.mpl_line_objects[z]:
-                self.ax.lines.remove(currentLine)
+                currentLine.set_visible(False)
 
-        self.canvas.blit_image_and_lines()
         self.signal_roi_destruct.emit(self.img_index)
 
     def roi_release(self, event):
-        if self.mode != '' or self.roi_active == False or not self.roi_drawing_engaged:
+        if self.mode.name != 'ROI' or not self.roi_drawing_engaged:
             return
         if event.button != 1:
             return
@@ -127,7 +174,7 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
         self.roi_drawing_engaged = False
 
     def roi_press(self, event):
-        if self.mode != '' or self.roi_active == False:
+        if self.mode.name != 'ROI':
             return
         if event.button != 1:
             if self.roi_drawing_engaged:
@@ -138,7 +185,7 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
         self.roi_drawing_engaged = True
 
     def roi_move(self, event):
-        if self.mode != '' or self.roi_active == False or not self.roi_drawing_engaged:
+        if self.mode.name != 'ROI' or not self.roi_drawing_engaged:
             return
         if event.button != 1:
             return
@@ -146,40 +193,30 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
             return
         self.sig_roi_change.emit(event.xdata, event.ydata)
 
+    def movie_deactivate(self):
+        self.movieText.remove()
+        del self.movieText
+        # self.canvas.draw()
+        # self.canvas.blit(self.canvas.fig.bbox)
+        self.sig_movie_destruct.emit(self.img_index)
+
     def play_movie(self):
-        self._movie_active = not self._movie_active
-        if self._movie_active:
-            if self.roi_active:
-                self.roi()
-            self.roi_widget.setDisabled(True)
+        self.deactivate_current_mode()
+        if self.mode.name == 'MOVIE':
+            self.mode = _Mode.NONE
+            self.initialize_default()
+        else:
+            self.mode = _Mode.MOVIE
+            self._update_buttons_checked()
 
-            self.canvas.axes.texts.remove(self.canvas.htxt)
-            self.canvas.axes.texts.remove(self.canvas.vtxt)
-            self.canvas.axes.lines.remove(self.canvas.hline)
-            self.canvas.axes.lines.remove(self.canvas.vline)
-
+            # intialize and draw
+            self.clear_axes()
             axesTransform = self.canvas.img.axes.transAxes
-            axesOffset = transforms.ScaledTranslation(0, .6, self.canvas.img.axes.figure.dpi_scale_trans)
+            # axesOffset = transforms.ScaledTranslation(0, .6, self.canvas.img.axes.figure.dpi_scale_trans)
             self.movieText = self.canvas.img.axes.text(1, -.01, '', fontsize=10, transform=axesTransform, ha='right',
                                                        va='top')
-
             self.canvas.blit_image_and_lines()
             self.sig_movie_init.emit(self.img_index)
-
-        else:
-
-            self.movieText.remove()
-            del self.movieText
-
-            self.canvas.axes.texts.append(self.canvas.htxt)
-            self.canvas.axes.texts.append(self.canvas.vtxt)
-            self.canvas.axes.lines.append(self.canvas.hline)
-            self.canvas.axes.lines.append(self.canvas.vline)
-
-            self.canvas.draw()
-            self.canvas.blit(self.canvas.fig.bbox)
-            self.roi_widget.setEnabled(True)
-            self.sig_movie_destruct.emit(self.img_index)
 
 
 class LassoLines:

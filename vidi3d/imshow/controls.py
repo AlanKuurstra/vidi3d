@@ -131,19 +131,19 @@ class _ControlWidget4D(Signals, QtWidgets.QWidget):
 
     def change_x_control(self, value):
         if self.xcontrol.hasFocus():
-            self.sig_x_change.emit(value)
+            self.sig_x_change.emit(int(value))
 
     def change_y_control(self, value):
         if self.ycontrol.hasFocus():
-            self.sig_y_change.emit(value)
+            self.sig_y_change.emit(int(value))
 
     def change_z_control(self, value):
         if self.zcontrol.hasFocus():
-            self.sig_z_change.emit(value)
+            self.sig_z_change.emit(int(value))
 
     def change_t_control(self, value):
         if self.tcontrol.hasFocus():
-            self.sig_t_change.emit(value)
+            self.sig_t_change.emit(int(value))
 
     def reset_wl(self):
         self.sig_window_level_reset.emit()

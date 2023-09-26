@@ -2,8 +2,6 @@
 Core functions for setting up the viewers.  Creating the qApp event loop and 
 a global dictionary of viewer objects.
 """
-from collections import Iterable
-
 import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5 import QtWidgets, QtCore
@@ -91,6 +89,6 @@ def split_array(array, axis=-1, index_list=None):
 
 
 def to_list(input_data):
-    if isinstance(input_data, (np.ndarray, str)) or not isinstance(input_data, Iterable):
+    if isinstance(input_data, (np.ndarray, str)) or not hasattr(input_data, '__iter__'):
         input_data = [input_data, ]
     return list(input_data)

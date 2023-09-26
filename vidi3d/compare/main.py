@@ -414,9 +414,10 @@ class Compare(QtWidgets.QMainWindow):
         self.roi_data.start_new_lasso(x, y, self.loc.z)
         for image_toolbar in self.image_toolbars:
             image_toolbar.roi_lines.start_new_lasso_line(x, y, self.loc.z)
-            if image_toolbar.mode.name=='ROI':
-                currentline = image_toolbar.roi_lines.mpl_line_objects[self.loc.z][-1]
-                image_toolbar.ax.add_line(currentline)
+            currentline = image_toolbar.roi_lines.mpl_line_objects[self.loc.z][-1]
+            image_toolbar.ax.add_line(currentline)
+            if image_toolbar.mode.name!='ROI':
+                currentline.set_visible(False)
 
     def end_roi(self):
         curr_roi_verts = self.roi_data.verts[self.loc.z][-1]
@@ -429,8 +430,8 @@ class Compare(QtWidgets.QMainWindow):
     def cancel_roi(self):
         for image_toolbar in self.image_toolbars:
             curr_line = image_toolbar.roi_lines.mpl_line_objects[self.loc.z].pop()
+            curr_line.remove()
             if image_toolbar.mode.name=='ROI':
-                image_toolbar.ax.lines.remove(curr_line)
                 image_toolbar.canvas.draw()
         self.roi_data.verts[self.loc.z].pop()
 

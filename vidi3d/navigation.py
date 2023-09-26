@@ -137,14 +137,15 @@ class NavigationToolbar(Signals, NavigationToolbarSimple):
         self._id_roi_move = self.canvas.mpl_connect('button_release_event', self.roi_release)
         self._update_buttons_checked()
 
+        self.clear_axes()
+
         z = self.canvas.cursor_loc.z
         if z in self.roi_lines.mpl_line_objects:
             for currentLine in self.roi_lines.mpl_line_objects[z]:
                 currentLine.set_visible(True)
 
-        self.clear_axes()
-
         self.canvas.blit_image_and_lines()
+
         self.sig_roi_init.emit(self.img_index)
 
     def roi_deactivate(self):

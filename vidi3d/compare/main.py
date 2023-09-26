@@ -117,8 +117,8 @@ class Compare(QtWidgets.QMainWindow):
         if max_in_row is None:
             max_in_row = int(np.sqrt(num_images) + 1 - 1e-10)
         for indx in range(num_images):
-            imgs_layout.addWidget(self.image_toolbars[indx], 2 * np.floor(indx / max_in_row), indx % max_in_row)
-            imgs_layout.addWidget(self.image_figures[indx], 2 * np.floor(indx / max_in_row) + 1, indx % max_in_row)
+            imgs_layout.addWidget(self.image_toolbars[indx], int(2 * np.floor(indx / max_in_row)), indx % max_in_row)
+            imgs_layout.addWidget(self.image_figures[indx], int(2 * np.floor(indx / max_in_row) + 1), indx % max_in_row)
         self.image_panel_widget.setLayout(imgs_layout)
 
         # Set up Controls

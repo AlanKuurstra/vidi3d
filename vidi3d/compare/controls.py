@@ -300,7 +300,7 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.overlay_minmax[1] += stepsize
         overlay_diff = (self.overlay_minmax[1] - self.overlay_minmax[0])
 
-        self.overlay_slider_minmax = [-np.iinfo('int32').max / 2, np.iinfo('int32').max / 2]
+        self.overlay_slider_minmax = [-int(np.iinfo('int32').max / 2), int(np.iinfo('int32').max / 2)]
         self.overlay_slider_to_float = float(overlay_diff) / (
                 self.overlay_slider_minmax[1] - self.overlay_slider_minmax[0])
         init_slider_value = 0
@@ -345,7 +345,7 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         alpha_init = 0.5
         self.alpha_spinbox_step = 0.01
         alpha_slider_min = 0
-        alpha_slider_max = np.ceil(alpha_max / self.alpha_spinbox_step)
+        alpha_slider_max = int(np.ceil(alpha_max / self.alpha_spinbox_step))
         alpha_slider_init = int(alpha_init / self.alpha_spinbox_step)
         set_min_max_value(self.overlay_alpha_slider, [alpha_slider_min, alpha_slider_max, alpha_slider_init])
         set_min_max_value(self.overlay_alpha_spinbox, [alpha_min, alpha_max, alpha_init])
@@ -574,7 +574,7 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.sig_overlay_alpha_change.emit(value)
 
     def movie_interval_slider_changed(self, interval):
-        self.movie_interval_spinbox.setValue(float(interval) / self.num_steps_bw_movie_slider_ints)
+        self.movie_interval_spinbox.setValue(int(float(interval) / self.num_steps_bw_movie_slider_ints))
 
     def movie_interval_spinbox_changed(self, interval):
         self.movie_interval_slider.blockSignals(True)

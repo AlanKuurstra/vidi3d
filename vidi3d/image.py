@@ -217,7 +217,7 @@ class MplImage(Signals, FigureCanvas):
             self.emit_cursor_change(data_coord)
 
     def emit_cursor_change(self, coord):
-        self.sig_cursor_change.emit(coord[0], coord[1])
+        self.sig_cursor_change.emit(int(coord[0]), int(coord[1]))
 
     # Methods that set internal data
     def set_complex_image(self, new_image):

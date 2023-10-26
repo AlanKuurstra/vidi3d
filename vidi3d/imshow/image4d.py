@@ -153,8 +153,8 @@ class ZSlice(MplImage):
     # y in MplImage coordinates corresponds to y in Image4D coordinates
     # z in MplImage coordinates corresponds to z in Image4D coordinates
     def emit_cursor_change(self, location):
-        self.sig_x_change.emit(location[0])
-        self.sig_y_change.emit(location[1])
+        self.sig_x_change.emit(int(location[0]))
+        self.sig_y_change.emit(int(location[1]))
 
     def wheelEvent(self, event):
         # emit Image4D z slice changed using MplImage z value
@@ -205,8 +205,8 @@ class XSlice(MplImage):
     # y in MplImage coordinates corresponds to y in Image4D coordinates
     # z in MplImage coordinates corresponds to x in Image4D coordinates
     def emit_cursor_change(self, location):
-        self.sig_z_change.emit(location[0])
-        self.sig_y_change.emit(location[1])
+        self.sig_z_change.emit(int(location[0]))
+        self.sig_y_change.emit(int(location[1]))
 
     def wheelEvent(self, event):
         # emit Image4D x slice changed using MplImage z value

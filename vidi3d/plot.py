@@ -98,8 +98,8 @@ class MplPlot(FigureCanvas):
     def set_markers(self):
         if self.marker_posn is not None:
             for plot_num in range(len(self.complex_data)):
-                self.markers[plot_num][0].set_data(self.marker_posn, apply_display_type(
-                    self.complex_data[plot_num][self.marker_posn], self.display_type))
+                self.markers[plot_num][0].set_data([self.marker_posn,], [apply_display_type(
+                    self.complex_data[plot_num][self.marker_posn], self.display_type),])
 
     def create_lines(self):
         self.lines = []

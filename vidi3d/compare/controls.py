@@ -97,8 +97,8 @@ class CompareControlWidget(Signals, QtWidgets.QWidget):
         self.zcontrol.setMinimum(0)
         self.zcontrol.setMaximum(img_shape[2] - 1)
         self.zcontrol.setValue(location.z)
-        self.tcontrol = QtWidgets.QDoubleSpinBox()
-        self.tcontrol.setDecimals(0)
+        self.tcontrol = QtWidgets.QSpinBox()
+        self.tcontrol.setMinimum(0)
         self.tcontrol.setMaximum(img_shape[3] - 1)
         self.tcontrol.setValue(location.t)
 
